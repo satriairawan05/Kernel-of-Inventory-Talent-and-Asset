@@ -301,8 +301,8 @@
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.company.*') ? 'active' : '' }} label-1" href="{{ route('setting.company.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
-                                    data-feather="map"></span></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Companies</span></span></div>
+                                    data-feather="map-pin"></span></span><span class="nav-link-text-wrapper"><span
+                                    class="nav-link-text">Outlets</span></span></div>
                     </a>
                 </div>
                 <!-- label-->

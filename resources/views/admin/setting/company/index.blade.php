@@ -56,12 +56,12 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <h4 class="card-title">List Data {{ $name }}</h4>
+            <h4 class="card-title">List Outlet</h4>
         </div>
         <div class="card-body">
             <a href="{{ route('setting.company.create') }}" class="btn btn-success btn-add-company">
                 <i class="fas fa-plus me-1"></i>
-                Add New
+                Add New Outlet
             </a>
             <div class="table-responsive mb-3">
                 <table class="table table-hover align-middle">
@@ -90,10 +90,10 @@
                                 </td>
                                 <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
                                     <a href="{{ route('setting.company.edit', $company) }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i> Edit</a>
+                                        <i class="fas fa-edit"></i> Edit Outlet</a>
                                     <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
                                         data-bs-target="#deleteCompanyModal{{ $company->id }}">
-                                        <i class="fas fa-trash"></i> Delete
+                                        <i class="fas fa-trash"></i> Delete Outlet
                                     </button>
 
                                     <div class="modal fade" id="deleteCompanyModal{{ $company->id }}" tabindex="-1"

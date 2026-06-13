@@ -45,14 +45,14 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <h4>Add New Company</h4>
+            <h4>Add New Outlet</h4>
         </div>
         <div class="card-body">
             <form action="{{ route('setting.company.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('POST')
                 <div class="mb-3">
-                    <label class="form-label" for="company_name">Company Name</label>
+                    <label class="form-label" for="company_name">Outlet Name</label>
 
                     <input class="form-control @error('company_name') is-invalid @enderror" id="company_name"
                         name="company_name" type="text" value="{{ old('company_name') }}" placeholder="Raja Kepiting">
@@ -169,7 +169,7 @@
                     </a>
 
                     <button type="submit" class="btn btn-primary">
-                        Add Company
+                        Add Outlet
                     </button>
 
                 </div>

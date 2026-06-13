@@ -43,7 +43,7 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <h4>Edit Company</h4>
+            <h4>Edit Outlet</h4>
         </div>
 
         <div class="card-body">
@@ -54,7 +54,7 @@
 
                 <div class="mb-3">
                     <label class="form-label" for="company_name">
-                        Company Name
+                        Outlet Name
                     </label>
 
                     <input type="text" id="company_name" name="company_name"
@@ -186,7 +186,7 @@
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Company Logo
+                        Outlet Logo
                     </label>
 
                     <input type="file" id="company_logo" name="company_logo"
@@ -218,7 +218,7 @@
                     </a>
 
                     <button type="submit" class="btn btn-primary">
-                        Update Company
+                        Update Outlet
                     </button>
 
                 </div>
