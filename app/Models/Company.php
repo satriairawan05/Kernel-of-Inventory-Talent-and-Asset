@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Shift;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Company extends Model
+{
+    protected $table = 'companies';
+
+    protected $fillable = [
+        'company_name',
+        'company_email',
+        'company_phone',
+        'company_address',
+        'company_logo',
+        'bussines_type',
+        'use_menu',
+        'use_service',
+        'use_inventory'
+    ];
+
+    /**
+     * Get all shifts belonging to this company.
+     */
+    public function shifts(): HasMany
+    {
+        return $this->hasMany(
+            Shift::class,
+            'company_id',
+            'id'
+        );
+    }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(
+            Category::class,
+            'category_id',
+            'id'
+        );
+    }
+
+    public function getLogoUrlAttribute(): string
+    {
+        return $this->company_logo
+            ? asset(
+                'storage/' . $this->company_logo
+            )
+            : asset(
+                'assets/img/icons/av color.png'
+            );
+    }
+}
