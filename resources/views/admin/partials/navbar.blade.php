@@ -107,17 +107,17 @@
                     <div class="parent-wrapper label-1">
                         <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-reports">
                             <li class="collapsed-nav-item-title d-none">Reports</li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('pos.report.*') }}" href="{{ route('pos.report.daily') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Daily</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('pos.report.*') }}" href="{{ route('pos.report.weekly') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Weekly</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('pos.report.*') }}" href="{{ route('pos.report.monthly') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Monthly</span>
                                     </div>
                                 </a><!-- more inner pages-->

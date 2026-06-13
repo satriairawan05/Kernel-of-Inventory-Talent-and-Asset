@@ -56,49 +56,50 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <h4 class="card-title">List Account</h4>
+            <h4 class="card-title">Daily Report</h4>
         </div>
         <div class="card-body">
-            <a href="{{ route('setting.account.create') }}" class="btn btn-success btn-add-company">
+            <a href="{{ route('pos.report.create') }}" class="btn btn-success btn-add-company">
                 <i class="fas fa-plus me-1"></i>
-                Add New
+                Add New Report
             </a>
-            <div class="table-responsive">
+            <div class="table-responsive mb-3">
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th scope="col">#</th>
-                            <th scope="col">Name</th>
-                            <th scope="col">Email</th>
+                            <th scope="col">Total</th>
                             <th scope="col">Handle</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($accounts as $account)
+                        @forelse($reports as $report)
                             <tr>
-                                <th scope="row">{{ $accounts->firstItem() + $loop->index }}</th>
-                                <td>{{ $account->name }}</td>
-                                <td>{{ $account->email }}</td>
+                                <th scope="row">{{ $reports->firstItem() + $loop->index }}</th>
+                                <td>{{ Carbon\Carbon::rupiah($report->total_amount) }}</td>
                                 <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
-                                    <a href="{{ route('setting.account.edit', $account) }}" class="btn btn-sm btn-primary">
+                                    <a href="{{ route('pos.report.show',$report) }}" class="btn btn-sm btn-subtle-primary">
+                                        <i class="fas fa-eye"></i> Detail
+                                    </a>
+                                    <a href="{{ route('pos.report.edit', $report) }}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-edit"></i> Edit</a>
-                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                                            data-bs-target="#deleteAccountModal{{ $account->id }}">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteReportModal{{ $report->id }}">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
 
-                                    <div class="modal fade" id="deleteAccountModal{{ $account->id }}" tabindex="-1"
+                                    <div class="modal fade" id="deleteReportModal{{ $report->id }}" tabindex="-1"
                                         data-bs-backdrop="static"
-                                        aria-labelledby="deleteAccountModalLabel{{ $account->id }}" aria-hidden="true">
+                                        aria-labelledby="deleteReportModalLabel{{ $report->id }}" aria-hidden="true">
 
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content border-0 shadow">
 
                                                 <div class="modal-header bg-danger">
                                                     <h5 class="modal-title text-white"
-                                                        id="deleteAccountModalLabel{{ $account->id }}">
+                                                        id="deleteReportModalLabel{{ $report->id }}">
                                                         <i class="fas fa-triangle-exclamation me-2"></i>
-                                                        Delete Account
+                                                        Delete Report
                                                     </h5>
 
                                                     <button class="btn p-1" type="button" data-bs-dismiss="modal"
@@ -122,7 +123,7 @@
 
                                                     <p class="text-muted mb-0">
                                                         You are about to delete
-                                                        <strong>{{ $account->name }}</strong>.
+                                                        <strong>{{ $report->date }}</strong>.
                                                     </p>
 
                                                     <p class="text-danger small mt-2 mb-0">
@@ -138,19 +139,14 @@
                                                         Cancel
                                                     </button>
 
-                                                    <form action="{{ route('setting.account.destroy', $account) }}"
+                                                    <form action="{{ route('pos.report.destroy', $report) }}"
                                                         method="POST">
-
                                                         @csrf
                                                         @method('DELETE')
-
                                                         <button type="submit" class="btn btn-danger">
-
                                                             <i class="fas fa-trash me-2"></i>
-                                                            Delete Account
-
+                                                            Delete report
                                                         </button>
-
                                                     </form>
 
                                                 </div>
@@ -161,9 +157,8 @@
                                 </td>
                             </tr>
                         @empty
-
                             <tr>
-                                <td colspan="5" class="text-center">
+                                <td colspan="3" class="text-center">
                                     No Data Found
                                 </td>
                             </tr>
@@ -173,7 +168,7 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center mt-3 pagination-wrapper">
-                {{ $accounts->links() }}
+                {{ $reports->links() }}
             </div>
         </div>
     </div>

@@ -19,9 +19,8 @@ class CompanyService
     public function store(array $data): Company
     {
         return DB::transaction(function () use ($data) {
-
             // Upload company logo if available
-            if (! empty($data['company_logo'])) {
+            if (!empty($data['company_logo'])) {
                 $data['company_logo'] = $this->uploadLogo(
                     $data['company_logo']
                 );
@@ -41,10 +40,8 @@ class CompanyService
     public function update(Company $company, array $data): Company
     {
         return DB::transaction(function () use ($company, $data) {
-
             // Upload new logo and remove old logo if exists
-            if (! empty($data['company_logo'])) {
-
+            if (!empty($data['company_logo'])) {
                 $data['company_logo'] = $this->uploadLogo(
                     $data['company_logo'],
                     $company->company_logo
@@ -68,7 +65,6 @@ class CompanyService
     public function destroy(Company $company): bool
     {
         return DB::transaction(function () use ($company) {
-
             // Delete logo file if it exists
             if (
                 $company->company_logo &&
@@ -93,7 +89,6 @@ class CompanyService
         UploadedFile $file,
         ?string $oldLogo = null
     ): string {
-
         // Remove previous logo if available
         if (
             $oldLogo &&

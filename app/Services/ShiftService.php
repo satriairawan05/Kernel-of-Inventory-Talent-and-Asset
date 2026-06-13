@@ -17,11 +17,9 @@ class ShiftService
     public function store(array $data): Shift
     {
         return DB::transaction(function () use ($data) {
-            $company = Company::findOrFail(
-                $data['company_id']
-            );
+            $company = Company::findOrFail($data['company_id']);
 
-            return Shift::castBindingreate([
+            return Shift::create([
                 'company_id' => $company->id,
                 'shift_name' => $data['shift_name'],
                 'shift_code' => $data['shift_code'],
@@ -40,7 +38,7 @@ class ShiftService
      * @param array $data
      * @return Shift
      */
-    public function update(Shift $shift,array $data): Shift 
+    public function update(Shift $shift, array $data): Shift
     {
         return DB::transaction(function () use ($shift, $data) {
             $shift->update([
@@ -63,9 +61,9 @@ class ShiftService
      * @param Shift $shift
      * @return bool
      */
-    public function destroy(Shift $shift): bool 
+    public function destroy(Shift $shift): bool
     {
-        return DB::transaction(function () use ($shift){
+        return DB::transaction(function () use ($shift) {
             return $shift->delete();
         });
     }

@@ -17,7 +17,6 @@ class AccountService
     public function store(array $data): User
     {
         return DB::transaction(function () use ($data) {
-
             // Hash password before storing
             $data['password'] = Hash::make($data['password']);
 
@@ -35,7 +34,6 @@ class AccountService
     public function update(User $user, array $data): User
     {
         return DB::transaction(function () use ($user, $data) {
-
             // Update password only when provided
             if (!empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
@@ -58,7 +56,6 @@ class AccountService
     public function destroy(User $user): bool
     {
         return DB::transaction(function () use ($user) {
-
             return $user->delete();
         });
     }

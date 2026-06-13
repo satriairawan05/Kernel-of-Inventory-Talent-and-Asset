@@ -8,8 +8,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'companies';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'company_name',
         'company_email',
@@ -34,6 +44,11 @@ class Company extends Model
         );
     }
 
+    /**
+     * Get the categories for the company.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function categories(): HasMany
     {
         return $this->hasMany(
@@ -43,6 +58,11 @@ class Company extends Model
         );
     }
 
+    /**
+     * Get the company logo URL attribute.
+     *
+     * @return string
+     */
     public function getLogoUrlAttribute(): string
     {
         return $this->company_logo

@@ -19,8 +19,6 @@ class CategoryService
         return DB::transaction(function () use ($data) {
             $company = Company::findOrFail($data['company_id']);
 
-            // return dd($company);
-
             return Category::create([
                 'company_id' => $company->id,
                 'category_name' => $data['category_name'],
@@ -36,7 +34,7 @@ class CategoryService
      * @param array $data
      * @return Category
      */
-    public function update(Category $category,array $data): Category 
+    public function update(Category $category, array $data): Category
     {
         return DB::transaction(function () use ($category, $data) {
             $category->update([
@@ -55,9 +53,9 @@ class CategoryService
      * @param Category $category
      * @return bool
      */
-    public function destroy(Category $category): bool 
+    public function destroy(Category $category): bool
     {
-        return DB::transaction(function () use ($category){
+        return DB::transaction(function () use ($category) {
             return $category->delete();
         });
     }

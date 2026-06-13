@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('shifts', function (Blueprint $table) {
+        Schema::create('sales_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained('companies')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->string('shift_name')->nullable();
-            $table->time('start_time')->nullable();
-            $table->time('end_time')->nullable();
-            $table->string('shift_code',50)->nullable();
-            $table->unsignedSmallInteger('late_tolerance_minutes')->default(0)->nullable();
-            $table->unsignedSmallInteger('early_leave_tolerance_minutes')->default(0)->nullable();
+            $table->date('report_date')->nullable();
+            $table->date('arrived_date')->nullable();
+            $table->decimal('pulsa_amount',15,2)->nullable();
+            $table->decimal('accessories_amount',15,2)->nullable();
+            $table->decimal('service_amount',15,2)->nullable();
+            $table->decimal('total_amount',15,2)->nullable();
+            $table->longText('notes')->nullable();
             $table->timestamps();
             $table->index('company_id');
         });
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('shifts');
+        Schema::dropIfExists('sales_reports');
     }
 };

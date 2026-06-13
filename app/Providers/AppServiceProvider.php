@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Carbon\Carbon;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -12,7 +13,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        Carbon::macro('rupiah', function ($amount) {
+            return 'Rp ' . number_format($amount, 0, ',', '.');
+        });
+
     }
 
     /**
@@ -20,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        config('app.locale', 'id');
+        \Carbon\Carbon::setLocale('id');
+
+        
         Paginator::useBootstrapFive();
     }
 }

@@ -158,9 +158,8 @@
                                 </td>
                             </tr>
                         @empty
-
                             <tr>
-                                <td colspan="6" class="text-center">
+                                <td colspan="5" class="text-center">
                                     No Data Found
                                 </td>
                             </tr>

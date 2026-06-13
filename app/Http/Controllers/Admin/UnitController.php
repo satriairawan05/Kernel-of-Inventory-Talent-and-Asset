@@ -23,7 +23,7 @@ class UnitController extends Controller
     public function index()
     {
         try {
-            $units = Unit::paginate(15);
+            $units = Unit::paginate(25);
 
             return view('admin.setting.unit.index',[
                 'units' => $units

@@ -21,7 +21,9 @@ class Shift extends Model
     ];
 
     /**
-     * Get the company that owns this shift.
+     * Get the company that owns the shift.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function company(): BelongsTo
     {

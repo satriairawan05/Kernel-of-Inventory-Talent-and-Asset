@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('companies')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('category_name')->nullable();
             $table->string('category_code')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->index('company_id');
         });
     }
 
