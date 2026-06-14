@@ -26,6 +26,7 @@ class ProductVariant extends Model
         'purchase_price',
         'selling_price',
         'is_active',
+        'image'
     ];
 
     /**

@@ -23,7 +23,7 @@ class ProductUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $productId = $this->route('product');
+        $productId = $this->route('inventory.product');
 
         return [
             'company_id'   => ['required', 'integer', 'exists:companies,id'],
@@ -34,6 +34,8 @@ class ProductUpdateRequest extends FormRequest
             'description'  => ['required', 'string'],
             'has_variant'  => ['required', 'boolean'],
             'is_active'    => ['required', 'boolean'],
+            'image'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'], // Tambahkan ini
+            'remove_image' => ['nullable', 'boolean'], // Tambahkan ini untuk opsi hapus gambar
         ];
     }
 }

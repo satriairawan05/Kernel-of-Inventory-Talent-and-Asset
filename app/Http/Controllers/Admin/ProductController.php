@@ -20,12 +20,7 @@ class ProductController extends Controller
      */
     public function __construct(private $access = [])
     {
-        try {
-            //
-        } catch(\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
-        }
+        //
     }
 
     /**

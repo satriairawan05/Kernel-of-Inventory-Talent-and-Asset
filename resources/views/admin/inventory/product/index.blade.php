@@ -19,6 +19,14 @@
     .search-shell .form-control, .search-shell .btn { border-radius: 12px; }
     .search-shell .btn { padding-inline: .9rem; }
     .pill-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 10px; font-size: .82rem; font-weight: 600; }
+    .product-thumb {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid #e5e7eb;
+        background: #f8fafc;
+    }
 </style>
 @endpush
 
@@ -56,6 +64,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
+                            <th>Image</th>
                             <th>Product</th>
                             <th>Code</th>
                             <th>Category</th>
@@ -69,6 +78,9 @@
                     @forelse($products as $product)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
+                            <td>
+                                <img src="{{ $product->image_url }}" alt="{{ $product->product_name }}" class="product-thumb">
+                            </td>
                             <td>
                                 <strong>{{ $product->product_name }}</strong>
                                 <div class="small text-muted">{{ Str::limit($product->description, 50) }}</div>
@@ -118,7 +130,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-5">No products found.</td>
+                            <td colspan="9" class="text-center text-muted py-5">No products found.</td>
                         </tr>
                     @endforelse
                     </tbody>

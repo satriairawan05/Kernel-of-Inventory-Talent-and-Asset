@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('product_id')->nullable()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('variant_name')->nullable();
             $table->string('variant_code')->nullable();
+            $table->string('image')->nullable();
             $table->decimal('purchase_price', 15, 2)->default(0)->nullable();
             $table->decimal('selling_price', 15, 2)->default(0)->nullable();
             $table->boolean('is_active')->default(true)->nullable();

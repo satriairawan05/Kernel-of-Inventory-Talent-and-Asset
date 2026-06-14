@@ -31,6 +31,7 @@ class ProductStoreRequest extends FormRequest
             'description'  => ['required', 'string'],
             'has_variant'  => ['required', 'boolean'],
             'is_active'    => ['required', 'boolean'],
+            'image'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'], // Tambahkan ini
         ];
     }
 }
