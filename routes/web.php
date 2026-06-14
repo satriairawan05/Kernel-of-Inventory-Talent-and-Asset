@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\SalesReportController;
+use App\Services\ModuleService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -25,8 +26,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::group(['prefix' => 'inventory', 'as' => 'inventory.'], function () {
-        Route::get('/', function () {
-            return view('admin.inventory.home');
+        Route::get('/', function (ModuleService $moduleService) {
+            return view('admin.inventory.home',[
+                'stats' => $moduleService->getInventoryStats()
+            ]);
         })->name('home');
 
         Route::resource('category', \App\Http\Controllers\Admin\CategoryController::class);

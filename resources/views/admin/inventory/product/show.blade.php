@@ -167,7 +167,7 @@
                                     <dt class="col-sm-4">Product Code</dt>
                                     <dd class="col-sm-8"><code>{{ $product->product_code }}</code></dd>
 
-                                    <dt class="col-sm-4">Company / Outlet</dt>
+                                    <dt class="col-sm-4">Outlet</dt>
                                     <dd class="col-sm-8">{{ $product->company->company_name ?? '-' }}</dd>
 
                                     <dt class="col-sm-4">Category</dt>
@@ -265,7 +265,7 @@
                                             </td>
                                             <td class="text-end">
                                                 <div class="d-flex justify-content-end gap-2">
-                                                    <a href="{{ route('inventory.product-variant.edit', [$product, $variant]) }}" 
+                                                    <a href="#" 
                                                        class="btn btn-sm btn-warning">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
