@@ -204,15 +204,15 @@
         }
 
         .hr-card {
-            background: linear-gradient(135deg, #0d6efd, #4f8dfd);
+            background: linear-gradient(135deg, #fd7e14, #ffb347);
         }
-
+        
         .pos-card {
-            background: linear-gradient(135deg, #198754, #3cb878);
+            background: linear-gradient(135deg, #198750, #3cb860);
         }
 
         .inv-card {
-            background: linear-gradient(135deg, #6f42c1, #9b6df3);
+            background: linear-gradient(135deg, #198577, #3cb978);
         }
 
         .presence-card {
@@ -220,7 +220,7 @@
         }
 
         .sys-card {
-            background: linear-gradient(135deg, #fd7e14, #ffb347);
+            background: linear-gradient(135deg, #0d6efd, #4f8dfd);
         }
 
         /* MOBILE */
