@@ -14,6 +14,8 @@ Auth::routes(['login' => true, 'register' => true]);
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+    Route::get('profile',[App\Http\Controllers\HomeController::class, 'profile'])->name('profile');
+
     Route::group(['prefix' => 'setting', 'as' => 'setting.'], function () {
         Route::get('/', function () {
             return view('admin.setting.home');
