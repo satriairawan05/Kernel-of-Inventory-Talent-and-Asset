@@ -107,7 +107,7 @@
                         <thead>
                             <tr>
                                 <th scope="col">#</th>
-                                <th scope="col">Company</th>
+                                <th scope="col">Outlet</th>
                                 <th scope="col">Shift Name</th>
                                 <th scope="col">Shift Code</th>
                                 <th scope="col">Start Time</th>
