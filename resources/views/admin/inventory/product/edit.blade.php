@@ -34,16 +34,47 @@
     document.addEventListener('DOMContentLoaded', function() {
         const input = document.getElementById('product_image');
         const preview = document.getElementById('imagePreview');
+        const defaultPreview = document.getElementById('defaultPreview');
+        
         if (!input || !preview) return;
+        
         input.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) {
-                preview.src = "{{ $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/150x150?text=Product+Image' }}";
+                // Jika tidak ada file, tampilkan default preview dan sembunyikan preview baru
+                preview.classList.add('d-none');
+                defaultPreview.classList.remove('d-none');
                 return;
             }
+            
+            // Validasi tipe file
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file type. Please upload JPG, JPEG, PNG, or WEBP file.');
+                input.value = ''; // Reset input
+                preview.classList.add('d-none');
+                defaultPreview.classList.remove('d-none');
+                return;
+            }
+            
+            // Validasi ukuran file (max 5MB)
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            if (file.size > maxSize) {
+                alert('File size must not exceed 5MB.');
+                input.value = ''; // Reset input
+                preview.classList.add('d-none');
+                defaultPreview.classList.remove('d-none');
+                return;
+            }
+            
+            // Sembunyikan default preview
+            defaultPreview.classList.add('d-none');
+            
+            // Tampilkan preview gambar baru
             const reader = new FileReader();
             reader.onload = function(event) {
                 preview.src = event.target.result;
+                preview.classList.remove('d-none');
             };
             reader.readAsDataURL(file);
         });

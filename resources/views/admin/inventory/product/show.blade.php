@@ -199,7 +199,7 @@
                         <div class="card info-card h-100">
                             <div class="card-body text-center">
                                 <h5 class="mb-3">Product Image</h5>
-                                <img src="{{ $product->image_url }}" alt="{{ $product->product_name }}"
+                                <img src="{{ asset('storage/'.$product->image) }}" alt="{{ $product->product_name }}"
                                     class="product-image"
                                     onerror="this.src='{{ asset('assets/img/icons/av color.png') }}'">
                                 @if (!$product->image)
@@ -222,6 +222,13 @@
                     </div>
                 </div>
 
+                <!-- Tombol Add Product Variant (DITAMBAHKAN DI SINI) -->
+                <div class="mt-4 d-flex justify-content-end">
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Add Product Variant
+                    </a>
+                </div>
+
                 <!-- Daftar Variant -->
                 <div class="mt-4">
                     <h5 class="mb-3">Product Variants</h5>
@@ -236,6 +243,7 @@
                                         <th class="text-end">Purchase Price</th>
                                         <th class="text-end">Selling Price</th>
                                         <th>Status</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -255,6 +263,43 @@
                                                     <span class="badge bg-secondary">Inactive</span>
                                                 @endif
                                             </td>
+                                            <td class="text-end">
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <a href="{{ route('inventory.product-variant.edit', [$product, $variant]) }}" 
+                                                       class="btn btn-sm btn-warning">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-danger" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#deleteVariantModal{{ $variant->id }}">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+
+                                                <!-- Modal Delete Variant -->
+                                                <div class="modal fade" id="deleteVariantModal{{ $variant->id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content border-0 shadow">
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title">Delete Variant</h5>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body text-center py-4">
+                                                                <p class="mb-0">Yakin ingin menghapus variant <strong>{{ $variant->variant_name }}</strong>?</p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <form action="{{ route('inventory.product-variant.destroy', [$product, $variant]) }}" method="POST">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -263,6 +308,9 @@
                     @else
                         <div class="alert alert-secondary mb-0">
                             <i class="fas fa-info-circle me-2"></i> No variant data found for this product.
+                            <a href="#" class="alert-link ms-2">
+                                Click here to add first variant →
+                            </a>
                         </div>
                     @endif
                 </div>
