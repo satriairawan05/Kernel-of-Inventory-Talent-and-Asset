@@ -117,8 +117,8 @@ class SalesReportQueryService
                 DB::raw('COUNT(*) as total_transactions')
             )
             ->groupBy('year', 'week_number')
-            ->orderBy('year', 'DESC')
-            ->orderBy('week_number', 'DESC');
+            ->orderBy('year', 'ASC')
+            ->orderBy('week_number', 'ASC');
 
         if ($companyId) {
             $query->where('company_id', $companyId);
@@ -171,8 +171,8 @@ class SalesReportQueryService
                 DB::raw('COUNT(*) as total_transactions')
             )
             ->groupBy('year', 'month', 'month_year','arrived_month_year')
-            ->orderBy('year', 'DESC')
-            ->orderBy('month', 'DESC');
+            ->orderBy('year', 'ASC')
+            ->orderBy('month', 'ASC');
 
         if ($companyId) {
             $query->where('company_id', $companyId);
