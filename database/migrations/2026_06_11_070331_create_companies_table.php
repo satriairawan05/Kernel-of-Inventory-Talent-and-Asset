@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('company_address')->nullable();
             $table->string('company_logo')->nullable();
 
-            $table->string('business_type')->nullable();
+            $table->string('bussiness_type')->nullable();
             $table->boolean('use_menu')->nullable()->default(false);
             $table->boolean('use_inventory')->nullable()->default(false);
             $table->boolean('use_service')->nullable()->default(false);

@@ -9,7 +9,7 @@
         }
 
         .filter-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #2563eb 45%, #22d3ee 100%);
             border: none;
             border-radius: 15px;
             margin-bottom: 30px;

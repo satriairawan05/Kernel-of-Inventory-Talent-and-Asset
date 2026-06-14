@@ -41,11 +41,9 @@ class CompanyService
     {
         return DB::transaction(function () use ($company, $data) {
             // Upload new logo and remove old logo if exists
-            if (!empty($data['company_logo'])) {
-                $data['company_logo'] = $this->uploadLogo(
-                    $data['company_logo'],
-                    $company->company_logo
-                );
+            if (isset($data['company_logo']) && $data['company_logo'] instanceof UploadedFile) {
+                // Handle logo upload
+                $data['company_logo'] = $this->uploadLogo($data['company_logo']);
             }
 
             // Update company data
@@ -66,10 +64,7 @@ class CompanyService
     {
         return DB::transaction(function () use ($company) {
             // Delete logo file if it exists
-            if (
-                $company->company_logo &&
-                Storage::disk('public')->exists($company->company_logo)
-            ) {
+            if ($company->company_logo &&Storage::disk('public')->exists($company->company_logo)) {
                 Storage::disk('public')->delete($company->company_logo);
             }
 
@@ -85,15 +80,10 @@ class CompanyService
      * optionally removes the previous logo,
      * and stores the new file in public storage.
      */
-    private function uploadLogo(
-        UploadedFile $file,
-        ?string $oldLogo = null
-    ): string {
+    private function uploadLogo(UploadedFile $file,?string $oldLogo = null): string 
+    {
         // Remove previous logo if available
-        if (
-            $oldLogo &&
-            Storage::disk('public')->exists($oldLogo)
-        ) {
+        if ($oldLogo &&Storage::disk('public')->exists($oldLogo)){
             Storage::disk('public')->delete($oldLogo);
         }
 
@@ -101,10 +91,6 @@ class CompanyService
         $filename = Str::uuid() . '.' . $file->extension();
 
         // Store file and return relative path
-        return $file->storeAs(
-            'companies/logo',
-            $filename,
-            'public'
-        );
+        return $file->storeAs('companies/logo',$filename,'public');
     }
 }

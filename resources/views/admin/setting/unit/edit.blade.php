@@ -1,140 +1,49 @@
 @extends('admin.layouts.app')
 
+@push('css')
+<style>
+    .page-shell { padding-top: 1rem; }
+    .page-hero { border-radius: 28px; padding: 24px; background: linear-gradient(135deg, #111827 0%, #2563eb 45%, #22d3ee 100%); color:#fff; box-shadow: 0 18px 40px rgba(15,23,42,.18); }
+    .page-hero .eyebrow { text-transform: uppercase; letter-spacing: .28em; font-size: .72rem; color: rgba(255,255,255,.82); }
+    .soft-card { border-radius: 24px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 18px 40px rgba(15,23,42,.08); overflow: hidden; }
+    .soft-card .card-header { border-bottom: 1px solid rgba(148,163,184,.18); background: linear-gradient(180deg, #fff 0%, #f8fbff 100%); }
+    .form-label { font-weight: 600; color: #334155; }
+    .form-control, .form-select { border-radius: 14px; border-color: #cbd5e1; padding: .72rem .9rem; }
+    .form-control:focus, .form-select:focus { border-color: #2563eb; box-shadow: 0 0 0 .18rem rgba(37,99,235,.15); }
+    .switch-card { border: 1px solid #e5e7eb; border-radius: 16px; padding: 14px; background: #fff; }
+    .action-bar { border-top: 1px solid rgba(148,163,184,.18); margin-top: 1rem; padding-top: 1rem; }
+    @media (max-width: 768px) { .page-hero { padding: 18px; } .action-bar .btn { width: 100%; } .action-bar { flex-direction: column-reverse; } }
+</style>
+@endpush
+
 @section('content')
-    <div class="card">
-
-        <div class="card-header">
-            <h4>Update Unit</h4>
+<div class="container-fluid py-4 page-shell">
+    <section class="page-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+            <p class="eyebrow mb-2">Settings</p>
+            <h2 class="mb-1">Update Unit</h2>
+            <p class="mb-0">Perbarui satuan produk dengan form yang lebih rapi dan responsif untuk semua ukuran layar.</p>
         </div>
-
+        <span class="badge bg-white text-primary fs-6 px-3 py-2"><i class="fas fa-edit me-1"></i> Edit unit</span>
+    </section>
+    <div class="card soft-card mt-4">
+        <div class="card-header">
+            <h4 class="mb-1">Unit Details</h4>
+            <p class="text-muted mb-0">Tampilan form pengeditan unit dibuat lebih bersih dan mudah dibaca.</p>
+        </div>
         <div class="card-body">
-
             <form action="{{ route('setting.unit.update',$unit) }}" method="POST">
                 @method('PUT')
                 @csrf
-                <div class="row">
-
-                    {{-- Unit Name --}}
-                    <div class="col-md-8">
-
-                        <div class="mb-3">
-
-                            <label class="form-label" for="unit_name">
-                                Unit Name
-                            </label>
-
-                            <input
-                                type="text"
-                                id="unit_name"
-                                name="unit_name"
-                                value="{{ old('unit_name',$unit->unit_name) }}"
-                                class="form-control @error('unit_name') is-invalid @enderror"
-                                placeholder="Pieces">
-
-                            @error('unit_name')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-                    {{-- Unit Code --}}
-                    <div class="col-md-4">
-
-                        <div class="mb-3">
-
-                            <label class="form-label" for="unit_code">
-                                Unit Code
-                            </label>
-
-                            <input
-                                type="text"
-                                id="unit_code"
-                                name="unit_code"
-                                value="{{ old('unit_code',$unit->unit_code) }}"
-                                class="form-control @error('unit_code') is-invalid @enderror"
-                                placeholder="PCS">
-
-                            @error('unit_code')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-
-                        </div>
-
-                    </div>
-
+                <div class="row g-3">
+                    <div class="col-md-8 mb-3"><label class="form-label" for="unit_name">Unit Name</label><input type="text" id="unit_name" name="unit_name" value="{{ old('unit_name',$unit->unit_name) }}" class="form-control @error('unit_name') is-invalid @enderror" placeholder="Pieces">@error('unit_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                    <div class="col-md-4 mb-3"><label class="form-label" for="unit_code">Unit Code</label><input type="text" id="unit_code" name="unit_code" value="{{ old('unit_code',$unit->unit_code) }}" class="form-control @error('unit_code') is-invalid @enderror" placeholder="PCS">@error('unit_code')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 </div>
-
-                {{-- Description --}}
-                <div class="mb-3">
-
-                    <label class="form-label" for="description">
-                        Description
-                    </label>
-
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows="4"
-                        class="form-control @error('description') is-invalid @enderror"
-                        placeholder="Example: Product unit for accessories, food, beverages, etc.">{{ old('description',$unit->description) }}</textarea>
-
-                    @error('description')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
-
-                </div>
-
-                {{-- Status --}}
-                <div class="mb-4">
-
-                    <label class="form-label d-block">
-                        Status
-                    </label>
-
-                    <div class="form-check form-switch">
-
-                        <input
-                            class="form-check-input"
-                            type="checkbox"
-                            id="is_active"
-                            name="is_active"
-                            value="1"
-                            {{ old('is_active', $unit->is_active) ? 'checked' : '' }}>
-
-                        <label class="form-check-label" for="is_active">
-                            Active
-                        </label>
-
-                    </div>
-
-                </div>
-
-                <div class="d-flex justify-content-end gap-2">
-
-                    <a href="{{ route('setting.unit.index') }}"
-                        class="btn btn-secondary">
-                        Cancel
-                    </a>
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary">
-                        Update Unit
-                    </button>
-
-                </div>
-
+                <div class="mb-3"><label class="form-label" for="description">Description</label><textarea id="description" name="description" rows="4" class="form-control @error('description') is-invalid @enderror" placeholder="Example: Product unit for accessories, food, beverages, etc.">{{ old('description',$unit->description) }}</textarea>@error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                <div class="mb-4"><div class="switch-card"><label class="form-label d-block">Status</label><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active', $unit->is_active) ? 'checked' : '' }}><label class="form-check-label" for="is_active">Active</label></div></div></div>
+                <div class="d-flex justify-content-end gap-2 action-bar"><a href="{{ route('setting.unit.index') }}" class="btn btn-outline-secondary">Cancel</a><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update Unit</button></div>
             </form>
-
         </div>
-
     </div>
+</div>
 @endsection

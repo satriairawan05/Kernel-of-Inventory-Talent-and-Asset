@@ -30,6 +30,8 @@ Route::middleware(['auth'])->group(function () {
         })->name('home');
 
         Route::resource('category', \App\Http\Controllers\Admin\CategoryController::class);
+
+        Route::resource('product', \App\Http\Controllers\Admin\ProductController::class);
     });
 
     Route::group(['prefix' => 'pos', 'as' => 'pos.'], function () {

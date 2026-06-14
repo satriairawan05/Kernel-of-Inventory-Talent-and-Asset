@@ -24,9 +24,8 @@ class CompanyController extends Controller
     {
         try {
             $companies = Company::paginate(5);
-    
             return view('admin.setting.company.index', ['companies' => $companies, 'name' => $this->name]);
-        } catch(\Illuminate\Database\QueryException $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
         }
@@ -39,11 +38,10 @@ class CompanyController extends Controller
     {
         try {
             return view('admin.setting.company.create');
-        } catch(\Illuminate\Database\QueryException $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
         }
-        
     }
 
     /**
@@ -52,19 +50,37 @@ class CompanyController extends Controller
     public function store(CompanyRequest $request, CompanyService $companyService)
     {
         try {
-            $companyService->store(
-                $request->validated()
-            );
+            $validated = $request->validated();
+
+            // otomatis nilainya menjadi false dan tetap tersimpan di database.
+            $validated['use_menu'] = $request->boolean('use_menu');
+            $validated['use_service'] = $request->boolean('use_service');
+            $validated['use_inventory'] = $request->boolean('use_inventory');
+
+            $companyService->store($validated);
 
             return redirect()
                 ->route('setting.company.index')
-                ->with(
-                    'success',
-                    'Company created successfully.'
-                );
-        } catch(\Illuminate\Database\QueryException $e) {
+                ->with('success', 'Company created successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+
+            // Tangani error unik constraint
+            if ($e->errorInfo[1] == 1062) { // Duplicate entry
+                return redirect()->back()
+                    ->withInput()
+                    ->with('failed', 'Company email or name already exists.');
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->with('failed', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('General error: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('failed', 'An error occurred: ' . $e->getMessage());
         }
     }
 
@@ -75,7 +91,7 @@ class CompanyController extends Controller
     {
         try {
             //
-        } catch(\Illuminate\Database\QueryException $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
         }
@@ -88,7 +104,7 @@ class CompanyController extends Controller
     {
         try {
             return view('admin.setting.company.edit', ['company' => $company]);
-        } catch(\Illuminate\Database\QueryException $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
         }
@@ -100,12 +116,24 @@ class CompanyController extends Controller
     public function update(CompanyRequest $request, Company $company, CompanyService $companyService)
     {
         try {
-            $companyService->update($company, $request->validated());
+            $validated = $request->validated();
 
-            return redirect()->route('setting.company.index')->with('success','Company updated successfully.');
-        } catch(\Illuminate\Database\QueryException $e) {
+            // PERBAIKAN: Tambahkan proses konversi boolean yang sebelumnya tidak ada di method update
+            $validated['use_menu'] = $request->boolean('use_menu');
+            $validated['use_service'] = $request->boolean('use_service');
+            $validated['use_inventory'] = $request->boolean('use_inventory');
+
+            $companyService->update($company, $validated);
+
+            return redirect()->route('setting.company.index')->with('success', 'Company updated successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+            // PERBAIKAN: Tambahkan ->withInput() agar ketikan user tidak hilang saat error
+            return redirect()->back()->withInput()->with('failed', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            // PERBAIKAN: Tambahkan catch Exception agar tidak error 500 jika gagal di service
+            \Illuminate\Support\Facades\Log::error('General error: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('failed', 'An error occurred: ' . $e->getMessage());
         }
     }
 
@@ -116,8 +144,8 @@ class CompanyController extends Controller
     {
         try {
             $companyService->destroy($company);
-            return redirect()->route('setting.company.index')->with('success','Company deleted successfully.');
-        } catch(\Illuminate\Database\QueryException $e) {
+            return redirect()->route('setting.company.index')->with('success', 'Company deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
         }

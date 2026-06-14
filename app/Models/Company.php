@@ -26,7 +26,7 @@ class Company extends Model
         'company_phone',
         'company_address',
         'company_logo',
-        'bussines_type',
+        'bussiness_type',
         'use_menu',
         'use_service',
         'use_inventory'

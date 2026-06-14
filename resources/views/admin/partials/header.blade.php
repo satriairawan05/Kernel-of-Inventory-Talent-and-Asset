@@ -41,6 +41,77 @@
     <link href="{{ asset('assets/css/user-rtl.min.css') }}" type="text/css" rel="stylesheet" id="user-style-rtl">
     <link href="{{ asset('assets/css/user.min.css') }}" type="text/css" rel="stylesheet" id="user-style-default">
     <style>
+        :root {
+            --soft-surface: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            --soft-border: rgba(148, 163, 184, 0.18);
+            --soft-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 22%),
+                linear-gradient(180deg, #f5f7fb 0%, #eef4ff 100%);
+        }
+
+        .card {
+            border: 1px solid var(--soft-border) !important;
+            border-radius: 22px !important;
+            box-shadow: var(--soft-shadow) !important;
+            background: var(--soft-surface) !important;
+        }
+
+        .card-header {
+            background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%) !important;
+            border-bottom: 1px solid var(--soft-border) !important;
+        }
+
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table thead th {
+            background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%) !important;
+            color: #334155;
+            font-weight: 700;
+            letter-spacing: .02em;
+            border-bottom: 1px solid var(--soft-border) !important;
+        }
+
+        .table tbody tr {
+            transition: transform .15s ease, background-color .15s ease;
+        }
+
+        .table tbody tr:hover {
+            background: #f8fbff;
+            transform: translateY(-1px);
+        }
+
+        .btn {
+            border-radius: 12px !important;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+            border: none !important;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+            border: none !important;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+            border: none !important;
+        }
+
+        .badge {
+            border-radius: 999px !important;
+            font-weight: 600;
+        }
+
         .user-initial-avatar {
             width: 100%;
             height: 100%;

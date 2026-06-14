@@ -149,7 +149,7 @@
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.product.*') }}" href="{{ route('inventory.product.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Product</span>
                                     </div>
                                 </a><!-- more inner pages-->
