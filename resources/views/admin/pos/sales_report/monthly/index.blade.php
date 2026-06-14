@@ -393,6 +393,7 @@
                                 <th class="text-end">Total Amount</th>
                                 <th class="text-center">Transactions</th>
                                 <th class="text-center">Trend</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -477,7 +478,7 @@
                                 <td class="text-center">
                                     <span class="badge bg-info rounded-pill">
                                         <i class="fas fa-receipt me-1"></i>
-                                        {{ number_format($report->total_transactions) }}
+                                        {{ $report->total_transactions }}
                                     </span>
                                  </td>
                                 <td class="text-center">
@@ -488,6 +489,15 @@
                                         <small class="text-muted">-</small>
                                     @endif
                                 </td>
+                                <td class="text-center">
+                                    <a href="{{ route('pos.report.monthly.detail', [
+                                        'start_date' => \Carbon\Carbon::createFromFormat('Y-m', $report->month_year)->startOfMonth()->toDateString(),
+                                        'end_date' => \Carbon\Carbon::createFromFormat('Y-m', $report->month_year)->endOfMonth()->toDateString(),
+                                        'company_id' => request('company_id'),
+                                    ]) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i> Detail
+                                    </a>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -497,20 +507,20 @@
                                     <strong>GRAND TOTAL</strong>
                                  </td>
                                 <td class="text-end">
-                                    <strong class="text-success">Rp {{ number_format($totalAccessories, 0, ',', '.') }}</strong>
+                                    <strong class="text-success">{{ \Carbon\Carbon::rupiah($totalAccessories) }}</strong>
                                  </td>
                                 <td class="text-end">
-                                    <strong class="text-info">Rp {{ number_format($totalService, 0, ',', '.') }}</strong>
+                                    <strong class="text-info">{{ \Carbon\Carbon::rupiah($totalService) }}</strong>
                                  </td>
                                 <td class="text-end">
-                                    <strong class="text-warning">Rp {{ number_format($totalPulsa, 0, ',', '.') }}</strong>
+                                    <strong class="text-warning">{{ \Carbon\Carbon::rupiah($totalPulsa) }}</strong>
                                  </td>
                                 <td class="text-end">
-                                    <strong class="text-primary">Rp {{ number_format($totalAmount, 0, ',', '.') }}</strong>
+                                    <strong class="text-primary">{{ \Carbon\Carbon::rupiah($totalAmount) }}</strong>
                                  </td>
                                 <td class="text-center">
                                     <strong class="bg-white px-2 py-1 rounded">
-                                        {{ number_format($totalTransactions) }}
+                                        {{ $totalTransactions }}
                                     </strong>
                                  </td>
                                 <td></td>
@@ -583,54 +593,79 @@
     
     // Monthly Chart
     @if(isset($monthlyReports) && $monthlyReports->count() > 0)
-    const ctx = document.getElementById('monthlyChart')?.getContext('2d');
-    if (ctx) {
-        new Chart(ctx, {
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('monthlyChart');
+
+        if (!ctx) {
+            return;
+        }
+
+        const chartLabels = @json($monthlyReports->pluck('month_display')->values()->all());
+        const chartTotals = @json($monthlyReports->map(fn ($item) => (float) ($item->total_amount ?? 0))->values()->all());
+        const chartTransactions = @json($monthlyReports->map(fn ($item) => (int) ($item->total_transactions ?? 0))->values()->all());
+
+        if (!chartLabels.length || !ctx.getContext) {
+            return;
+        }
+
+        const chartContext = ctx.getContext('2d');
+
+        if (!window.Chart) {
+            console.error('Chart.js is not loaded.');
+            return;
+        }
+
+        new Chart(chartContext, {
             type: 'line',
             data: {
-                labels: {!! json_encode($monthlyReports->pluck('month_display')->toArray()) !!},
-                datasets: [{
-                    label: 'Total Amount (Rp)',
-                    data: {!! json_encode($monthlyReports->pluck('total_amount')->toArray()) !!},
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#764ba2',
-                    pointBorderColor: '#fff',
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }, {
-                    label: 'Transactions Count',
-                    data: {!! json_encode($monthlyReports->pluck('total_transactions')->toArray()) !!},
-                    borderColor: '#ff6b6b',
-                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#ff5252',
-                    pointBorderColor: '#fff',
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    yAxisID: 'y1'
-                }]
+                labels: chartLabels,
+                datasets: [
+                    {
+                        label: 'Total Amount (Rp)',
+                        data: chartTotals,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#764ba2',
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    },
+                    {
+                        label: 'Transactions Count',
+                        data: chartTransactions,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#ff5252',
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        yAxisID: 'y1'
+                    }
+                ]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: 'top'
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                let value = context.raw;
-                                if (context.dataset.label.includes('Amount')) {
+                            label: function (context) {
+                                const label = context.dataset.label || '';
+                                const value = context.raw;
+
+                                if (context.dataset.label && context.dataset.label.includes('Amount')) {
                                     return label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
                                 }
+
                                 return label + ': ' + new Intl.NumberFormat('id-ID').format(value);
                             }
                         }
@@ -640,7 +675,7 @@
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
                             }
                         }
@@ -655,7 +690,7 @@
                 }
             }
         });
-    }
+    });
     @endif
 </script>
 @endpush

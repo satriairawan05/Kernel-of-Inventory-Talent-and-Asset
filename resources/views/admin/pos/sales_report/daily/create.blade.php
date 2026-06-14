@@ -95,7 +95,7 @@
         </div>
 
         <div class="card-body">
-            <form action="{{ route('pos.report.create') }}" method="POST">
+            <form action="{{ route('pos.report.store') }}" method="POST">
                 @csrf
 
                 <!-- Company Section -->

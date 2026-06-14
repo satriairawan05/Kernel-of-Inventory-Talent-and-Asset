@@ -10,6 +10,7 @@ use App\Models\SalesReport;
 use App\Services\SalesReportQueryService;
 use App\Services\SalesReportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class SalesReportController extends Controller
 {
@@ -50,20 +51,19 @@ class SalesReportController extends Controller
     public function weeklyIndex(SalesReportQueryService $salesReportQueryService, Request $request)
     {
         try {
-            $salesReport = SalesReport::latest()->get();
-            $company = Company::latest()->get();
+            $company = Company::query()->latest('id')->get();
+            $startDate = $request->filled('start_date')
+                ? $request->start_date
+                : now()->startOfMonth()->toDateString();
+            $endDate = $request->filled('end_date')
+                ? $request->end_date
+                : now()->toDateString();
+            $companyId = $request->filled('company_id') ? (int) $request->company_id : null;
 
-            if ($request->start_date !== null && $request->end_date !== null && $request->company_id) {
-                $data = $salesReportQueryService->getWeeklyReportForTable($request->start_date, $request->end_date, $request->company_id);
-
-                return view('admin.pos.sales_report.weekly.index', [
-                    'weeklyReports' => $data,
-                    'companies' => $company,
-                ]);
-            }
+            $data = $salesReportQueryService->getWeeklyReportForTable($startDate, $endDate, $companyId);
 
             return view('admin.pos.sales_report.weekly.index', [
-                'weeklyReports' => $salesReport,
+                'weeklyReports' => $data,
                 'companies' => $company,
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
@@ -78,21 +78,21 @@ class SalesReportController extends Controller
     public function monthlyIndex(SalesReportQueryService $salesReportQueryService, Request $request)
     {
         try {
-            $salesReport = SalesReport::latest()->get();
-            $company = Company::latest()->get();
+            $company = Company::query()->latest('id')->get();
+            $companyId = $request->filled('company_id') ? (int) $request->company_id : null;
 
-            if ($request->start_date !== null && $request->End_date !== null && $request->company_id !== null) {
-                $data = $salesReportQueryService->getMonthlyReportForTable($request->start_date, $request->end_date, $request->company_id);
-    
-                return view('admin.pos.sales_report.monthly.index', [
-                    'companies' => $company,
-                    'monthlyReports' => $data
-                ]);
-            }
+            $startDate = $request->filled('start_date')
+                ? Carbon::createFromFormat('Y-m', $request->start_date)->startOfMonth()->toDateString()
+                : now()->startOfMonth()->toDateString();
+            $endDate = $request->filled('end_date')
+                ? Carbon::createFromFormat('Y-m', $request->end_date)->endOfMonth()->toDateString()
+                : now()->endOfMonth()->toDateString();
+
+            $data = $salesReportQueryService->getMonthlyReportForTable($startDate, $endDate, $companyId);
 
             return view('admin.pos.sales_report.monthly.index', [
                 'companies' => $company,
-                'monthlyReports' => $salesReport
+                'monthlyReports' => $data,
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
@@ -107,7 +107,7 @@ class SalesReportController extends Controller
     {
         try {
             return view('admin.pos.sales_report.daily.create', [
-                'companies' => Company::get()
+                'companies' => Company::query()->get()
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
@@ -136,10 +136,13 @@ class SalesReportController extends Controller
     public function show(SalesReport $salesReport, SalesReportQueryService $salesReportQueryService)
     {
         try {
-            $data = $salesReportQueryService->getDailyDetailReport(now()->toDateString());
+            $newReport = $salesReport->find(request()->segment(3));
+            $reportDate = $salesReport->report_date ?? $newReport->arrived_date ?? now()->toDateString();
+            $data = $salesReportQueryService->getDailyDetailReport($reportDate, $newReport->company_id);
 
             return view('admin.pos.sales_report.daily.show', [
-                'salesReport' => $data
+                'salesReport' => $data,
+                'report' => $salesReport,
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
@@ -150,17 +153,59 @@ class SalesReportController extends Controller
     /**
      * Display the specified resource in Weekly.
      */
-    public function showWeekly(SalesReport $salesReport, SalesReportQueryService $salesReportQueryService)
+    public function showWeekly(Request $request, SalesReportQueryService $salesReportQueryService)
     {
-        //
+        try {
+            $startDate = $request->route('start_date') ?? $request->query('start_date');
+            $endDate = $request->route('end_date') ?? $request->query('end_date');
+            $companyId = $request->route('company_id') ?? $request->query('company_id');
+
+            $report = $salesReportQueryService->getWeeklyReport(
+                (string) $startDate,
+                (string) $endDate,
+                $companyId ? (int) $companyId : null,
+            );
+
+            return view('admin.pos.sales_report.weekly.show', [
+                'report' => $report,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'companyId' => $companyId ? (int) $companyId : null,
+                'companies' => Company::query()->latest('id')->get(),
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
+        }
     }
 
     /**
      * Display the specified resource in monthly.
      */
-    public function showMonthly(SalesReport $salesReport, SalesReportQueryService $salesReportQueryService)
+    public function showMonthly(Request $request, SalesReportQueryService $salesReportQueryService)
     {
-        //
+        try {
+            $startDate = $request->route('start_date') ?? $request->query('start_date');
+            $endDate = $request->route('end_date') ?? $request->query('end_date');
+            $companyId = $request->route('company_id') ?? $request->query('company_id');
+
+            $report = $salesReportQueryService->getMonthlyReport(
+                (string) $startDate,
+                (string) $endDate,
+                $companyId ? (int) $companyId : null,
+            );
+
+            return view('admin.pos.sales_report.monthly.show', [
+                'report' => $report,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'companyId' => $companyId ? (int) $companyId : null,
+                'companies' => Company::query()->latest('id')->get(),
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
+        }
     }
 
     /**
@@ -170,8 +215,8 @@ class SalesReportController extends Controller
     {
         try {
             return view('admin.pos.sales_report.daily.edit', [
-                'companies' => Company::get(),
-                'report' => $salesReport->find(request()->segment(3))
+                'companies' => Company::query()->get(),
+                'report' => SalesReport::findOrFail(request()->segment(3))
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
@@ -185,7 +230,7 @@ class SalesReportController extends Controller
     public function update(SalesReportUpdateRequest $request, SalesReport $salesReport, SalesReportService $salesReportService)
     {
         try {
-            $salesReportService->update($salesReport->find(request()->segment(3)), $request->validated());
+            $salesReportService->update(SalesReport::findOrFail(request()->segment(3)), $request->validated());
 
             return redirect()->route('pos.report.daily')->with('success', 'Report Updated Successfully.');
         } catch (\Illuminate\Database\QueryException $e) {
@@ -200,7 +245,7 @@ class SalesReportController extends Controller
     public function destroy(SalesReport $salesReport, SalesReportService $salesReportService)
     {
         try {
-            $salesReportService->destroy($salesReport->find(request()->segment(3)));
+            $salesReportService->destroy(SalesReport::findOrFail(request()->segment(3)));
 
             return redirect()->back()->with('success', 'Report Deleted!');
         } catch (\Illuminate\Database\QueryException $e) {

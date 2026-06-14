@@ -23,12 +23,14 @@ class SalesReportUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['sometimes', 'required', 'exists:companies,id'],
+            'company_id'         => ['sometimes', 'nullable', 'integer', 'exists:companies,id'],
+            'report_date'        => ['sometimes', 'nullable', 'date'],
+            'arrived_date'       => ['sometimes', 'nullable', 'date'],
             'accessories_amount' => ['sometimes', 'required', 'numeric', 'min:0'],
-            'service_amount' => ['sometimes', 'required', 'numeric', 'min:0'],
-            'pulsa_amount' => ['sometimes', 'required', 'numeric', 'min:0'],
-            'total_amount' => ['sometimes', 'required', 'numeric', 'min:0'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'service_amount'     => ['sometimes', 'required', 'numeric', 'min:0'],
+            'pulsa_amount'       => ['sometimes', 'required', 'numeric', 'min:0'],
+            'total_amount'       => ['sometimes', 'required', 'numeric', 'min:0'],
+            'notes'              => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

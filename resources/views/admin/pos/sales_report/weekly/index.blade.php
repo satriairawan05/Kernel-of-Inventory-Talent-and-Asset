@@ -332,6 +332,7 @@
                                 <th class="text-end">Pulsa</th>
                                 <th class="text-end">Total Amount</th>
                                 <th class="text-center">Transactions</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -391,6 +392,15 @@
                                         {{ $report->total_transactions }}
                                     </span>
                                 </td>
+                                <td class="text-center">
+                                    <a href="{{ route('pos.report.weekly.detail', [
+                                        'start_date' => $report->week_start,
+                                        'end_date' => $report->week_end,
+                                        'company_id' => request('company_id'),
+                                    ]) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i> Detail
+                                    </a>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -416,6 +426,7 @@
                                         {{ $totalTransactions }}
                                     </strong>
                                 </td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>

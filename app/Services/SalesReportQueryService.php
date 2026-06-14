@@ -101,16 +101,19 @@ class SalesReportQueryService
     public function getWeeklyReportForTable(string $startDate, string $endDate, ?int $companyId = null): Collection
     {
         $query = SalesReport::query()
-            ->whereBetween('report_date', [$startDate, $endDate])
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('report_date', [$startDate, $endDate])
+                  ->orWhereBetween('arrived_date', [$startDate, $endDate]);
+            })
             ->select(
                 DB::raw('YEAR(report_date) as year'),
                 DB::raw('WEEK(report_date, 1) as week_number'),
                 DB::raw('MIN(report_date) as week_start'),
                 DB::raw('MAX(report_date) as week_end'),
-                DB::raw('SUM(accessories_amount) as total_accessories'),
-                DB::raw('SUM(service_amount) as total_service'),
-                DB::raw('SUM(pulsa_amount) as total_pulsa'),
-                DB::raw('SUM(total_amount) as grand_total'),
+                DB::raw('COALESCE(SUM(accessories_amount), 0) as total_accessories'),
+                DB::raw('COALESCE(SUM(service_amount), 0) as total_service'),
+                DB::raw('COALESCE(SUM(pulsa_amount), 0) as total_pulsa'),
+                DB::raw('COALESCE(SUM(total_amount), 0) as grand_total'),
                 DB::raw('COUNT(*) as total_transactions')
             )
             ->groupBy('year', 'week_number')
@@ -152,16 +155,19 @@ class SalesReportQueryService
     public function getMonthlyReportForTable(string $startDate, string $endDate, ?int $companyId = null): Collection
     {
         $query = SalesReport::query()
-            ->whereBetween('report_date', [$startDate, $endDate])
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('report_date', [$startDate, $endDate])
+                  ->orWhereBetween('arrived_date', [$startDate, $endDate]);
+            })
             ->select(
                 DB::raw('YEAR(report_date) as year'),
                 DB::raw('MONTH(report_date) as month'),
                 DB::raw('DATE_FORMAT(report_date, "%Y-%m") as month_year'),
                 DB::raw('DATE_FORMAT(arrived_date, "%Y-%m") as arrived_month_year'),
-                DB::raw('SUM(accessories_amount) as total_accessories'),
-                DB::raw('SUM(service_amount) as total_service'),
-                DB::raw('SUM(pulsa_amount) as total_pulsa'),
-                DB::raw('SUM(total_amount) as grand_total'),
+                DB::raw('COALESCE(SUM(accessories_amount), 0) as total_accessories'),
+                DB::raw('COALESCE(SUM(service_amount), 0) as total_service'),
+                DB::raw('COALESCE(SUM(pulsa_amount), 0) as total_pulsa'),
+                DB::raw('COALESCE(SUM(total_amount), 0) as grand_total'),
                 DB::raw('COUNT(*) as total_transactions')
             )
             ->groupBy('year', 'month', 'month_year','arrived_month_year')
@@ -304,8 +310,10 @@ class SalesReportQueryService
     public function getWeeklyReport(string $startDate, string $endDate, ?int $companyId = null): array
     {
         $query = SalesReport::query()
-            ->whereBetween('report_date', [$startDate, $endDate])
-            ->orWhereBetween('arrived_date', [$startDate, $endDate])
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('report_date', [$startDate, $endDate])
+                  ->orWhereBetween('arrived_date', [$startDate, $endDate]);
+            })
             ->select(
                 DB::raw('YEAR(report_date) as year'),
                 DB::raw('WEEK(report_date, 1) as week_number'),
@@ -369,7 +377,10 @@ class SalesReportQueryService
     public function getMonthlyReport(string $startDate, string $endDate, ?int $companyId = null): array
     {
         $query = SalesReport::query()
-            ->whereBetween('report_date', [$startDate, $endDate])
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('report_date', [$startDate, $endDate])
+                  ->orWhereBetween('arrived_date', [$startDate, $endDate]);
+            })
             ->select(
                 DB::raw('YEAR(report_date) as year'),
                 DB::raw('MONTH(report_date) as month'),
@@ -441,7 +452,8 @@ class SalesReportQueryService
             $query->where('company_id', $companyId);
         }
 
-        $reports = $query->get();
+        $reports = $query->get();      
+        $company = \App\Models\Company::firstWhere('id', $reports[0]->company_id);
 
         return [
             'report_type' => 'daily_detail',
@@ -460,6 +472,7 @@ class SalesReportQueryService
                     'created_at' => $report->created_at,
                 ];
             }),
+            'company_name' => $company->company_name, 
             'summary' => [
                 'total_companies' => $reports->count(),
                 'total_accessories' => $reports->sum('accessories_amount'),

@@ -101,7 +101,7 @@
                             <div class="dropdown-indicator-icon-wrapper"><span
                                     class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
                                 class="nav-link-icon"><span data-feather="file-text"></span></span><span
-                                class="nav-link-text">Reports</span>
+                                class="nav-link-text">Sales Reports</span>
                         </div>
                     </a>
                     <div class="parent-wrapper label-1">

@@ -39,7 +39,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('report/daily', [SalesReportController::class, 'dailyIndex'])->name('report.daily');
         Route::get('report/weekly', [SalesReportController::class, 'weeklyIndex'])->name('report.weekly');
+        Route::get('report/weekly/detail/{start_date}/{end_date}/{company_id?}', [SalesReportController::class, 'showWeekly'])->name('report.weekly.detail');
         Route::get('report/monthly', [SalesReportController::class, 'monthlyIndex'])->name('report.monthly');
+        Route::get('report/monthly/detail/{start_date}/{end_date}/{company_id?}', [SalesReportController::class, 'showMonthly'])->name('report.monthly.detail');
         Route::resource('report', SalesReportController::class)->except('index');
     });
 
