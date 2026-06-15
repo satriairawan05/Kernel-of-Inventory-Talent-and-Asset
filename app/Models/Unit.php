@@ -6,11 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Unit extends Model
 {
-    // Define the table name used by this model
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'units';
 
-    // Allow mass assignment for these fields
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'unit_name','unit_code','description','is_active'
+        'unit_name',
+        'unit_code',
+        'description',
+        'is_active',
     ];
 }

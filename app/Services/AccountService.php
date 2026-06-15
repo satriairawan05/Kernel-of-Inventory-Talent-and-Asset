@@ -94,4 +94,21 @@ class AccountService
 
         return $user;
     }
+
+    /**
+     * Update user's group (role).
+     *
+     * @param \App\Models\User $user
+     * @param int $groupId
+     * @return \App\Models\User
+     */
+    public function updateGroup(User $user, int $groupId): User
+    {
+        return DB::transaction(function () use ($user, $groupId) {
+            $user->group_id = $groupId;
+            $user->save();
+
+            return $user;
+        });
+    }
 }

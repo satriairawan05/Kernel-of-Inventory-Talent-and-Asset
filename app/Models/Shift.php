@@ -8,8 +8,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Shift extends Model
 {
+     /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'shifts';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'company_id',
         'shift_name',
@@ -22,15 +32,9 @@ class Shift extends Model
 
     /**
      * Get the company that owns the shift.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function company(): BelongsTo
     {
-        return $this->belongsTo(
-            Company::class,
-            'company_id',
-            'id'
-        );
+        return $this->belongsTo(Company::class, 'company_id', 'id');
     }
 }

@@ -174,7 +174,7 @@
                                     Category</a></li>
                             <li><a href="{{ route('inventory.product.index') }}"><i class="fas fa-box-open fa-fw"></i>
                                     Product</a></li>
-                            <li><a href="#"><i class="fas fa-chart-line fa-fw"></i> Stock</a></li>
+                            <li><a href="{{ route('inventory.stock.index') }}"><i class="fas fa-chart-line fa-fw"></i> Stock</a></li>
                         </ul>
                     </div>
                 </div>

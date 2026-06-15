@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AccountRoleRequest;
 use App\Http\Requests\ProfileUpdatePasswordRequest;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\AccountService;
@@ -43,8 +44,8 @@ class HomeController extends Controller
      * @return \Illuminate\View\View
      */
     public function profile(ModuleService $moduleService)
-    { 
-        return view('admin.setting.account.profile',['profile' => $moduleService->getProfile()]);
+    {
+        return view('admin.setting.account.profile', ['profile' => $moduleService->getProfile()]);
     }
 
     /**
@@ -69,5 +70,16 @@ class HomeController extends Controller
         $accountService->updatePassword($user, $request->password);
 
         return redirect()->back()->with('password_success', 'Password berhasil diubah.');
+    }
+
+    /**
+     * Update role
+     */
+    public function updateGroup(AccountRoleRequest $request, AccountService $accountService)
+    {
+        $user = Auth::user();
+        $accountService->updateGroup($user, $request->group_id);
+
+        return redirect()->back()->with('group_success', 'Role berhasil diperbarui.');
     }
 }

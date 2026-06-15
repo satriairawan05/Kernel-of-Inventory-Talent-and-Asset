@@ -8,10 +8,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SalesReport extends Model
 {
-    // Define the table name used by this model
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'sales_reports';
 
-    // Allow mass assignment for these fields
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'company_id',
         'report_date',

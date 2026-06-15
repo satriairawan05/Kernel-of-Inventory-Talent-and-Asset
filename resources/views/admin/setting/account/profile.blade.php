@@ -114,7 +114,7 @@
                     e.preventDefault();
 
                     var icon = $(this);
-                    
+
                     if (input.prop('type') === 'password') {
                         input.prop('type', 'text');
                         icon.removeClass('fa-eye-slash').addClass('fa-eye');
@@ -239,6 +239,60 @@
                     </div>
                 </div>
 
+                <!-- Update Role Card -->
+                <div class="card soft-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-users me-2 text-primary"></i> Change Role</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (session('group_success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('group_success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+                        @if ($errors->group->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <ul class="mb-0">
+                                    @foreach ($errors->group->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        <form action="#" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">User Role / Group</label>
+                                    <select name="group_id"
+                                        class="form-select @error('group_id', 'group') is-invalid @enderror">
+                                        <option value="">Select Role</option>
+                                        {{-- @foreach ($groups as $group)
+                                            <option value="{{ $group->id }}"
+                                                {{ old('group_id', $profile->group_id) == $group->id ? 'selected' : '' }}>
+                                                {{ $group->name }}
+                                            </option>
+                                        @endforeach --}}
+                                    </select>
+                                    @error('group_id', 'group')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <hr class="my-4">
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save me-2"></i> Update Role
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Change Password Card -->
                 <div class="card soft-card">
                     <div class="card-header">
@@ -251,7 +305,10 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
-                        @if ($errors->password->has('current_password') || $errors->password->has('password') || $errors->password->has('password_confirmation'))
+                        @if (
+                            $errors->password->has('current_password') ||
+                                $errors->password->has('password') ||
+                                $errors->password->has('password_confirmation'))
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <ul class="mb-0">
                                     @foreach ($errors->all() as $error)

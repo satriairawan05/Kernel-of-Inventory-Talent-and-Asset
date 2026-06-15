@@ -15,6 +15,11 @@
                 <!-- label-->
                 <p class="navbar-vertical-label">Human Resources</p>
                 <hr class="navbar-vertical-line" /><!-- parent pages-->
+                <a class="nav-link label-1" href="{{ route('hr.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
+                    <div class="d-flex align-items-center"><span class="nav-link-icon">
+                        <i class="fas fa-users"></i>
+                    </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (HR)</span></span></div>
+                </a>
                 <!-- parent pages-->
                 <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
                         data-bs-toggle="" aria-expanded="false">
@@ -76,6 +81,11 @@
                 <!-- label-->
                 <p class="navbar-vertical-label">Sales</p>
                 <hr class="navbar-vertical-line" /><!-- parent pages-->
+                <a class="nav-link label-1" href="{{ route('pos.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
+                    <div class="d-flex align-items-center"><span class="nav-link-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (POS)</span></span></div>
+                </a>
                 <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-cash-register"></i></span><span class="nav-link-text-wrapper"><span
@@ -159,6 +169,11 @@
                 <!-- label-->
                 <p class="navbar-vertical-label">Inventories</p>
                 <hr class="navbar-vertical-line" />
+                <a class="nav-link label-1" href="{{ route('inventory.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
+                    <div class="d-flex align-items-center"><span class="nav-link-icon">
+                        <i class="fas fa-archive"></i>
+                    </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (Inventory)</span></span></div>
+                </a>
                 <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-masters"
                         role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-masters">
                         <div class="d-flex align-items-center">
@@ -181,7 +196,7 @@
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock.*') }}" href="{{ route('inventory.stock.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Stock</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -325,6 +340,11 @@
             <li class="nav-item"><!-- parent pages-->
                 <p class="navbar-vertical-label">System Settings</p>
                 <hr class="navbar-vertical-line" />
+                <a class="nav-link label-1" href="{{ route('setting.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
+                    <div class="d-flex align-items-center"><span class="nav-link-icon">
+                        <i class="fas fa-user-cog"></i>
+                    </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (System Setting)</span></span></div>
+                </a>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.company.*') ? 'active' : '' }} label-1" href="{{ route('setting.company.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-store"></i></span><span class="nav-link-text-wrapper"><span

@@ -29,6 +29,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [App\Http\Controllers\HomeController::class, 'profile'])->name('profile');
             Route::put('/update', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('profile.update');
             Route::put('/password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('profile.password');
+            Route::put('/group', [App\Http\Controllers\HomeController::class, 'updateGroup'])->name('profile.group');
         });
     });
 
@@ -43,10 +44,12 @@ Route::middleware(['auth'])->group(function () {
 
         Route::resource('product', \App\Http\Controllers\Admin\ProductController::class);
         Route::prefix('product')->name('product.')->group(function () {
-            Route::post('products/{product}/variants', [\App\Http\Controllers\Admin\ProductController::class, 'storeVariant'])->name('product-variant.store');
-            Route::put('products/{product}/variants/{variant}', [\App\Http\Controllers\Admin\ProductController::class, 'updateVariant'])->name('product-variant.update');
-            Route::delete('products/{product}/variants/{variant}', [\App\Http\Controllers\Admin\ProductController::class, 'destroyVariant'])->name('product-variant.destroy');
+            Route::post('product/{product}/variants', [\App\Http\Controllers\Admin\ProductController::class, 'storeVariant'])->name('product-variant.store');
+            Route::put('product/{product}/variants/{variant}', [\App\Http\Controllers\Admin\ProductController::class, 'updateVariant'])->name('product-variant.update');
+            Route::delete('product/{product}/variants/{variant}', [\App\Http\Controllers\Admin\ProductController::class, 'destroyVariant'])->name('product-variant.destroy');
         });
+
+        Route::resource('stock', \App\Http\Controllers\Admin\StockController::class);
     });
 
     Route::group(['prefix' => 'pos', 'as' => 'pos.'], function () {
