@@ -22,6 +22,7 @@ return new class extends Migration
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('pic_id')->nullable()->constrained('users')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('movement_type', 50)->nullable();
             $table->decimal('qty', 15, 2)->nullable();
             $table->decimal('stock_before', 15, 2)->nullable();
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->index('product_variant_id');
+            $table->index('pic_id');
         });
 
         Schema::create('stock_opnames', function (Blueprint $table) {

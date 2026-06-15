@@ -26,8 +26,8 @@
                                 class="toggle-line"></span></span></button>
                     <a class="navbar-brand me-1 me-sm-3" href="{{ route('home') }}">
                         <div class="d-flex align-items-center">
-                            <div class="d-flex align-items-center"><img src="{{ asset('assets/img/icons/av color.png') }}"
-                                    alt="phoenix" width="27" />
+                            <div class="d-flex align-items-center"><img
+                                    src="{{ asset('assets/img/icons/av color.png') }}" alt="phoenix" width="27" />
                                 <h5 class="logo-text ms-2 d-none d-sm-block">{{ env('APP_NAME') }}</h5>
                             </div>
                         </div>
@@ -158,125 +158,220 @@
                                 data-bs-title="Switch theme" style="height:32px;width:32px;"><span class="icon"
                                     data-feather="sun"></span></label></div>
                     </li>
-                    <li class="nav-item d-lg-none"><a class="nav-link" href="#" data-bs-toggle="modal"
-                            data-bs-target="#searchBoxModal"><span class="d-block" style="height:20px;width:20px;"><span
-                                    data-feather="search"
-                                    style="height:19px;width:19px;margin-bottom: 2px;"></span></span>
-                            </a>
-                    </li>
-                            
+                    {{-- <li class="nav-item dropdown">
+                        <a class="nav-link" href="#" style="min-width: 2.25rem" role="button"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                            data-bs-auto-close="outside"><span class="d-block" style="height:20px;width:20px;"><span
+                                    data-feather="bell" style="height:20px;width:20px;"></span></span></a>
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown-menu py-0 shadow border navbar-dropdown-caret"
+                            id="navbarDropdownNotfication" aria-labelledby="navbarDropdownNotfication">
+                            <div class="card position-relative border-0">
+                                <div class="card-header p-2">
+                                    <div class="d-flex justify-content-between">
+                                        <h5 class="text-body-emphasis mb-0">Notifications</h5><button
+                                            class="btn btn-link p-0 fs-9 fw-normal" type="button">Mark all as
+                                            read</button>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="scrollbar-overlay" style="height: 27rem;">
+                                        <div
+                                            class="px-2 px-sm-3 py-3 notification-card position-relative read border-bottom">
+                                            <div
+                                                class="d-flex align-items-center justify-content-between position-relative">
+                                                <div class="d-flex">
+                                                    <div class="avatar avatar-m status-online me-3"><img
+                                                            class="rounded-circle"
+                                                            src="../assets/img/team/40x40/30.webp" alt="" />
+                                                    </div>
+                                                    <div class="flex-1 me-sm-3">
+                                                        <h4 class="fs-9 text-body-emphasis">Jessie Samson</h4>
+                                                        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal"><span
+                                                                class='me-1 fs-10'>💬</span>Mentioned you in a
+                                                            comment.<span
+                                                                class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10">10m</span>
+                                                        </p>
+                                                        <p class="text-body-secondary fs-9 mb-0"><span
+                                                                class="me-1 fas fa-clock"></span><span
+                                                                class="fw-bold">10:41 AM </span>August 7,2021</p>
+                                                    </div>
+                                                </div>
+                                                <div class="dropdown notification-dropdown"><button
+                                                        class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none"
+                                                        type="button" data-bs-toggle="dropdown"
+                                                        data-boundary="window" aria-haspopup="true"
+                                                        aria-expanded="false" data-bs-reference="parent"><span
+                                                            class="fas fa-ellipsis-h fs-10 text-body"></span></button>
+                                                    <div class="dropdown-menu py-2"><a class="dropdown-item"
+                                                            href="#!">Mark as unread</a></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="px-2 px-sm-3 py-3 notification-card position-relative unread border-bottom">
+                                            <div
+                                                class="d-flex align-items-center justify-content-between position-relative">
+                                                <div class="d-flex">
+                                                    <div class="avatar avatar-m status-online me-3">
+                                                        <div class="avatar-name rounded-circle"><span>J</span></div>
+                                                    </div>
+                                                    <div class="flex-1 me-sm-3">
+                                                        <h4 class="fs-9 text-body-emphasis">Jane Foster</h4>
+                                                        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+                                                            <span class='me-1 fs-10'>📅</span>Created an event.<span
+                                                                class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10">20m</span>
+                                                        </p>
+                                                        <p class="text-body-secondary fs-9 mb-0"><span
+                                                                class="me-1 fas fa-clock"></span><span
+                                                                class="fw-bold">10:20 AM </span>August 7,2021</p>
+                                                    </div>
+                                                </div>
+                                                <div class="dropdown notification-dropdown"><button
+                                                        class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none"
+                                                        type="button" data-bs-toggle="dropdown"
+                                                        data-boundary="window" aria-haspopup="true"
+                                                        aria-expanded="false" data-bs-reference="parent"><span
+                                                            class="fas fa-ellipsis-h fs-10 text-body"></span></button>
+                                                    <div class="dropdown-menu py-2"><a class="dropdown-item"
+                                                            href="#!">Mark as unread</a></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="px-2 px-sm-3 py-3 notification-card position-relative unread border-bottom">
+                                            <div
+                                                class="d-flex align-items-center justify-content-between position-relative">
+                                                <div class="d-flex">
+                                                    <div class="avatar avatar-m status-online me-3"><img
+                                                            class="rounded-circle avatar-placeholder"
+                                                            src="../assets/img/team/40x40/avatar.webp"
+                                                            alt="" /></div>
+                                                    <div class="flex-1 me-sm-3">
+                                                        <h4 class="fs-9 text-body-emphasis">Jessie Samson</h4>
+                                                        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+                                                            <span class='me-1 fs-10'>👍</span>Liked your comment.<span
+                                                                class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10">1h</span>
+                                                        </p>
+                                                        <p class="text-body-secondary fs-9 mb-0"><span
+                                                                class="me-1 fas fa-clock"></span><span
+                                                                class="fw-bold">9:30 AM </span>August 7,2021</p>
+                                                    </div>
+                                                </div>
+                                                <div class="dropdown notification-dropdown"><button
+                                                        class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none"
+                                                        type="button" data-bs-toggle="dropdown"
+                                                        data-boundary="window" aria-haspopup="true"
+                                                        aria-expanded="false" data-bs-reference="parent"><span
+                                                            class="fas fa-ellipsis-h fs-10 text-body"></span></button>
+                                                    <div class="dropdown-menu py-2"><a class="dropdown-item"
+                                                            href="#!">Mark as unread</a></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="px-2 px-sm-3 py-3 notification-card position-relative unread border-bottom">
+                                            <div
+                                                class="d-flex align-items-center justify-content-between position-relative">
+                                                <div class="d-flex">
+                                                    <div class="avatar avatar-m status-online me-3"><img
+                                                            class="rounded-circle"
+                                                            src="../assets/img/team/40x40/57.webp" alt="" />
+                                                    </div>
+                                                    <div class="flex-1 me-sm-3">
+                                                        <h4 class="fs-9 text-body-emphasis">Kiera Anderson</h4>
+                                                        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+                                                            <span class='me-1 fs-10'>💬</span>Mentioned you in a
+                                                            comment.<span
+                                                                class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10"></span>
+                                                        </p>
+                                                        <p class="text-body-secondary fs-9 mb-0"><span
+                                                                class="me-1 fas fa-clock"></span><span
+                                                                class="fw-bold">9:11 AM </span>August 7,2021</p>
+                                                    </div>
+                                                </div>
+                                                <div class="dropdown notification-dropdown"><button
+                                                        class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none"
+                                                        type="button" data-bs-toggle="dropdown"
+                                                        data-boundary="window" aria-haspopup="true"
+                                                        aria-expanded="false" data-bs-reference="parent"><span
+                                                            class="fas fa-ellipsis-h fs-10 text-body"></span></button>
+                                                    <div class="dropdown-menu py-2"><a class="dropdown-item"
+                                                            href="#!">Mark as unread</a></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="px-2 px-sm-3 py-3 notification-card position-relative unread border-bottom">
+                                            <div
+                                                class="d-flex align-items-center justify-content-between position-relative">
+                                                <div class="d-flex">
+                                                    <div class="avatar avatar-m status-online me-3"><img
+                                                            class="rounded-circle"
+                                                            src="../assets/img/team/40x40/59.webp" alt="" />
+                                                    </div>
+                                                    <div class="flex-1 me-sm-3">
+                                                        <h4 class="fs-9 text-body-emphasis">Herman Carter</h4>
+                                                        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+                                                            <span class='me-1 fs-10'>👤</span>Tagged you in a
+                                                            comment.<span
+                                                                class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10"></span>
+                                                        </p>
+                                                        <p class="text-body-secondary fs-9 mb-0"><span
+                                                                class="me-1 fas fa-clock"></span><span
+                                                                class="fw-bold">10:58 PM </span>August 7,2021</p>
+                                                    </div>
+                                                </div>
+                                                <div class="dropdown notification-dropdown"><button
+                                                        class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none"
+                                                        type="button" data-bs-toggle="dropdown"
+                                                        data-boundary="window" aria-haspopup="true"
+                                                        aria-expanded="false" data-bs-reference="parent"><span
+                                                            class="fas fa-ellipsis-h fs-10 text-body"></span></button>
+                                                    <div class="dropdown-menu py-2"><a class="dropdown-item"
+                                                            href="#!">Mark as unread</a></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="px-2 px-sm-3 py-3 notification-card position-relative read ">
+                                            <div
+                                                class="d-flex align-items-center justify-content-between position-relative">
+                                                <div class="d-flex">
+                                                    <div class="avatar avatar-m status-online me-3"><img
+                                                            class="rounded-circle"
+                                                            src="../assets/img/team/40x40/58.webp" alt="" />
+                                                    </div>
+                                                    <div class="flex-1 me-sm-3">
+                                                        <h4 class="fs-9 text-body-emphasis">Benjamin Button</h4>
+                                                        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+                                                            <span class='me-1 fs-10'>👍</span>Liked your comment.<span
+                                                                class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10"></span>
+                                                        </p>
+                                                        <p class="text-body-secondary fs-9 mb-0"><span
+                                                                class="me-1 fas fa-clock"></span><span
+                                                                class="fw-bold">10:18 AM </span>August 7,2021</p>
+                                                    </div>
+                                                </div>
+                                                <div class="dropdown notification-dropdown"><button
+                                                        class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none"
+                                                        type="button" data-bs-toggle="dropdown"
+                                                        data-boundary="window" aria-haspopup="true"
+                                                        aria-expanded="false" data-bs-reference="parent"><span
+                                                            class="fas fa-ellipsis-h fs-10 text-body"></span></button>
+                                                    <div class="dropdown-menu py-2"><a class="dropdown-item"
+                                                            href="#!">Mark as unread</a></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer p-0 border-top border-translucent border-0">
+                                    <div class="my-2 text-center fw-bold fs-10 text-body-tertiary text-opactity-85"><a
+                                            class="fw-bolder" href="notifications.html">Notification history</a></div>
+                                </div>
+                            </div>
+                        </div>
+                    </li> 
                     <li class="nav-item dropdown">
-              <a class="nav-link" href="#" style="min-width: 2.25rem" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bs-auto-close="outside"><span class="d-block" style="height:20px;width:20px;"><span data-feather="bell" style="height:20px;width:20px;"></span></span></a>
-              <div class="dropdown-menu dropdown-menu-end notification-dropdown-menu py-0 shadow border navbar-dropdown-caret" id="navbarDropdownNotfication" aria-labelledby="navbarDropdownNotfication">
-                <div class="card position-relative border-0">
-                  <div class="card-header p-2">
-                    <div class="d-flex justify-content-between">
-                      <h5 class="text-body-emphasis mb-0">Notifications</h5><button class="btn btn-link p-0 fs-9 fw-normal" type="button">Mark all as read</button>
-                    </div>
-                  </div>
-                  <div class="card-body p-0">
-                    <div class="scrollbar-overlay" style="height: 27rem;">
-                      <div class="px-2 px-sm-3 py-3 notification-card position-relative read border-bottom">
-                        <div class="d-flex align-items-center justify-content-between position-relative">
-                          <div class="d-flex">
-                            <div class="avatar avatar-m status-online me-3"><img class="rounded-circle" src="../assets/img/team/40x40/30.webp" alt="" /></div>
-                            <div class="flex-1 me-sm-3">
-                              <h4 class="fs-9 text-body-emphasis">Jessie Samson</h4>
-                              <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal"><span class='me-1 fs-10'>💬</span>Mentioned you in a comment.<span class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10">10m</span></p>
-                              <p class="text-body-secondary fs-9 mb-0"><span class="me-1 fas fa-clock"></span><span class="fw-bold">10:41 AM </span>August 7,2021</p>
-                            </div>
-                          </div>
-                          <div class="dropdown notification-dropdown"><button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10 text-body"></span></button>
-                            <div class="dropdown-menu py-2"><a class="dropdown-item" href="#!">Mark as unread</a></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="px-2 px-sm-3 py-3 notification-card position-relative unread border-bottom">
-                        <div class="d-flex align-items-center justify-content-between position-relative">
-                          <div class="d-flex">
-                            <div class="avatar avatar-m status-online me-3">
-                              <div class="avatar-name rounded-circle"><span>J</span></div>
-                            </div>
-                            <div class="flex-1 me-sm-3">
-                              <h4 class="fs-9 text-body-emphasis">Jane Foster</h4>
-                              <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal"><span class='me-1 fs-10'>📅</span>Created an event.<span class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10">20m</span></p>
-                              <p class="text-body-secondary fs-9 mb-0"><span class="me-1 fas fa-clock"></span><span class="fw-bold">10:20 AM </span>August 7,2021</p>
-                            </div>
-                          </div>
-                          <div class="dropdown notification-dropdown"><button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10 text-body"></span></button>
-                            <div class="dropdown-menu py-2"><a class="dropdown-item" href="#!">Mark as unread</a></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="px-2 px-sm-3 py-3 notification-card position-relative unread border-bottom">
-                        <div class="d-flex align-items-center justify-content-between position-relative">
-                          <div class="d-flex">
-                            <div class="avatar avatar-m status-online me-3"><img class="rounded-circle avatar-placeholder" src="../assets/img/team/40x40/avatar.webp" alt="" /></div>
-                            <div class="flex-1 me-sm-3">
-                              <h4 class="fs-9 text-body-emphasis">Jessie Samson</h4>
-                              <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal"><span class='me-1 fs-10'>👍</span>Liked your comment.<span class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10">1h</span></p>
-                              <p class="text-body-secondary fs-9 mb-0"><span class="me-1 fas fa-clock"></span><span class="fw-bold">9:30 AM </span>August 7,2021</p>
-                            </div>
-                          </div>
-                          <div class="dropdown notification-dropdown"><button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10 text-body"></span></button>
-                            <div class="dropdown-menu py-2"><a class="dropdown-item" href="#!">Mark as unread</a></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="px-2 px-sm-3 py-3 notification-card position-relative unread border-bottom">
-                        <div class="d-flex align-items-center justify-content-between position-relative">
-                          <div class="d-flex">
-                            <div class="avatar avatar-m status-online me-3"><img class="rounded-circle" src="../assets/img/team/40x40/57.webp" alt="" /></div>
-                            <div class="flex-1 me-sm-3">
-                              <h4 class="fs-9 text-body-emphasis">Kiera Anderson</h4>
-                              <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal"><span class='me-1 fs-10'>💬</span>Mentioned you in a comment.<span class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10"></span></p>
-                              <p class="text-body-secondary fs-9 mb-0"><span class="me-1 fas fa-clock"></span><span class="fw-bold">9:11 AM </span>August 7,2021</p>
-                            </div>
-                          </div>
-                          <div class="dropdown notification-dropdown"><button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10 text-body"></span></button>
-                            <div class="dropdown-menu py-2"><a class="dropdown-item" href="#!">Mark as unread</a></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="px-2 px-sm-3 py-3 notification-card position-relative unread border-bottom">
-                        <div class="d-flex align-items-center justify-content-between position-relative">
-                          <div class="d-flex">
-                            <div class="avatar avatar-m status-online me-3"><img class="rounded-circle" src="../assets/img/team/40x40/59.webp" alt="" /></div>
-                            <div class="flex-1 me-sm-3">
-                              <h4 class="fs-9 text-body-emphasis">Herman Carter</h4>
-                              <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal"><span class='me-1 fs-10'>👤</span>Tagged you in a comment.<span class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10"></span></p>
-                              <p class="text-body-secondary fs-9 mb-0"><span class="me-1 fas fa-clock"></span><span class="fw-bold">10:58 PM </span>August 7,2021</p>
-                            </div>
-                          </div>
-                          <div class="dropdown notification-dropdown"><button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10 text-body"></span></button>
-                            <div class="dropdown-menu py-2"><a class="dropdown-item" href="#!">Mark as unread</a></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="px-2 px-sm-3 py-3 notification-card position-relative read ">
-                        <div class="d-flex align-items-center justify-content-between position-relative">
-                          <div class="d-flex">
-                            <div class="avatar avatar-m status-online me-3"><img class="rounded-circle" src="../assets/img/team/40x40/58.webp" alt="" /></div>
-                            <div class="flex-1 me-sm-3">
-                              <h4 class="fs-9 text-body-emphasis">Benjamin Button</h4>
-                              <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal"><span class='me-1 fs-10'>👍</span>Liked your comment.<span class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10"></span></p>
-                              <p class="text-body-secondary fs-9 mb-0"><span class="me-1 fas fa-clock"></span><span class="fw-bold">10:18 AM </span>August 7,2021</p>
-                            </div>
-                          </div>
-                          <div class="dropdown notification-dropdown"><button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10 text-body"></span></button>
-                            <div class="dropdown-menu py-2"><a class="dropdown-item" href="#!">Mark as unread</a></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="card-footer p-0 border-top border-translucent border-0">
-                    <div class="my-2 text-center fw-bold fs-10 text-body-tertiary text-opactity-85"><a class="fw-bolder" href="notifications.html">Notification history</a></div>
-                  </div>
-                </div>
-              </div>
-            </li>
-            <li class="nav-item dropdown">
               <a class="nav-link" id="navbarDropdownNindeDots" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" data-bs-auto-close="outside" aria-expanded="false"><svg width="16" height="16" viewbox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="2" cy="2" r="2" fill="currentColor"></circle>
                   <circle cx="2" cy="8" r="2" fill="currentColor"></circle>
@@ -338,7 +433,7 @@
                   </div>
                 </div>
               </div>
-            </li>
+            </li> --}}
                     @php
                         $user = auth()->user();
                         $hasAvatar = !empty($user->avatar) && Storage::disk('public')->exists($user->avatar);
@@ -351,10 +446,13 @@
                             ->implode('');
                     @endphp
                     <li class="nav-item dropdown">
-                        <a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#" role="button"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true"
+                            aria-expanded="false">
                             <div class="avatar avatar-l">
-                                @if($hasAvatar)
-                                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                                @if ($hasAvatar)
+                                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="rounded-circle"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
                                 @else
                                     <div class="user-initial-avatar">
                                         {{ $initials }}
@@ -368,8 +466,10 @@
                                 <div class="card-body p-0">
                                     <div class="text-center pt-4 pb-3">
                                         <div class="avatar avatar-xl">
-                                            @if($hasAvatar)
-                                                <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                                            @if ($hasAvatar)
+                                                <img src="{{ $avatarUrl }}" alt="{{ $user->name }}"
+                                                    class="rounded-circle"
+                                                    style="width: 100%; height: 100%; object-fit: cover;">
                                             @else
                                                 <div class="user-initial-avatar">
                                                     {{ $initials }}
@@ -382,7 +482,8 @@
                                 </div>
                                 <div class="overflow-auto scrollbar" style="height: 10rem;">
                                     <ul class="nav d-flex flex-column mb-2 pb-1">
-                                        <li class="nav-item"><a class="nav-link px-3 d-block" href="{{ route('setting.profile') }}"> <span
+                                        <li class="nav-item"><a class="nav-link px-3 d-block"
+                                                href="{{ route('setting.profile') }}"> <span
                                                     class="me-2 text-body align-bottom"
                                                     data-feather="user"></span><span>Profile</span></a></li>
                                         <li class="nav-item"><a class="nav-link px-3 d-block"
@@ -428,8 +529,9 @@
                             class="toggle-line"></span></span></button>
                 <a class="navbar-brand me-1 me-sm-3" href="{{ route('home') }}">
                     <div class="d-flex align-items-center">
-                        <div class="d-flex align-items-center"><img src="{{ asset('assets/img/icons/av color.png') }}"
-                                alt="{{ env('APP_NAME') }}" width="27" />
+                        <div class="d-flex align-items-center"><img
+                                src="{{ asset('assets/img/icons/av color.png') }}" alt="{{ env('APP_NAME') }}"
+                                width="27" />
                             <h5 class="logo-text ms-2 d-none d-sm-block">{{ env('APP_NAME') }}</h5>
                         </div>
                     </div>
@@ -440,9 +542,9 @@
             id="navbarTopSlim" style="display:none;">
             <div class="navbar-logo">
                 <button class="btn navbar-toggler navbar-toggler-humburger-icon hover-bg-transparent" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#navbarTopCollapse"
-                    aria-controls="navbarTopCollapse" aria-expanded="false" aria-label="Toggle Navigation"><span
-                        class="navbar-toggle-icon"><span class="toggle-line"></span></span></button>
+                    data-bs-toggle="collapse" data-bs-target="#navbarTopCollapse" aria-controls="navbarTopCollapse"
+                    aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span
+                            class="toggle-line"></span></span></button>
                 <a class="navbar-brand navbar-brand" href="#">phoenix <span
                         class="text-body-highlight d-none d-sm-inline">slim</span></a>
             </div>
@@ -520,8 +622,7 @@
                                                     <div class="dropdown-item-wrapper"><span
                                                             class="me-2 uil"></span>Customer details</div>
                                                 </a></li>
-                                            <li><a class="dropdown-item"
-                                                    href="../apps/e-commerce/admin/orders.html">
+                                            <li><a class="dropdown-item" href="../apps/e-commerce/admin/orders.html">
                                                     <div class="dropdown-item-wrapper"><span
                                                             class="me-2 uil"></span>Orders</div>
                                                 </a></li>
@@ -530,8 +631,7 @@
                                                     <div class="dropdown-item-wrapper"><span
                                                             class="me-2 uil"></span>Order details</div>
                                                 </a></li>
-                                            <li><a class="dropdown-item"
-                                                    href="../apps/e-commerce/admin/refund.html">
+                                            <li><a class="dropdown-item" href="../apps/e-commerce/admin/refund.html">
                                                     <div class="dropdown-item-wrapper"><span
                                                             class="me-2 uil"></span>Refund</div>
                                                 </a></li>
@@ -559,8 +659,7 @@
                                                     <div class="dropdown-item-wrapper"><span
                                                             class="me-2 uil"></span>Products filter</div>
                                                 </a></li>
-                                            <li><a class="dropdown-item"
-                                                    href="../apps/e-commerce/landing/cart.html">
+                                            <li><a class="dropdown-item" href="../apps/e-commerce/landing/cart.html">
                                                     <div class="dropdown-item-wrapper"><span
                                                             class="me-2 uil"></span>Cart</div>
                                                 </a></li>
@@ -611,8 +710,8 @@
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="../apps/crm/analytics.html">
-                                            <div class="dropdown-item-wrapper"><span
-                                                    class="me-2 uil"></span>Analytics</div>
+                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Analytics
+                                            </div>
                                         </a></li>
                                     <li><a class="dropdown-item" href="../apps/crm/deals.html">
                                             <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Deals
@@ -836,12 +935,12 @@
                                                 details</div>
                                         </a></li>
                                     <li><a class="dropdown-item" href="../apps/stock/portfolio.html">
-                                            <div class="dropdown-item-wrapper"><span
-                                                    class="me-2 uil"></span>Portfolio</div>
+                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Portfolio
+                                            </div>
                                         </a></li>
                                     <li><a class="dropdown-item" href="../apps/stock/watchlist.html">
-                                            <div class="dropdown-item-wrapper"><span
-                                                    class="me-2 uil"></span>Watchlist</div>
+                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Watchlist
+                                            </div>
                                         </a></li>
                                 </ul>
                             </li>
@@ -924,8 +1023,8 @@
                                             </div>
                                         </a></li>
                                     <li><a class="dropdown-item" href="../apps/social/settings.html">
-                                            <div class="dropdown-item-wrapper"><span
-                                                    class="me-2 uil"></span>Settings</div>
+                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Settings
+                                            </div>
                                         </a></li>
                                 </ul>
                             </li>
@@ -1024,8 +1123,8 @@
                                             </div>
                                         </a></li>
                                     <li><a class="dropdown-item" href="landing/alternate.html">
-                                            <div class="dropdown-item-wrapper"><span
-                                                    class="me-2 uil"></span>Alternate</div>
+                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Alternate
+                                            </div>
                                         </a></li>
                                 </ul>
                             </li>
@@ -1969,8 +2068,9 @@
                             class="toggle-line"></span></span></button>
                 <a class="navbar-brand me-1 me-sm-3" href="../index.html">
                     <div class="d-flex align-items-center">
-                        <div class="d-flex align-items-center"><img src="{{asset('assets/img/icons/av color.png')}}"
-                                alt="{{ env('APP_NAME') }}" width="27" />
+                        <div class="d-flex align-items-center"><img
+                                src="{{ asset('assets/img/icons/av color.png') }}" alt="{{ env('APP_NAME') }}"
+                                width="27" />
                             <h5 class="logo-text ms-2 d-none d-sm-block">{{ env('APP_NAME') }}</h5>
                         </div>
                     </div>
