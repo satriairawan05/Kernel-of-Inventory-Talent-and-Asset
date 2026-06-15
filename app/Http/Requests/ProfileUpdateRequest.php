@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ProfileUpdateRequest extends FormRequest
 {
+    protected $errorBag = 'profile';
+
     /**
      * Determine if the user is authorized to make this request.
      */

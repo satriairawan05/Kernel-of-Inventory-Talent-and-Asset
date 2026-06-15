@@ -42,6 +42,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('category', \App\Http\Controllers\Admin\CategoryController::class);
 
         Route::resource('product', \App\Http\Controllers\Admin\ProductController::class);
+        Route::prefix('product')->name('product.')->group(function () {
+            Route::post('products/{product}/variants', [\App\Http\Controllers\Admin\ProductController::class, 'storeVariant'])->name('product-variant.store');
+            Route::put('products/{product}/variants/{variant}', [\App\Http\Controllers\Admin\ProductController::class, 'updateVariant'])->name('product-variant.update');
+            Route::delete('products/{product}/variants/{variant}', [\App\Http\Controllers\Admin\ProductController::class, 'destroyVariant'])->name('product-variant.destroy');
+        });
     });
 
     Route::group(['prefix' => 'pos', 'as' => 'pos.'], function () {

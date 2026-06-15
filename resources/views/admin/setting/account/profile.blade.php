@@ -180,7 +180,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
-                        @if ($errors->any() && !$errors->has('current_password'))
+                        @if ($errors->profile->any() && !$errors->has('current_password'))
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <ul class="mb-0">
                                     @foreach ($errors->all() as $error)
@@ -251,7 +251,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
-                        @if ($errors->has('current_password') || $errors->has('password') || $errors->has('password_confirmation'))
+                        @if ($errors->password->has('current_password') || $errors->password->has('password') || $errors->password->has('password_confirmation'))
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <ul class="mb-0">
                                     @foreach ($errors->all() as $error)

@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
+use App\Http\Requests\ProductVariantStoreRequest;
+use App\Http\Requests\ProductVariantUpdateRequest;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Unit;
 use App\Services\ProductService;
+use App\Services\ProductVariantService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -82,7 +86,9 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         try {
-            $product->load(['company', 'category', 'unit', 'variants']);
+            $product->load(['company', 'category', 'unit', 'variants' => function ($query) {
+                $query->latest();
+            }]);
 
             return view('admin.inventory.product.show', [
                 'product' => $product,
@@ -139,5 +145,48 @@ class ProductController extends Controller
             Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
         }
+    }
+
+    /**
+     * Store a newly created product variant in storage.
+     *
+     * @param  \App\Http\Requests\ProductVariantStoreRequest  $request
+     * @param  \App\Models\Product  $product
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storeVariant(ProductVariantStoreRequest $request, Product $product, ProductVariantService $productVariantService)
+    {
+        $productVariantService->store($product, $request->validated(), $request->file('image'));
+
+        return redirect()->back()->with('variant_success', 'Variant added successfully.');
+    }
+
+    /**
+     * Update the specified product variant in storage.
+     *
+     * @param  \App\Http\Requests\ProductVariantUpdateRequest  $request
+     * @param  \App\Models\Product  $product
+     * @param  \App\Models\ProductVariant  $variant
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateVariant(ProductVariantUpdateRequest $request, Product $product, ProductVariant $variant, ProductVariantService $productVariantService)
+    {
+        $productVariantService->update($variant, $request->validated(), $request->file('image'));
+
+        return redirect()->back()->with('variant_success', 'Variant updated successfully.');
+    }
+
+    /**
+     * Remove the specified product variant from storage.
+     *
+     * @param  \App\Models\Product  $product
+     * @param  \App\Models\ProductVariant  $variant
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroyVariant(Product $product, ProductVariant $variant, ProductVariantService $productVariantService)
+    {
+        $productVariantService->destroy($variant);
+
+        return redirect()->back()->with('variant_success', 'Variant deleted successfully.');
     }
 }
