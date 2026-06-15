@@ -334,7 +334,7 @@
                         </ul>
                     </div>
                 </div>
-                <a class="nav-link label-1" href="$" role="button" data-bs-toggle="" aria-expanded="false">
+                <a class="nav-link label-1" href="{{ route('inventory.stock.logs') }}" role="button" data-bs-toggle="" aria-expanded="false">
                     <div class="d-flex align-items-center"><span class="nav-link-icon">
                         <i class="fas fa-file-archive"></i>
                     </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Logs</span></span></div>

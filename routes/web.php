@@ -50,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::resource('stock', \App\Http\Controllers\Admin\StockController::class);
+        Route::get('stock-log', [\App\Http\Controllers\Admin\StockController::class, 'stockLogs'])->name('stock.logs');
     });
 
     Route::group(['prefix' => 'pos', 'as' => 'pos.'], function () {

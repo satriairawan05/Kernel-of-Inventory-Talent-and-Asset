@@ -47,4 +47,12 @@ class StockMovement extends Model
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
+
+    /**
+     * Get the pic that owns the stock movement.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'pic_id');
+    }
 }

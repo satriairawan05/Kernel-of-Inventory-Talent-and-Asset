@@ -136,22 +136,22 @@
             </div>
             <div class="col-md-3 col-6">
                 <div class="card inventory-card p-3 text-center">
-                    <h6 class="text-muted">Stok Menipis</h6>
-                    <h3 class="fw-bold text-warning">8</h3>
+                    <h6 class="text-muted">Stok Menipis (<=5)</h6>
+                    <h3 class="fw-bold text-warning">{{ number_format($stats['low_stock_count']) }}</h3>
                     <small class="text-muted">perlu restok</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card inventory-card p-3 text-center">
                     <h6 class="text-muted">Barang Masuk (bulan ini)</h6>
-                    <h3 class="fw-bold text-primary">342</h3>
+                    <h3 class="fw-bold text-primary">{{ number_format($stats['incoming_transactions']) }}</h3>
                     <small class="text-muted">transaksi</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card inventory-card p-3 text-center">
                     <h6 class="text-muted">Barang Keluar (bulan ini)</h6>
-                    <h3 class="fw-bold text-info">287</h3>
+                    <h3 class="fw-bold text-info">{{ number_format($stats['outgoing_transactions']) }}</h3>
                     <small class="text-muted">transaksi</small>
                 </div>
             </div>

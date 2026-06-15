@@ -83,7 +83,7 @@
                             </td>
                             <td>
                                 <strong>{{ $product->product_name }}</strong>
-                                <div class="small text-muted">{{ Str::limit($product->description, 50) }}</div>
+                                <div class="small text-muted">{{ Str::limit($product->description, 25) }}</div>
                             </td>
                             <td><span class="badge bg-light text-dark">{{ $product->product_code }}</span></td>
                             <td>{{ $product->category->category_name ?? '-' }}</td>

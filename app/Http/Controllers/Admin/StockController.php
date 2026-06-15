@@ -7,6 +7,7 @@ use App\Http\Requests\StockStoreRequest;
 use App\Http\Requests\StockUpdateRequest;
 use App\Models\ProductVariant;
 use App\Models\Stock;
+use App\Services\ModuleService;
 use App\Services\StockService;
 
 class StockController extends Controller
@@ -121,12 +122,18 @@ class StockController extends Controller
         try {
             $stockService->destroy($stock);
 
-        return redirect()
-            ->route('inventory.stock.index')
-            ->with('success', 'Stock Deleted Successfully!.');
+            return redirect()
+                ->route('inventory.stock.index')
+                ->with('success', 'Stock Deleted Successfully!.');
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
         }
+    }
+
+    public function stockLogs(ModuleService $moduleService)
+    {
+        $movements = $moduleService->getStockMovements();
+        return view('admin.inventory.log.stock', ['movements' => $movements]);
     }
 }
