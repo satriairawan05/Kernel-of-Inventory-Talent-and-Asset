@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProfileUpdatePasswordRequest;
+use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\AccountService;
 use App\Services\ModuleService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -40,5 +45,29 @@ class HomeController extends Controller
     public function profile(ModuleService $moduleService)
     { 
         return view('admin.setting.account.profile',['profile' => $moduleService->getProfile()]);
+    }
+
+    /**
+     * Update profile (name, email, avatar)
+     */
+    public function updateProfile(ProfileUpdateRequest $request, AccountService $accountService): RedirectResponse
+    {
+        $user = Auth::user();
+        $avatarFile = $request->file('avatar');
+
+        $accountService->updateProfile($user, $request->validated(), $avatarFile);
+
+        return redirect()->back()->with('profile_success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Update password
+     */
+    public function updatePassword(ProfileUpdatePasswordRequest $request, AccountService $accountService): RedirectResponse
+    {
+        $user = Auth::user();
+        $accountService->updatePassword($user, $request->password);
+
+        return redirect()->back()->with('password_success', 'Password berhasil diubah.');
     }
 }

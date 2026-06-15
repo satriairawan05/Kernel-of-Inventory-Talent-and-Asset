@@ -14,8 +14,6 @@ Auth::routes(['login' => true, 'register' => true]);
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-    Route::get('profile',[App\Http\Controllers\HomeController::class, 'profile'])->name('profile');
-
     Route::group(['prefix' => 'setting', 'as' => 'setting.'], function () {
         Route::get('/', function () {
             return view('admin.setting.home');
@@ -25,11 +23,18 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('shift', \App\Http\Controllers\Admin\ShiftController::class);
         Route::resource('unit', \App\Http\Controllers\Admin\UnitController::class);
         Route::resource('account', App\Http\Controllers\Admin\AccountController::class);
+
+
+        Route::middleware(['auth'])->prefix('profile')->group(function () {
+            Route::get('/', [App\Http\Controllers\HomeController::class, 'profile'])->name('profile');
+            Route::put('/update', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('profile.update');
+            Route::put('/password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('profile.password');
+        });
     });
 
     Route::group(['prefix' => 'inventory', 'as' => 'inventory.'], function () {
         Route::get('/', function (ModuleService $moduleService) {
-            return view('admin.inventory.home',[
+            return view('admin.inventory.home', [
                 'stats' => $moduleService->getInventoryStats()
             ]);
         })->name('home');

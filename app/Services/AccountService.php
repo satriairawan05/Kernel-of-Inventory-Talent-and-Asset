@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\{DB, Hash, Storage};
 
 class AccountService
 {
@@ -58,5 +58,40 @@ class AccountService
         return DB::transaction(function () use ($user) {
             return $user->delete();
         });
+    }
+
+    /**
+     * Update user profile (name, email, avatar)
+     */
+    public function updateProfile(User $user, array $data, ?UploadedFile $avatarFile = null): User
+    {
+        $user->name  = $data['name'];
+        $user->email = $data['email'];
+
+        if ($avatarFile) {
+            // Hapus avatar lama jika ada
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            // Simpan avatar baru
+            $path = $avatarFile->store('avatars', 'public');
+            $user->avatar = $path;
+        }
+
+        $user->save();
+
+        return $user;
+    }
+
+    /**
+     * Update user password
+     */
+    public function updatePassword(User $user, string $newPassword): User
+    {
+        $user->password = Hash::make($newPassword);
+        $user->save();
+
+        return $user;
     }
 }

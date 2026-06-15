@@ -70,12 +70,12 @@
         }
 
         .avatar-preview {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             background: #f1f5f9;
         }
 
@@ -83,86 +83,69 @@
             position: relative;
         }
 
-        .password-toggle-icon {
+        .password-toggle-wrapper input {
+            padding-right: 35px;
+        }
+
+        .toggle-icon {
             position: absolute;
-            right: 15px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
-            color: #64748b;
+            color: #6c757d;
             z-index: 10;
-            background: white;
-            padding-left: 5px;
         }
 
         .password-toggle-icon:hover {
             color: #2563eb;
         }
-
-        .password-toggle-wrapper input {
-            padding-right: 45px;
-        }
     </style>
 @endpush
 
 @push('js')
-<script>
-    // Fungsi untuk menambahkan toggle pada input password
-    function addPasswordToggle(inputId, wrapperId) {
-        let input = document.getElementById(inputId);
-        let wrapper = document.getElementById(wrapperId);
-        if (!input || !wrapper) return;
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    {{-- <script src="{{ asset('assets/js/jquery-3.6.4.min.js') }}"></script> --}}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            function togglePassword(inputId, iconId) {
+                var input = $('#' + inputId);
+                $(document).off('click', '#' + iconId).on('click', '#' + iconId, function(e) {
+                    e.preventDefault();
 
-        // Hapus icon lama jika ada (mencegah duplikasi)
-        let oldIcon = wrapper.querySelector('.password-toggle-icon');
-        if (oldIcon) oldIcon.remove();
-
-        // Buat icon baru
-        let icon = document.createElement('i');
-        icon.className = 'fas fa-eye-slash password-toggle-icon';
-        wrapper.appendChild(icon);
-
-        // Event klik
-        icon.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+                    var icon = $(this);
+                    
+                    if (input.prop('type') === 'password') {
+                        input.prop('type', 'text');
+                        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                    } else {
+                        input.prop('type', 'password');
+                        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                    }
+                });
             }
-        });
-    }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Toggle untuk ketiga field password
-        addPasswordToggle('current_password', 'wrapper-current');
-        addPasswordToggle('new_password', 'wrapper-new');
-        addPasswordToggle('confirm_password', 'wrapper-confirm');
+            togglePassword('current_password', 'toggle_current_password');
+            togglePassword('new_password', 'toggle_new_password');
+            togglePassword('confirm_password', 'toggle_confirm_password');
 
-        // Avatar preview
-        const avatarInput = document.getElementById('avatar_input');
-        const avatarPreview = document.getElementById('avatar_preview');
-        if (avatarInput && avatarPreview) {
-            avatarInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
+            // Avatar preview
+            $('#avatar_input').on('change', function(e) {
+                var file = e.target.files[0];
+                var preview = $('#avatar_preview');
                 if (file) {
-                    const reader = new FileReader();
+                    var reader = new FileReader();
                     reader.onload = function(event) {
-                        avatarPreview.src = event.target.result;
+                        preview.attr('src', event.target.result);
                     };
                     reader.readAsDataURL(file);
                 } else {
-                    const currentAvatar = avatarPreview.getAttribute('data-default');
-                    if (currentAvatar) avatarPreview.src = currentAvatar;
+                    var defaultSrc = preview.data('default');
+                    if (defaultSrc) preview.attr('src', defaultSrc);
                 }
             });
-        }
-    });
-</script>
+        });
+    </script>
 @endpush
 
 @section('content')
@@ -208,7 +191,7 @@
                             </div>
                         @endif
 
-                        <form action="#" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('setting.profile.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
                             <div class="row g-3">
@@ -216,14 +199,17 @@
                                 <div class="col-12 text-center mb-3">
                                     <label class="form-label d-block">Profile Avatar</label>
                                     <div class="d-flex justify-content-center">
-                                        <img id="avatar_preview" class="avatar-preview" 
-                                             src="{{ $profile->avatar ? asset('storage/' . $profile->avatar) : asset('assets/img/default-avatar.png') }}" 
-                                             alt="Avatar"
-                                             data-default="{{ $profile->avatar ? asset('storage/' . $profile->avatar) : asset('assets/img/default-avatar.png') }}">
+                                        <img id="avatar_preview" class="avatar-preview"
+                                            src="{{ $profile->avatar ? asset('storage/' . $profile->avatar) : asset('assets/img/avatar/default-avatar.png') }}"
+                                            alt="Avatar"
+                                            data-default="{{ $profile->avatar ? asset('storage/' . $profile->avatar) : asset('assets/img/avatar/default-avatar.png') }}">
                                     </div>
-                                    <input type="file" name="avatar" id="avatar_input" class="form-control mt-3" accept="image/jpeg,image/png,image/jpg,image/webp">
+                                    <input type="file" name="avatar" id="avatar_input" class="form-control mt-3"
+                                        accept="image/jpeg,image/png,image/jpg,image/webp">
                                     <small class="text-muted">Format: JPG, PNG, WEBP (Max 2MB)</small>
-                                    @error('avatar')<div class="text-danger small">{{ $message }}</div>@enderror
+                                    @error('avatar')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <div class="col-md-6">
@@ -276,15 +262,18 @@
                             </div>
                         @endif
 
-                        <form action="#" method="POST">
+                        <form action="{{ route('setting.profile.update') }}" method="POST">
                             @csrf
                             @method('PUT')
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label">Current Password</label>
                                     <div class="password-toggle-wrapper" id="wrapper-current">
-                                        <input type="password" name="current_password" id="current_password"
+                                        <input type="password" placeholder="********" name="current_password"
+                                            id="current_password"
                                             class="form-control @error('current_password') is-invalid @enderror" required>
+                                        <i class="fas fa-eye-slash" id="toggle_current_password"
+                                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
                                     </div>
                                     @error('current_password')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -293,8 +282,10 @@
                                 <div class="col-md-4">
                                     <label class="form-label">New Password</label>
                                     <div class="password-toggle-wrapper" id="wrapper-new">
-                                        <input type="password" name="password" id="new_password"
+                                        <input type="password" placeholder="********" name="password" id="new_password"
                                             class="form-control @error('password') is-invalid @enderror" required>
+                                        <i class="fas fa-eye-slash" id="toggle_new_password"
+                                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
                                     </div>
                                     @error('password')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -303,8 +294,10 @@
                                 <div class="col-md-4">
                                     <label class="form-label">Confirm New Password</label>
                                     <div class="password-toggle-wrapper" id="wrapper-confirm">
-                                        <input type="password" name="password_confirmation" id="confirm_password"
-                                            class="form-control" required>
+                                        <input type="password" placeholder="********" name="password_confirmation"
+                                            id="confirm_password" class="form-control" required>
+                                        <i class="fas fa-eye-slash" id="toggle_confirm_password"
+                                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
                                     </div>
                                 </div>
                             </div>

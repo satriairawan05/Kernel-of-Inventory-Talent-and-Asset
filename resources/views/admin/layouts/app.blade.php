@@ -340,18 +340,26 @@
               </div>
             </li>
                     @php
-                        $initials = collect(explode(' ', auth()->user()->name))
+                        $user = auth()->user();
+                        $hasAvatar = !empty($user->avatar) && Storage::disk('public')->exists($user->avatar);
+                        // Jika avatar disimpan sebagai path relatif, misal 'avatars/filename.jpg'
+                        // Atau jika langsung filename, sesuaikan.
+                        $avatarUrl = $hasAvatar ? asset('storage/' . $user->avatar) : null;
+                        $initials = collect(explode(' ', $user->name))
                             ->map(fn($word) => strtoupper(substr($word, 0, 1)))
                             ->take(2)
                             ->implode('');
                     @endphp
-                    <li class="nav-item dropdown"><a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#!"
-                            role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true"
-                            aria-expanded="false">
-                            <div class="avatar avatar-l ">
-                                <div class="user-initial-avatar">
-                                    {{ $initials }}
-                                </div>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                            <div class="avatar avatar-l">
+                                @if($hasAvatar)
+                                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                                @else
+                                    <div class="user-initial-avatar">
+                                        {{ $initials }}
+                                    </div>
+                                @endif
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border"
@@ -360,9 +368,13 @@
                                 <div class="card-body p-0">
                                     <div class="text-center pt-4 pb-3">
                                         <div class="avatar avatar-xl">
-                                            <div class="user-initial-avatar">
-                                                {{ $initials }}
-                                            </div>
+                                            @if($hasAvatar)
+                                                <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                                            @else
+                                                <div class="user-initial-avatar">
+                                                    {{ $initials }}
+                                                </div>
+                                            @endif
                                         </div>
                                         <h6 class="mt-2 text-body-emphasis">{{ auth()->user()->name }}</h6>
                                     </div>
@@ -370,7 +382,7 @@
                                 </div>
                                 <div class="overflow-auto scrollbar" style="height: 10rem;">
                                     <ul class="nav d-flex flex-column mb-2 pb-1">
-                                        <li class="nav-item"><a class="nav-link px-3 d-block" href="{{ route('profile') }}"> <span
+                                        <li class="nav-item"><a class="nav-link px-3 d-block" href="{{ route('setting.profile') }}"> <span
                                                     class="me-2 text-body align-bottom"
                                                     data-feather="user"></span><span>Profile</span></a></li>
                                         <li class="nav-item"><a class="nav-link px-3 d-block"
