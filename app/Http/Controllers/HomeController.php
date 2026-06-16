@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AccountCompanyRequest;
 use App\Http\Requests\AccountRoleRequest;
 use App\Http\Requests\ProfileUpdatePasswordRequest;
 use App\Http\Requests\ProfileUpdateRequest;
@@ -45,7 +46,7 @@ class HomeController extends Controller
      */
     public function profile(ModuleService $moduleService)
     {
-        return view('admin.setting.account.profile', ['profile' => $moduleService->getProfile()]);
+        return view('admin.setting.account.profile', ['profile' => $moduleService->getProfile(),'companies' => \App\Models\Company::latest()->get(),'groups' => \App\Models\Group::latest()->get()]);
     }
 
     /**
@@ -81,5 +82,16 @@ class HomeController extends Controller
         $accountService->updateGroup($user, $request->group_id);
 
         return redirect()->back()->with('group_success', 'Role berhasil diperbarui.');
+    }
+
+    /**
+     * Update outlet
+     */
+    public function updateCompany(AccountCompanyRequest $request, AccountService $accountService)
+    {
+        $user = Auth::user();
+        $accountService->updateCompany($user, $request->company_id);
+
+        return redirect()->back()->with('company_success', 'Perusahaan berhasil diperbarui.');
     }
 }

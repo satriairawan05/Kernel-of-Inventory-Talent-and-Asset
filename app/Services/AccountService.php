@@ -111,4 +111,21 @@ class AccountService
             return $user;
         });
     }
+
+    /**
+     * Update user's company.
+     *
+     * @param \App\Models\User $user
+     * @param int $companyId
+     * @return \App\Models\User
+     */
+    public function updateCompany(User $user, int $companyId): User
+    {
+        return DB::transaction(function () use ($user, $companyId) {
+            $user->company_id = $companyId;
+            $user->save();
+
+            return $user;
+        });
+    }
 }

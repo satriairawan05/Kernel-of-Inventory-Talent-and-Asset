@@ -23,6 +23,7 @@ class AccountController extends Controller
      */
     public function index()
     {
+        dd($this->access);
         try {
             $accounts = User::paginate(25);
             return view('admin.setting.account.index',['accounts' => $accounts]);

@@ -7,7 +7,7 @@
             {{ date('Y') }}
         </div>
         <div class="col-12 col-sm-auto text-center">
-            <p class="mb-0 text-body-tertiary text-opacity-85">v{{ config('app.version') }}</p>
+            <p class="mb-0 text-body-tertiary text-opacity-85">{{ config('app.version') }}</p>
         </div>
     </div>
 </footer>

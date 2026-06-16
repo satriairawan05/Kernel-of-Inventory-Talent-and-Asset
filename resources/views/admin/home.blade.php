@@ -18,6 +18,8 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/favicons/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ asset('assets/img/favicons/manifest.json') }}">
     <meta name="theme-color" content="#ffffff">
+    <meta name="description"
+        content="Kernel of Inventory Talent and Asset adalah project yang mengintegrasikan HRIS, Inventory dan POS dalam 1 wadah">
 </head>
 
 <body>
@@ -152,9 +154,9 @@
         /* NAVBAR */
         .navbar-orange {
             background: linear-gradient(135deg,
-                    #ff7a00 0%,
-                    #ff9f43 100%);
-            box-shadow: 0 4px 15px rgba(255, 122, 0, .25);
+                    #001f3f 0%,
+                    #2c3e50 100%);
+            box-shadow: 0 4px 15px rgba(0, 31, 63, .25);
         }
 
         .navbar-brand {
@@ -200,27 +202,27 @@
 
         /* MODULE COLORS */
         .dash-card {
-            background: linear-gradient(135deg, #0dcaf0, #6edff6);
+            background: linear-gradient(135deg, #0a2540, #1a3a5f);
         }
 
         .hr-card {
-            background: linear-gradient(135deg, #fd7e14, #ffb347);
+            background: linear-gradient(135deg, #3d1c00, #7a3d00);
         }
-        
+
         .pos-card {
-            background: linear-gradient(135deg, #198750, #3cb860);
+            background: linear-gradient(135deg, #0d3b2b, #1b5e48);
         }
 
         .inv-card {
-            background: linear-gradient(135deg, #198577, #3cb978);
+            background: linear-gradient(135deg, #0d3d35, #1b6b5e);
         }
 
         .presence-card {
-            background: linear-gradient(135deg, #dc3545, #ff6b6b);
+            background: linear-gradient(135deg, #4a0d1a, #8b1e2e);
         }
 
         .sys-card {
-            background: linear-gradient(135deg, #0d6efd, #4f8dfd);
+            background: linear-gradient(135deg, #0a1a3a, #1e3a6b);
         }
 
         /* MOBILE */

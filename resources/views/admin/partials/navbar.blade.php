@@ -360,16 +360,16 @@
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.shift.*') ? 'active' : '' }} label-1" href="{{ route('setting.shift.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-clock"></i></span></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Shift</span></span></div>
+                                    class="nav-link-text">Shifts</span></span></div>
                     </a>
                 </div>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.unit.*') ? 'active' : '' }} label-1" href="{{ route('setting.unit.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-ruler-combined"></i></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Unit</span></span></div>
+                                    class="nav-link-text">Units</span></span></div>
                     </a>
                 </div>
-                <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
+                <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.role.*') ? 'active' : '' }} label-1" href="{{ route('setting.role.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                     class="fas fa-user-cog"></span></span><span

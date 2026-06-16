@@ -191,7 +191,7 @@
                             </div>
                         @endif
 
-                        <form action="{{ route('setting.profile.update') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('setting.profile.update',$profile->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
                             <div class="row g-3">
@@ -262,7 +262,7 @@
                             </div>
                         @endif
 
-                        <form action="#" method="POST">
+                        <form action="{{ route('setting.profile.group',$profile->id) }}" method="POST">
                             @csrf
                             @method('PUT')
                             <div class="row g-3">
@@ -271,12 +271,12 @@
                                     <select name="group_id"
                                         class="form-select @error('group_id', 'group') is-invalid @enderror">
                                         <option value="">Select Role</option>
-                                        {{-- @foreach ($groups as $group)
+                                        @foreach ($groups as $group)
                                             <option value="{{ $group->id }}"
                                                 {{ old('group_id', $profile->group_id) == $group->id ? 'selected' : '' }}>
-                                                {{ $group->name }}
+                                                {{ $group->group_name }}
                                             </option>
-                                        @endforeach --}}
+                                        @endforeach
                                     </select>
                                     @error('group_id', 'group')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -287,6 +287,60 @@
                             <div class="d-flex justify-content-end">
                                 <button type="submit" class="btn btn-primary px-4">
                                     <i class="fas fa-save me-2"></i> Update Role
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Update Outlet Card -->
+                <div class="card soft-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-building me-2 text-primary"></i> Change Oulet</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (session('company_success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('company_success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+                        @if ($errors->company->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <ul class="mb-0">
+                                    @foreach ($errors->company->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        <form action="{{ route('setting.profile.company',$profile->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Outlet</label>
+                                    <select name="company_id"
+                                        class="form-select @error('company_id', 'company') is-invalid @enderror">
+                                        <option value="">Select Outlet</option>
+                                        @foreach ($companies as $company)
+                                            <option value="{{ $company->id }}"
+                                                {{ old('company_id', $profile->company_id) == $company->id ? 'selected' : '' }}>
+                                                {{ $company->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('company_id', 'company')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <hr class="my-4">
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save me-2"></i> Update Outlet
                                 </button>
                             </div>
                         </form>
@@ -319,7 +373,7 @@
                             </div>
                         @endif
 
-                        <form action="{{ route('setting.profile.update') }}" method="POST">
+                        <form action="{{ route('setting.profile.update',$profile->id) }}" method="POST">
                             @csrf
                             @method('PUT')
                             <div class="row g-3">

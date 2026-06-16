@@ -8,7 +8,7 @@
     <!--    Document Title-->
     <!-- ===============================================-->
     <title>{{ env('APP_NAME') }}</title>
-
+    
     <!-- ===============================================-->
     <!--    Favicons-->
     <!-- ===============================================-->
@@ -19,6 +19,7 @@
     <link rel="manifest" href="{{ asset('assets/img/favicons/manifest.json') }}">
     <meta name="msapplication-TileImage" content="{{ asset('assets/img/favicons/mstile-150x150.png') }}">
     <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Kernel of Inventory Talent and Asset adalah project yang mengintegrasikan HRIS, Inventory dan POS dalam 1 wadah">
     <script src="{{ asset('vendors/simplebar/simplebar.min.js') }}"></script>
     <script src="{{ asset('assets/js/config.js') }}"></script>
 

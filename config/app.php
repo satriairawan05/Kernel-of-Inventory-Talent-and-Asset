@@ -134,6 +134,6 @@ return [
     |       
     */
 
-    'version' => '1.0.0-alpha',
+    'version' => 'v1.0.0-alpha',
 
 ];

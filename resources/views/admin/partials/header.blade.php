@@ -13,7 +13,7 @@
     <!--    Document Title-->
     <!-- ===============================================-->
     <title>{{ env('APP_NAME') }}</title>
-
+    
     <!-- ===============================================-->
     <!--    Favicons-->
     <!-- ===============================================-->
@@ -24,6 +24,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/favicons/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ asset('assets/img/favicons/manifest.json') }}">
     <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Kernel of Inventory Talent and Asset adalah project yang mengintegrasikan HRIS, Inventory dan POS dalam 1 wadah">
     <script src="{{ asset('vendors/simplebar/simplebar.min.js') }}"></script>
     <script src="{{ asset('assets/js/config.js') }}"></script>
 
