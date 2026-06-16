@@ -2,31 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\User;
+use App\Services\AccountService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AccountStoreRequest;
 use App\Http\Requests\AccountUpdateRequest;
-use App\Models\User;
-use App\Services\AccountService;
 
 class AccountController extends Controller
 {
-    /**
-     * Constructor for Controller.
-     */
-    public function __construct(private $access = [])
-    {
-        //
-    }
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        dd($this->access);
         try {
             $accounts = User::paginate(25);
-            return view('admin.setting.account.index',['accounts' => $accounts]);
+            return view('admin.setting.account.index',['accounts' => $accounts, 'access' => $this->get_access_per_page('Account')]);
         } catch(\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());

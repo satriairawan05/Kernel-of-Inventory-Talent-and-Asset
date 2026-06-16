@@ -10,21 +10,13 @@ use App\Models\Company;
 class CompanyController extends Controller
 {
     /**
-     * Constructor for Controller.
-     */
-    public function __construct(private $name = 'Company', private $access = [])
-    {
-        //
-    }
-
-    /**
      * Display a listing of the resource.
      */
     public function index()
     {
         try {
             $companies = Company::paginate(5);
-            return view('admin.setting.company.index', ['companies' => $companies, 'name' => $this->name]);
+            return view('admin.setting.company.index', ['companies' => $companies, 'name' => 'Company']);
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());

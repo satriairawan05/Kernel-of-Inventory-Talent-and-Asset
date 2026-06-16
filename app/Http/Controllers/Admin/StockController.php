@@ -13,14 +13,6 @@ use App\Services\StockService;
 class StockController extends Controller
 {
     /**
-     * Constructor for Controller.
-     */
-    public function __construct(private $access = [])
-    {
-        //
-    }
-
-    /**
      * Display a listing of the resource.
      */
     public function index()
