@@ -114,9 +114,11 @@
                 <h4 class="card-title mb-1"><i class="fas fa-calendar-day me-2"></i>Daily Sales Report</h4>
                 <p class="small mb-0 text-white-50">Ringkasan harian dengan tampilan lebih rapi seperti weekly & monthly.</p>
             </div>
+            @if ($access['Create'])
             <a href="{{ route('pos.report.create') }}" class="btn btn-success btn-add-company">
                 <i class="fas fa-plus me-1"></i> Add New Report
             </a>
+            @endif
         </div>
         <div class="card-body">
             <div class="row g-3">
@@ -142,6 +144,7 @@
         </div>
     </div>
 
+    @if ($access['Read'] == 1)
     <div class="card report-card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="fas fa-table me-2"></i> Daily Report List</h5>
@@ -185,15 +188,20 @@
                                         <a href="{{ route('pos.report.show', $report) }}" class="btn btn-sm btn-subtle-primary">
                                             <i class="fas fa-eye"></i> Detail
                                         </a>
+                                        @if ($access['Update'] == 1)
                                         <a href="{{ route('pos.report.edit', $report) }}" class="btn btn-sm btn-primary">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
+                                        @endif
+                                        @if ($access['Delete'] == 1)
                                         <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
                                             data-bs-target="#deleteReportModal{{ $report->id }}">
                                             <i class="fas fa-trash"></i> Delete
                                         </button>
+                                        @endif
                                     </div>
 
+                                    @if ($access['Delete'] == 1)
                                     <div class="modal fade" id="deleteReportModal{{ $report->id }}" tabindex="-1" data-bs-backdrop="static" aria-labelledby="deleteReportModalLabel{{ $report->id }}" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content border-0 shadow">
@@ -222,6 +230,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -243,4 +252,5 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection

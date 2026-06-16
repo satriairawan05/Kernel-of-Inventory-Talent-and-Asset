@@ -20,6 +20,14 @@ use Illuminate\Support\Facades\Log;
 class ProductController extends Controller
 {
     /**
+     * Constructor for Controller.
+     */
+    public function __construct(private $access = [])
+    {
+        //
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request, ProductService $productService)
@@ -33,6 +41,7 @@ class ProductController extends Controller
             return view('admin.inventory.product.index', [
                 'products' => $products,
                 'search' => $keyword,
+                'access' => $this->get_access_per_page('Product')
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error($e->getMessage());

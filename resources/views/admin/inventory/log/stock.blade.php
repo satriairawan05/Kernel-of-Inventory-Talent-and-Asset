@@ -33,6 +33,7 @@
         </div>
     </section>
 
+    @if ($access['Read'] == 1)
     <div class="card soft-panel shadow-sm border-0 rounded-4 overflow-hidden mt-4">
         <div class="card-header bg-white border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div>
@@ -106,5 +107,6 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 @endsection

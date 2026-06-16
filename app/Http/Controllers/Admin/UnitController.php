@@ -18,7 +18,8 @@ class UnitController extends Controller
             $units = Unit::paginate(25);
 
             return view('admin.setting.unit.index',[
-                'units' => $units
+                'units' => $units,
+                'access' => $this->get_access_per_page('Unit')
             ]);
         } catch(\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());

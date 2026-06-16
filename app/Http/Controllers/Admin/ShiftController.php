@@ -21,7 +21,7 @@ class ShiftController extends Controller
         try {
             $shifts = Shift::paginate(5);
 
-            return view('admin.setting.shift.index', ['shifts' => $shifts]);
+            return view('admin.setting.shift.index', ['shifts' => $shifts,'access' => $this->get_access_per_page('Shift')]);
         } catch (QueryException $e) {
             Log::error($e->getMessage());
 

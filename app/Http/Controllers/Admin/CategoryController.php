@@ -21,7 +21,7 @@ class CategoryController extends Controller
         try {
             $categories = Category::paginate(10);
 
-            return view('admin.inventory.category.index', ['categories' => $categories]);
+            return view('admin.inventory.category.index', ['categories' => $categories, 'access' => $this->get_access_per_page('Category')]);
         } catch (QueryException $e) {
             Log::error($e->getMessage());
 

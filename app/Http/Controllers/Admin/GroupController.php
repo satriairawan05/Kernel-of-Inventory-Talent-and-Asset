@@ -11,13 +11,22 @@ use Illuminate\Support\Facades\Log;
 class GroupController extends Controller
 {
     /**
+     * Constructor for Controller.
+     */
+    public function __construct(private $access = [])
+    {
+        //
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
     {
         try {
             return view('admin.setting.role.index', [
-                'roles' => Group::paginate(15)
+                'roles' => Group::paginate(15),
+                'access' => $this->get_access_per_page('Roles')
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error($e->getMessage());

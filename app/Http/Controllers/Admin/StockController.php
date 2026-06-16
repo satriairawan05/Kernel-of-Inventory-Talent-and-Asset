@@ -126,6 +126,6 @@ class StockController extends Controller
     public function stockLogs(ModuleService $moduleService)
     {
         $movements = $moduleService->getStockMovements();
-        return view('admin.inventory.log.stock', ['movements' => $movements]);
+        return view('admin.inventory.log.stock', ['movements' => $movements,'access' => $this->get_access_per_page('Log')]);
     }
 }

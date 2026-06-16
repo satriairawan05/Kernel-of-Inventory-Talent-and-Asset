@@ -11,7 +11,6 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
 
-    // 1. Deklarasikan properti secara manual di atas (Jangan di-promote di constructor)
     public array $access = [];
     protected RoleService $roleService;
 

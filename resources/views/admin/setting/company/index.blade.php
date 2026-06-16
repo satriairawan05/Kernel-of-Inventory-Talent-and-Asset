@@ -29,9 +29,12 @@
             <p class="eyebrow mb-2">Settings</p>
             <h2 class="mb-1">Outlet Management</h2>
         </div>
+        @if ($access['Create'] == 1)
         <a href="{{ route('setting.company.create') }}" class="btn btn-success"><i class="fas fa-plus me-1"></i> Add New Outlet</a>
+        @endif
     </section>
 
+    @if ($access['Read'] == 1)
     <div class="card soft-card mt-4">
         <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div>
@@ -65,7 +68,10 @@
                                 <td>{{ $company->bussiness_type }}</td>
                                 <td><img src="{{ $company->logo_url }}" alt="{{ $company->company_name }}" class="company-logo rounded"></td>
                                 <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
+                                    @if ($access['Update'] == 1)
                                     <a href="{{ route('setting.company.edit', $company) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Edit Outlet</a>
+                                    @endif
+                                    @if ($access['Delete'] == 1)
                                     <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteCompanyModal{{ $company->id }}"><i class="fas fa-trash"></i> Delete Outlet</button>
                                     <div class="modal fade" id="deleteCompanyModal{{ $company->id }}" tabindex="-1" data-bs-backdrop="static" aria-labelledby="deleteCompanyModalLabel{{ $company->id }}" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
@@ -91,6 +97,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -107,5 +114,6 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 @endsection

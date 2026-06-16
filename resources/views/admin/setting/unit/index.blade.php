@@ -28,9 +28,12 @@
             <p class="eyebrow mb-2">Settings</p>
             <h2 class="mb-1">Unit Management</h2>
         </div>
+        @if ($access['Create'] == 1)
         <a href="{{ route('setting.unit.create') }}" class="btn btn-success"><i class="fas fa-plus me-1"></i> Add New</a>
+        @endif
     </section>
 
+    @if ($access['Read'] == 1)
     <div class="card soft-card mt-4">
         <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div>
@@ -58,7 +61,10 @@
                                 <td>{{ $unit->unit_code }}</td>
                                 <td>{{ $unit->description }}</td>
                                 <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
+                                    @if ($access['Update'] == 1)
                                     <a href="{{ route('setting.unit.edit', $unit) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Edit</a>
+                                    @endif
+                                    @if ($access['Delete'] == 1)
                                     <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUnitModal{{ $unit->id }}"><i class="fas fa-trash"></i> Delete</button>
                                     <div class="modal fade" id="deleteUnitModal{{ $unit->id }}" tabindex="-1" data-bs-backdrop="static" aria-labelledby="deleteUnitModalLabel{{ $unit->id }}" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
@@ -81,6 +87,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -97,5 +104,6 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 @endsection

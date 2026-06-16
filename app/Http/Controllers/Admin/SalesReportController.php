@@ -38,7 +38,7 @@ class SalesReportController extends Controller
         try {
             $data = $salesReportQueryService->getPaginatedReports(10);
 
-            return view('admin.pos.sales_report.daily.index', ['reports' => $data]);
+            return view('admin.pos.sales_report.daily.index', ['reports' => $data,'access' => $this->get_access_per_page('Sale Reports')]);
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());

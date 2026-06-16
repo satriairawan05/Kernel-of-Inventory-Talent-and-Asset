@@ -45,10 +45,13 @@
                     <a href="{{ route('inventory.product.index') }}" class="btn btn-outline-light">Reset</a>
                 @endif
             </form>
+            @if ($access['Create'] == 1)
             <a href="{{ route('inventory.product.create') }}" class="btn btn-success"><i class="fas fa-plus me-1"></i> Add Product</a>
+            @endif
         </div>
     </section>
 
+    @if ($access['Read'] == 1)
     <div class="card soft-panel shadow-sm border-0 rounded-4 overflow-hidden mt-4">
         <div class="card-header bg-white border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div>
@@ -99,10 +102,14 @@
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
                                     <a href="{{ route('inventory.product.show', $product) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+                                    @if ($access['Update'] == 1)
                                     <a href="{{ route('inventory.product.edit', $product) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                    @endif
+                                    @if ($access['Delete'] == 1)
                                     <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ $product->id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    @endif
                                 </div>
 
                                 <div class="modal fade" id="deleteProductModal{{ $product->id }}" tabindex="-1" aria-hidden="true">
@@ -138,5 +145,6 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 @endsection
