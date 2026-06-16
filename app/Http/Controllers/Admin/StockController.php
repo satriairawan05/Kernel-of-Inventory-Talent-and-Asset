@@ -22,7 +22,7 @@ class StockController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
-            return view('admin.inventory.stock.index', compact('stocks'));
+            return view('admin.inventory.stock.index', ['stocks' => $stocks, 'access' => $this->get_access_per_page('Stock')]);
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
