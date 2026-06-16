@@ -165,7 +165,7 @@
                             setiap modul KITA.</p>
                         <div class="info-row d-flex justify-content-between">
                             <span><i class="fas fa-shield-alt me-1"></i> RBAC</span>
-                            <a href="#" class="text-primary fw-semibold small">Kelola <i
+                            <a href="{{ route('setting.role.index') }}" class="text-primary fw-semibold small">Kelola <i
                                     class="fas fa-arrow-right ms-1"></i></a>
                         </div>
                     </div>
