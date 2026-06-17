@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 namespace App\Services;
 
@@ -7,10 +7,10 @@ use App\Models\StockMovement;
 use App\Enums\StockMovementTypeEnum;
 use Illuminate\Support\Facades\DB;
 
-class StockInService
+class ReturnStockService
 {
-    /**
-     * Create a new stock-in transaction (purchase).
+     /**
+     * Create a new return transaction (stock in).
      *
      * @param array $data
      * @return \App\Models\StockMovement
@@ -25,7 +25,6 @@ class StockInService
             $stock = Stock::where('product_variant_id', $variantId)->first();
 
             if (!$stock) {
-                // If no stock record exists, create one with 0 stock
                 $stock = Stock::create([
                     'product_variant_id' => $variantId,
                     'current_stock' => 0,
@@ -41,18 +40,18 @@ class StockInService
             // Create movement record
             return StockMovement::create([
                 'product_variant_id' => $variantId,
-                'movement_type' => StockMovementTypeEnum::PURCHASE,
-                'qty' => $qty,
-                'stock_before' => $stockBefore,
-                'stock_after' => $stockAfter,
-                'notes' => $data['notes'] ?? null,
-                'user_id' => auth()->user()->id
+                'movement_type'      => StockMovementTypeEnum::RETURN,
+                'qty'                => $qty, // positive
+                'stock_before'       => $stockBefore,
+                'stock_after'        => $stockAfter,
+                'notes'              => $data['notes'] ?? null,
+                'user_id'            => auth()->user()->id,
             ]);
         });
     }
 
     /**
-     * Update an existing stock-in transaction.
+     * Update an existing return transaction.
      *
      * @param \App\Models\StockMovement $movement
      * @param array $data
@@ -65,10 +64,9 @@ class StockInService
             $oldQty = $movement->qty;
             $newQty = $data['qty'];
 
-            // Get current stock
             $stock = Stock::where('product_variant_id', $variantId)->firstOrFail();
 
-            // Reverse the old movement
+            // Reverse old movement
             $stockBefore = $stock->current_stock - $oldQty;
 
             // Apply new qty
@@ -77,13 +75,13 @@ class StockInService
             // Update stock
             $stock->update(['current_stock' => $stockAfter]);
 
-            // Update movement record
+            // Update movement
             $movement->update([
-                'qty' => $newQty,
-                'stock_before' => $stockBefore,
-                'stock_after' => $stockAfter,
-                'notes' => $data['notes'] ?? null,
-                'user_id' => auth()->user()->id
+                'qty'           => $newQty,
+                'stock_before'  => $stockBefore,
+                'stock_after'   => $stockAfter,
+                'notes'         => $data['notes'] ?? null,
+                'user_id'       => auth()->user()->id,
             ]);
 
             return $movement->fresh();
@@ -91,7 +89,7 @@ class StockInService
     }
 
     /**
-     * Delete a stock-in transaction (reverse the movement).
+     * Delete a return transaction (reverse the movement).
      *
      * @param \App\Models\StockMovement $movement
      * @return bool
@@ -102,14 +100,12 @@ class StockInService
             $variantId = $movement->product_variant_id;
             $qty = $movement->qty;
 
-            // Get current stock
             $stock = Stock::where('product_variant_id', $variantId)->firstOrFail();
 
-            // Reverse the movement (subtract qty)
+            // Reverse: subtract qty
             $newStock = $stock->current_stock - $qty;
             $stock->update(['current_stock' => $newStock]);
 
-            // Delete the movement record
             return $movement->delete();
         });
     }

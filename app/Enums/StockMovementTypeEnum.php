@@ -9,6 +9,7 @@ class StockMovementTypeEnum
     public const SALE = 'sale';
     public const ADJUSTMENT = 'adjustment';
     public const OPNAME = 'opname';
+    public const RETURN = 'return';
 
     public static function labels(): array
     {
@@ -18,6 +19,7 @@ class StockMovementTypeEnum
             self::SALE => 'Sale',
             self::ADJUSTMENT => 'Adjustment',
             self::OPNAME => 'Opname',
+            self::RETURN => 'Return',
         ];
     }
 

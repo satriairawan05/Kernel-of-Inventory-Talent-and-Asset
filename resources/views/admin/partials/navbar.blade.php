@@ -204,8 +204,8 @@
                         </ul>
                     </div>
                 </div>
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-ingoods"
-                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-ingoods">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nav-ingoods"
+                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nav-ingoods">
                         <div class="d-flex align-items-center">
                             <div class="dropdown-indicator-icon-wrapper"><span
                                     class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
@@ -214,14 +214,14 @@
                         </div>
                     </a>
                     <div class="parent-wrapper label-1">
-                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-ingoods">
+                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-ingoods">
                             <li class="collapsed-nav-item-title d-none">Incoming Goods</li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-in.create') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">New Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-in.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -229,8 +229,8 @@
                         </ul>
                     </div>
                 </div>
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-returnitems"
-                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-returnitems">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nav-returnitems"
+                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nav-returnitems">
                         <div class="d-flex align-items-center">
                             <div class="dropdown-indicator-icon-wrapper"><span
                                     class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
@@ -239,14 +239,14 @@
                         </div>
                     </a>
                     <div class="parent-wrapper label-1">
-                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-returnitems">
+                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-returnitems">
                             <li class="collapsed-nav-item-title d-none">Exit Items</li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-out.create') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">New Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-out.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -254,8 +254,8 @@
                         </ul>
                     </div>
                 </div>
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-exititems"
-                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-exititems">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nav-exititems"
+                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nav-exititems">
                         <div class="d-flex align-items-center">
                             <div class="dropdown-indicator-icon-wrapper"><span
                                     class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
@@ -264,14 +264,14 @@
                         </div>
                     </a>
                     <div class="parent-wrapper label-1">
-                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-exititems">
+                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-exititems">
                             <li class="collapsed-nav-item-title d-none">Return Items</li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.return-stock.create') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">New Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.return-stock.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -279,8 +279,8 @@
                         </ul>
                     </div>
                 </div>
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-stockopnames"
-                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-stockopnames">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nav-stockopnames"
+                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nav-stockopnames">
                         <div class="d-flex align-items-center">
                             <div class="dropdown-indicator-icon-wrapper"><span
                                     class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
@@ -289,7 +289,7 @@
                         </div>
                     </a>
                     <div class="parent-wrapper label-1">
-                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-stockopnames">
+                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-stockopnames">
                             <li class="collapsed-nav-item-title d-none">Stock Opnames</li>
                             <li class="nav-item"><a class="nav-link" href="#">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">New Report</span>

@@ -227,8 +227,8 @@
                         <h5 class="fw-bold">Exit Items</h5>
                         <p class="small text-secondary">Catat barang keluar (penjualan, pemakaian).</p>
                         <ul class="submenu-list">
-                            <li><a href="#"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
-                            <li><a href="#"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
+                            <li><a href="{{ route('inventory.stock-out.create') }}"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
+                            <li><a href="{{ route('inventory.stock-out.index') }}"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
                         </ul>
                     </div>
                 </div>
@@ -240,13 +240,13 @@
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="card-icon mb-2"><i class="fas fa-undo-alt"></i></div>
-                            <span class="badge-subtle">Retur</span>
+                            <span class="badge-subtle">Return</span>
                         </div>
                         <h5 class="fw-bold">Return Items</h5>
-                        <p class="small text-secondary">Proses retur barang dari pelanggan.</p>
+                        <p class="small text-secondary">Proses return barang dari pelanggan.</p>
                         <ul class="submenu-list">
-                            <li><a href="#"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
-                            <li><a href="#"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
+                            <li><a href="{{ route('inventory.return-stock.create') }}"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
+                            <li><a href="{{ route('inventory.return-stock.index') }}"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
                         </ul>
                     </div>
                 </div>

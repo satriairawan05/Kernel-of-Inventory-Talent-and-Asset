@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\StockMovementTypeEnum;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StockOutStoreRequest;
-use App\Http\Requests\StockOutUpdateRequest;
+use App\Http\Requests\ReturnStockStoreRequest;
+use App\Http\Requests\ReturnStockUpdateRequest;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
-use App\Services\StockOutService;
+use App\Services\ReturnStockService;
 use Illuminate\Http\Request;
 
-class StockOutController extends Controller
+class ReturnStockController extends Controller
 {
     /*
     * Global Variable for Access Page
@@ -22,7 +23,7 @@ class StockOutController extends Controller
     */
     public function get_access()
     {
-        $this->accessPage = $this->get_access_per_page('Exit Item');
+        $this->accessPage = $this->get_access_per_page('Return Item');
 
         $data = [
             "Create" => (int) $this->accessPage['Create'],
@@ -46,11 +47,11 @@ class StockOutController extends Controller
         } else {
             try {
                 $movements = StockMovement::with(['productVariant.product', 'user'])
-                    ->where('movement_type', \App\Enums\StockMovementTypeEnum::SALE)
+                    ->where('movement_type', StockMovementTypeEnum::RETURN)
                     ->orderBy('created_at', 'desc')
                     ->paginate(15);
 
-                return view('admin.inventory.stock-out.index', compact('movements'));
+                return view('admin.inventory.return-stock.index', compact('movements'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -70,7 +71,7 @@ class StockOutController extends Controller
         } else {
             try {
                 $productVariants = ProductVariant::with('product')->get();
-                return view('admin.inventory.stock-out.create', compact('productVariants'));
+                return view('admin.inventory.return-stock.create', compact('productVariants'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -81,7 +82,7 @@ class StockOutController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StockOutStoreRequest $request, StockOutService $stockOutService)
+    public function store(ReturnStockStoreRequest $request, ReturnStockService $returnStockService)
     {
         $access = $this->get_access();
 
@@ -89,9 +90,9 @@ class StockOutController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $stockOutService->store($request->validated());
-                return redirect()->route('inventory.stock-out.index')
-                    ->with('success', 'Barang keluar berhasil dicatat.');
+                $returnStockService->store($request->validated());
+                return redirect()->route('inventory.return-stock.index')
+                    ->with('success', 'Retur barang berhasil dicatat.');
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -130,7 +131,7 @@ class StockOutController extends Controller
         } else {
             try {
                 $productVariants = ProductVariant::with('product')->get();
-                return view('admin.inventory.stock-out.edit', compact('stockOut', 'productVariants'));
+                return view('admin.inventory.return-stock.edit', ['return' => $stockMovement, 'productVariants' => $productVariants]);
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -141,7 +142,7 @@ class StockOutController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(StockOutUpdateRequest $request, StockMovement $stockMovement, StockOutService $stockOutService)
+    public function update(ReturnStockUpdateRequest $request, StockMovement $stockMovement, ReturnStockService $returnStockService)
     {
         $access = $this->get_access();
 
@@ -149,9 +150,9 @@ class StockOutController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $stockOutService->update($stockMovement, $request->validated());
-                return redirect()->route('inventory.stock-out.index')
-                    ->with('success', 'Barang keluar berhasil diperbarui.');
+                $returnStockService->update($stockMovement, $request->validated());
+                return redirect()->route('inventory.return-stock.index')
+                    ->with('success', 'Retur barang berhasil diperbarui.');
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -162,7 +163,7 @@ class StockOutController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(StockMovement $stockMovement, StockOutService $stockOutService)
+    public function destroy(StockMovement $stockMovement, ReturnStockService $returnStockService)
     {
         $access = $this->get_access();
 
@@ -170,9 +171,9 @@ class StockOutController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $stockOutService->destroy($stockMovement);
-                return redirect()->route('inventory.stock-out.index')
-                    ->with('success', 'Barang keluar berhasil dihapus dan stok dikembalikan.');
+                $returnStockService->destroy($stockMovement);
+                return redirect()->route('inventory.return-stock.index')
+                    ->with('success', 'Retur barang berhasil dihapus dan stok dikembalikan.');
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
