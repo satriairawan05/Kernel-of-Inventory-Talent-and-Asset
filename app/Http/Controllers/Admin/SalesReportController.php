@@ -14,12 +14,26 @@ use Illuminate\Support\Carbon;
 
 class SalesReportController extends Controller
 {
-    /**
-     * Constructor for Controller.
-     */
-    public function __construct(private $access = [])
+    /*
+    * Global Variable for Access Page
+    */
+    public $accessPage = [];
+
+    /*
+    * Get Access for Controller
+    */
+    public function get_access()
     {
-        //
+        $this->accessPage = $this->get_access_per_page('Sale Reports');
+
+        $data = [
+            "Create" => (int) $this->accessPage['Create'],
+            "Read" => (int) $this->accessPage['Read'],
+            "Update" => (int) $this->accessPage['Update'],
+            "Delete" => (int) $this->accessPage['Delete'],
+        ];
+
+        return $data;
     }
 
     /**

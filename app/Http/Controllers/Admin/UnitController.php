@@ -4,26 +4,55 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UnitStoreRequest;
+use App\Http\Requests\UnitUpdateRequest;
 use App\Models\Unit;
 use App\Services\UnitService;
 
 class UnitController extends Controller
 {
+    /*
+    * Global Variable for Access Page
+    */
+    public $accessPage = [];
+
+    /*
+    * Get Access for Controller
+    */
+    public function get_access()
+    {
+        $this->accessPage = $this->get_access_per_page('Unit');
+
+        $data = [
+            "Create" => (int) $this->accessPage['Create'],
+            "Read" => (int) $this->accessPage['Read'],
+            "Update" => (int) $this->accessPage['Update'],
+            "Delete" => (int) $this->accessPage['Delete'],
+        ];
+
+        return $data;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        try {
-            $units = Unit::paginate(25);
+        $access = $this->get_access();
 
-            return view('admin.setting.unit.index',[
-                'units' => $units,
-                'access' => $this->get_access_per_page('Unit')
-            ]);
-        } catch(\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $units = Unit::paginate(25);
+    
+                return view('admin.setting.unit.index',[
+                    'units' => $units,
+                    'access' => $this->get_access_per_page('Unit')
+                ]);
+            } catch(\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -32,11 +61,17 @@ class UnitController extends Controller
      */
     public function create()
     {
-        try {
-            return view('admin.setting.unit.create');
-        } catch(\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        $access = $this->get_access();
+
+        if (!isset($access['Create']) || $access['Create'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                return view('admin.setting.unit.create');
+            } catch(\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -45,13 +80,19 @@ class UnitController extends Controller
      */
     public function store(UnitStoreRequest $request, UnitService $unitService)
     {
-        try {
-        $unitService->store($request->validated());
+        $access = $this->get_access();
 
-        return redirect()->route('setting.unit.index')->with('success','Unit created successfully.');
-        } catch(\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Create']) || $access['Create'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+            $unitService->store($request->validated());
+    
+            return redirect()->route('setting.unit.index')->with('success','Unit created successfully.');
+            } catch(\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -60,11 +101,17 @@ class UnitController extends Controller
      */
     public function show(Unit $unit)
     {
-        try {
-            //
-        } catch(\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        $access = $this->get_access();
+
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                //
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -73,14 +120,21 @@ class UnitController extends Controller
      */
     public function edit(Unit $unit)
     {
-        try {
-            return view('admin.setting.unit.edit',[
-                'unit' => $unit
-            ]);
-        } catch(\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        $access = $this->get_access();
+
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                return view('admin.setting.unit.edit',[
+                    'unit' => $unit
+                ]);
+            } catch(\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+
     }
 
     /**
@@ -88,15 +142,22 @@ class UnitController extends Controller
      */
     public function update(UnitUpdateRequest $request, Unit $unit, UnitService $unitService)
     {
-        try {
-        $unitService->update($unit,$request->validated());
-        
-        return redirect()->route('setting.unit.index')->with('success','Unit updated successfully.');
+        $access = $this->get_access();
 
-        } catch(\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+            $unitService->update($unit,$request->validated());
+            
+            return redirect()->route('setting.unit.index')->with('success','Unit updated successfully.');
+    
+            } catch(\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+
     }
 
     /**
@@ -104,14 +165,21 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit, UnitService $unitService)
     {
-        try {
-        $unitService->destroy($unit);
+        $access = $this->get_access();
 
-        return redirect()->route('setting.unit.index')->with('success','Unit deleted successfully.');
-        
-        } catch(\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Delete']) || $access['Delete'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+            $unitService->destroy($unit);
+    
+            return redirect()->route('setting.unit.index')->with('success','Unit deleted successfully.');
+            
+            } catch(\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+        
     }
 }

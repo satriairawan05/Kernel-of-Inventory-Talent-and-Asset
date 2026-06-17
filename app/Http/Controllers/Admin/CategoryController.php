@@ -13,19 +13,47 @@ use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
 {
+    /*
+    * Global Variable for Access Page
+    */
+    public $accessPage = [];
+
+    /*
+    * Get Access for Controller
+    */
+    public function get_access()
+    {
+        $this->accessPage = $this->get_access_per_page('Category');
+
+        $data = [
+            "Create" => (int) $this->accessPage['Create'],
+            "Read" => (int) $this->accessPage['Read'],
+            "Update" => (int) $this->accessPage['Update'],
+            "Delete" => (int) $this->accessPage['Delete'],
+        ];
+
+        return $data;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        try {
-            $categories = Category::paginate(10);
+        $access = $this->get_access();
 
-            return view('admin.inventory.category.index', ['categories' => $categories, 'access' => $this->get_access_per_page('Category')]);
-        } catch (QueryException $e) {
-            Log::error($e->getMessage());
-
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $categories = Category::paginate(10);
+    
+                return view('admin.inventory.category.index', ['categories' => $categories, 'access' => $this->get_access_per_page('Category')]);
+            } catch (QueryException $e) {
+                Log::error($e->getMessage());
+    
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -34,14 +62,20 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        try {
-            $companies = Company::all();
+        $access = $this->get_access();
 
-            return view('admin.inventory.category.create', ['companies' => $companies]);
-        } catch (QueryException $e) {
-            Log::error($e->getMessage());
-
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Create']) || $access['Create'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $companies = Company::all();
+    
+                return view('admin.inventory.category.create', ['companies' => $companies]);
+            } catch (QueryException $e) {
+                Log::error($e->getMessage());
+    
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -50,15 +84,22 @@ class CategoryController extends Controller
      */
     public function store(CategoryStoreRequest $request, CategoryService $categoryService)
     {
-        try {
-            $categoryService->store($request->validated());
+        $access = $this->get_access();
 
-            return redirect()->route('inventory.category.index')->with('success', 'Category created successfully.');
-        } catch (QueryException $e) {
-            Log::error($e->getMessage());
-
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Create']) || $access['Create'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $categoryService->store($request->validated());
+    
+                return redirect()->route('inventory.category.index')->with('success', 'Category created successfully.');
+            } catch (QueryException $e) {
+                Log::error($e->getMessage());
+    
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+
     }
 
     /**
@@ -66,12 +107,17 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        try {
-            //
-        } catch (QueryException $e) {
-            Log::error($e->getMessage());
+        $access = $this->get_access();
 
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                //
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -80,14 +126,20 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        try {
-            $companies = Company::all();
+        $access = $this->get_access();
 
-            return view('admin.inventory.category.edit', ['category' => $category, 'companies' => $companies]);
-        } catch (QueryException $e) {
-            Log::error($e->getMessage());
-
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $companies = Company::all();
+    
+                return view('admin.inventory.category.edit', ['category' => $category, 'companies' => $companies]);
+            } catch (QueryException $e) {
+                Log::error($e->getMessage());
+    
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -96,15 +148,21 @@ class CategoryController extends Controller
      */
     public function update(CategoryUpdateRequest $request, Category $category, CategoryService $categoryService)
     {
-        try {
-            $categoryService->update($category, $request->validated());
+        $access = $this->get_access();
 
-            return redirect()->route('inventory.category.index')->with('success', 'Category updated successfully.');
-
-        } catch (QueryException $e) {
-            Log::error($e->getMessage());
-
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $categoryService->update($category, $request->validated());
+    
+                return redirect()->route('inventory.category.index')->with('success', 'Category updated successfully.');
+    
+            } catch (QueryException $e) {
+                Log::error($e->getMessage());
+    
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -113,14 +171,20 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category, CategoryService $categoryService)
     {
-        try {
-            $categoryService->destroy($category->find(request()->segment(3)));
+        $access = $this->get_access();
 
-            return redirect()->route('inventory.category.index')->with('success', 'Category deleted successfully.');
-        } catch (QueryException $e) {
-            Log::error($e->getMessage());
-
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Delete']) || $access['Delete'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $categoryService->destroy($category->find(request()->segment(3)));
+    
+                return redirect()->route('inventory.category.index')->with('success', 'Category deleted successfully.');
+            } catch (QueryException $e) {
+                Log::error($e->getMessage());
+    
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 }

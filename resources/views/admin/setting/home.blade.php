@@ -120,7 +120,7 @@
                             <div class="card-icon"><i class="fas fa-clock"></i></div>
                             <span class="badge-subtle">Jam Kerja</span>
                         </div>
-                        <h5 class="fw-bold mt-3 mb-2">Shift</h5>
+                        <h5 class="fw-bold mt-3 mb-2">Shifts</h5>
                         <p class="small text-secondary">Atur jadwal shift kerja, jam masuk, jam pulang, dan hari libur untuk
                             setiap outlet.</p>
                         <div class="info-row d-flex justify-content-between">
@@ -140,7 +140,7 @@
                             <div class="card-icon"><i class="fas fa-ruler-combined"></i></div>
                             <span class="badge-subtle">Satuan</span>
                         </div>
-                        <h5 class="fw-bold mt-3 mb-2">Unit</h5>
+                        <h5 class="fw-bold mt-3 mb-2">Units</h5>
                         <p class="small text-secondary">Buat satuan barang (pcs, kg, liter, box, dll) yang akan digunakan di
                             modul Inventory.</p>
                         <div class="info-row d-flex justify-content-between">

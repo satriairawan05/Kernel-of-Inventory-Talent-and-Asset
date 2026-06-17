@@ -19,26 +19,55 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
+    /*
+    * Global Variable for Access Page
+    */
+    public $accessPage = [];
+
+    /*
+    * Get Access for Controller
+    */
+    public function get_access()
+    {
+        $this->accessPage = $this->get_access_per_page('Product');
+
+        $data = [
+            "Create" => (int) $this->accessPage['Create'],
+            "Read" => (int) $this->accessPage['Read'],
+            "Update" => (int) $this->accessPage['Update'],
+            "Delete" => (int) $this->accessPage['Delete'],
+        ];
+
+        return $data;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request, ProductService $productService)
     {
-        try {
-            $keyword = $request->query('search', '');
+        $access = $this->get_access();
 
-            $products = $productService->search($keyword)
-                ->load(['company', 'category', 'unit']);
-
-            return view('admin.inventory.product.index', [
-                'products' => $products,
-                'search' => $keyword,
-                'access' => $this->get_access_per_page('Product')
-            ]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $keyword = $request->query('search', '');
+    
+                $products = $productService->search($keyword)
+                    ->load(['company', 'category', 'unit']);
+    
+                return view('admin.inventory.product.index', [
+                    'products' => $products,
+                    'search' => $keyword,
+                    'access' => $this->get_access_per_page('Product')
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+        
     }
 
     /**
@@ -46,16 +75,23 @@ class ProductController extends Controller
      */
     public function create()
     {
-        try {
-            return view('admin.inventory.product.create', [
-                'companies' => Company::query()->latest('id')->get(),
-                'categories' => Category::query()->latest('id')->get(),
-                'units' => Unit::query()->latest('id')->get(),
-            ]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        $access = $this->get_access();
+
+        if (!isset($access['Create']) || $access['Create'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                return view('admin.inventory.product.create', [
+                    'companies' => Company::query()->latest('id')->get(),
+                    'categories' => Category::query()->latest('id')->get(),
+                    'units' => Unit::query()->latest('id')->get(),
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+        
     }
 
     /**
@@ -63,14 +99,21 @@ class ProductController extends Controller
      */
     public function store(ProductStoreRequest $request, ProductService $productService)
     {
-        try {
-            $productService->store($request->validated());
+        $access = $this->get_access();
 
-            return redirect()->route('inventory.product.index')->with('success', 'Product created successfully.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Create']) || $access['Create'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $productService->store($request->validated());
+    
+                return redirect()->route('inventory.product.index')->with('success', 'Product created successfully.');
+            } catch (\Illuminate\Database\QueryException $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+        
     }
 
     /**
@@ -78,17 +121,23 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        try {
-            $product->load(['company', 'category', 'unit', 'variants' => function ($query) {
-                $query->latest();
-            }]);
+        $access = $this->get_access();
 
-            return view('admin.inventory.product.show', [
-                'product' => $product,
-            ]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $product->load(['company', 'category', 'unit', 'variants' => function ($query) {
+                    $query->latest();
+                }]);
+    
+                return view('admin.inventory.product.show', [
+                    'product' => $product,
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -97,16 +146,22 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        try {
-            return view('admin.inventory.product.edit', [
-                'product' => $product,
-                'companies' => Company::query()->latest('id')->get(),
-                'categories' => Category::query()->latest('id')->get(),
-                'units' => Unit::query()->latest('id')->get(),
-            ]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        $access = $this->get_access();
+
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                return view('admin.inventory.product.edit', [
+                    'product' => $product,
+                    'companies' => Company::query()->latest('id')->get(),
+                    'categories' => Category::query()->latest('id')->get(),
+                    'units' => Unit::query()->latest('id')->get(),
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -115,13 +170,19 @@ class ProductController extends Controller
      */
     public function update(ProductUpdateRequest $request, Product $product, ProductService $productService)
     {
-        try {
-            $productService->update($product, $request->validated());
+        $access = $this->get_access();
 
-            return redirect()->route('inventory.product.index')->with('success', 'Product updated successfully.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $productService->update($product, $request->validated());
+    
+                return redirect()->route('inventory.product.index')->with('success', 'Product updated successfully.');
+            } catch (\Illuminate\Database\QueryException $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -130,14 +191,21 @@ class ProductController extends Controller
      */
     public function destroy(Product $product, ProductService $productService)
     {
-        try {
-            $productService->destroy($product);
+        $access = $this->get_access();
 
-            return redirect()->route('inventory.product.index')->with('success', 'Product deleted successfully.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Delete']) || $access['Delete'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $productService->destroy($product);
+    
+                return redirect()->route('inventory.product.index')->with('success', 'Product deleted successfully.');
+            } catch (\Illuminate\Database\QueryException $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+        
     }
 
     /**

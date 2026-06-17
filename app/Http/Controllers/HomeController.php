@@ -34,6 +34,26 @@ class HomeController extends Controller
         return view('admin.home');
     }
 
+    /*
+    * Global Variable for Access Page
+    */
+    public $accessPage = [];
+
+    /*
+    * Get Access for Controller
+    */
+    public function get_access()
+    {
+        $this->accessPage = $this->get_access_per_page('Profile');
+
+        $data = [
+            "Read" => (int) $this->accessPage['Read'],
+            "Update" => (int) $this->accessPage['Update'],
+        ];
+
+        return $data;
+    }
+
     /**
      * Display the profile of the currently authenticated user.
      *
@@ -46,7 +66,13 @@ class HomeController extends Controller
      */
     public function profile(ModuleService $moduleService)
     {
-        return view('admin.setting.account.profile', ['profile' => $moduleService->getProfile(),'companies' => \App\Models\Company::latest()->get(),'groups' => \App\Models\Group::latest()->get()]);
+        $access = $this->get_access();
+
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            return view('admin.setting.account.profile', ['profile' => $moduleService->getProfile(),'companies' => \App\Models\Company::latest()->get(),'groups' => \App\Models\Group::latest()->get(),'access' => $this->get_access_per_page('Profile')]);
+        }
     }
 
     /**
@@ -54,12 +80,18 @@ class HomeController extends Controller
      */
     public function updateProfile(ProfileUpdateRequest $request, AccountService $accountService): RedirectResponse
     {
-        $user = Auth::user();
-        $avatarFile = $request->file('avatar');
+        $access = $this->get_access();
 
-        $accountService->updateProfile($user, $request->validated(), $avatarFile);
-
-        return redirect()->back()->with('profile_success', 'Profil berhasil diperbarui.');
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            $user = Auth::user();
+            $avatarFile = $request->file('avatar');
+    
+            $accountService->updateProfile($user, $request->validated(), $avatarFile);
+    
+            return redirect()->back()->with('profile_success', 'Profil berhasil diperbarui.');
+        }
     }
 
     /**
@@ -67,10 +99,16 @@ class HomeController extends Controller
      */
     public function updatePassword(ProfileUpdatePasswordRequest $request, AccountService $accountService): RedirectResponse
     {
-        $user = Auth::user();
-        $accountService->updatePassword($user, $request->password);
+        $access = $this->get_access();
 
-        return redirect()->back()->with('password_success', 'Password berhasil diubah.');
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            $user = Auth::user();
+            $accountService->updatePassword($user, $request->password);
+            
+            return redirect()->back()->with('password_success', 'Password berhasil diubah.');
+        }
     }
 
     /**
@@ -78,10 +116,17 @@ class HomeController extends Controller
      */
     public function updateGroup(AccountRoleRequest $request, AccountService $accountService)
     {
-        $user = Auth::user();
-        $accountService->updateGroup($user, $request->group_id);
+        $access = $this->get_access();
 
-        return redirect()->back()->with('group_success', 'Role berhasil diperbarui.');
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            $user = Auth::user();
+            $accountService->updateGroup($user, $request->group_id);
+    
+            return redirect()->back()->with('group_success', 'Role berhasil diperbarui.');
+        }
+
     }
 
     /**
@@ -89,9 +134,15 @@ class HomeController extends Controller
      */
     public function updateCompany(AccountCompanyRequest $request, AccountService $accountService)
     {
-        $user = Auth::user();
-        $accountService->updateCompany($user, $request->company_id);
+        $access = $this->get_access();
 
-        return redirect()->back()->with('company_success', 'Perusahaan berhasil diperbarui.');
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            $user = Auth::user();
+            $accountService->updateCompany($user, $request->company_id);
+    
+            return redirect()->back()->with('company_success', 'Perusahaan berhasil diperbarui.');
+        }
     }
 }

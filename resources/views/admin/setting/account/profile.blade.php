@@ -149,279 +149,287 @@
 @endpush
 
 @section('content')
-    <div class="container-fluid py-4 profile-shell">
-        <!-- Hero Section -->
-        <div class="profile-hero d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="d-flex align-items-center gap-4 flex-wrap">
-                <div class="profile-avatar">
-                    <i class="fas fa-user-circle"></i>
+    @if ($access['Read'] == 1)
+        <div class="container-fluid py-4 profile-shell">
+            <!-- Hero Section -->
+            <div class="profile-hero d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-4 flex-wrap">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div>
+                        <h2 class="fw-bold mb-1">My Profile</h2>
+                        <p class="mb-0 opacity-75">Kelola informasi akun dan keamanan Anda</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="fw-bold mb-1">My Profile</h2>
-                    <p class="mb-0 opacity-75">Kelola informasi akun dan keamanan Anda</p>
+                <div class="text-light-emphasis bg-white bg-opacity-10 px-3 py-2 rounded-pill">
+                    <i class="far fa-calendar-alt me-1"></i> {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
                 </div>
             </div>
-            <div class="text-light-emphasis bg-white bg-opacity-10 px-3 py-2 rounded-pill">
-                <i class="far fa-calendar-alt me-1"></i> {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+
+            <div class="row justify-content-center mt-4">
+                <div class="col-lg-10">
+                    @if ($access['Update'] == 1)
+                        <!-- Update Profile Card -->
+                        <div class="card soft-card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-user-edit me-2 text-primary"></i> Edit Profile</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (session('profile_success'))
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        {{ session('profile_success') }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                @endif
+                                @if ($errors->profile->any() && !$errors->has('current_password'))
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <ul class="mb-0">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                @endif
+
+                                <form action="{{ route('setting.profile.update', $profile->id) }}" method="POST"
+                                    enctype="multipart/form-data">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="row g-3">
+                                        <!-- Avatar Upload -->
+                                        <div class="col-12 text-center mb-3">
+                                            <label class="form-label d-block">Profile Avatar</label>
+                                            <div class="d-flex justify-content-center">
+                                                <img id="avatar_preview" class="avatar-preview"
+                                                    src="{{ $profile->avatar ? asset('storage/' . $profile->avatar) : asset('assets/img/avatar/default-avatar.png') }}"
+                                                    alt="Avatar"
+                                                    data-default="{{ $profile->avatar ? asset('storage/' . $profile->avatar) : asset('assets/img/avatar/default-avatar.png') }}">
+                                            </div>
+                                            <input type="file" name="avatar" id="avatar_input" class="form-control mt-3"
+                                                accept="image/jpeg,image/png,image/jpg,image/webp">
+                                            <small class="text-muted">Format: JPG, PNG, WEBP (Max 2MB)</small>
+                                            @error('avatar')
+                                                <div class="text-danger small">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">Full Name</label>
+                                            <input type="text" name="name" value="{{ old('name', $profile->name) }}"
+                                                class="form-control @error('name') is-invalid @enderror" required>
+                                            @error('name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Email Address</label>
+                                            <input type="email" name="email" value="{{ old('email', $profile->email) }}"
+                                                class="form-control @error('email') is-invalid @enderror" required>
+                                            @error('email')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <hr class="my-4">
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="fas fa-save me-2"></i> Update Profile
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Update Role Card -->
+                        <div class="card soft-card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-users me-2 text-primary"></i> Change Role</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (session('group_success'))
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        {{ session('group_success') }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                @endif
+                                @if ($errors->group->any())
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <ul class="mb-0">
+                                            @foreach ($errors->group->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                @endif
+
+                                <form action="{{ route('setting.profile.group', $profile->id) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label">User Role / Group</label>
+                                            <select name="group_id"
+                                                class="form-select @error('group_id', 'group') is-invalid @enderror">
+                                                <option value="">Select Role</option>
+                                                @foreach ($groups as $group)
+                                                    <option value="{{ $group->id }}"
+                                                        {{ old('group_id', $profile->group_id) == $group->id ? 'selected' : '' }}>
+                                                        {{ $group->group_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('group_id', 'group')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <hr class="my-4">
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="fas fa-save me-2"></i> Update Role
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Update Outlet Card -->
+                        <div class="card soft-card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-building me-2 text-primary"></i> Change Oulet</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (session('company_success'))
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        {{ session('company_success') }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                @endif
+                                @if ($errors->company->any())
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <ul class="mb-0">
+                                            @foreach ($errors->company->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                @endif
+
+                                <form action="{{ route('setting.profile.company', $profile->id) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label">Outlet</label>
+                                            <select name="company_id"
+                                                class="form-select @error('company_id', 'company') is-invalid @enderror">
+                                                <option value="">Select Outlet</option>
+                                                @foreach ($companies as $company)
+                                                    <option value="{{ $company->id }}"
+                                                        {{ old('company_id', $profile->company_id) == $company->id ? 'selected' : '' }}>
+                                                        {{ $company->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('company_id', 'company')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <hr class="my-4">
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="fas fa-save me-2"></i> Update Outlet
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Change Password Card -->
+                        <div class="card soft-card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-lock me-2 text-primary"></i> Change Password</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (session('password_success'))
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        {{ session('password_success') }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                @endif
+                                @if (
+                                    $errors->password->has('current_password') ||
+                                        $errors->password->has('password') ||
+                                        $errors->password->has('password_confirmation'))
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <ul class="mb-0">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                @endif
+
+                                <form action="{{ route('setting.profile.update', $profile->id) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Current Password</label>
+                                            <div class="password-toggle-wrapper" id="wrapper-current">
+                                                <input type="password" placeholder="********" name="current_password"
+                                                    id="current_password"
+                                                    class="form-control @error('current_password') is-invalid @enderror"
+                                                    required>
+                                                <i class="fas fa-eye-slash" id="toggle_current_password"
+                                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
+                                            </div>
+                                            @error('current_password')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">New Password</label>
+                                            <div class="password-toggle-wrapper" id="wrapper-new">
+                                                <input type="password" placeholder="********" name="password"
+                                                    id="new_password"
+                                                    class="form-control @error('password') is-invalid @enderror" required>
+                                                <i class="fas fa-eye-slash" id="toggle_new_password"
+                                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
+                                            </div>
+                                            @error('password')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Confirm New Password</label>
+                                            <div class="password-toggle-wrapper" id="wrapper-confirm">
+                                                <input type="password" placeholder="********"
+                                                    name="password_confirmation" id="confirm_password"
+                                                    class="form-control" required>
+                                                <i class="fas fa-eye-slash" id="toggle_confirm_password"
+                                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr class="my-4">
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="fas fa-key me-2"></i> Update Password
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
-
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-10">
-                <!-- Update Profile Card -->
-                <div class="card soft-card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-user-edit me-2 text-primary"></i> Edit Profile</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (session('profile_success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                {{ session('profile_success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-                        @if ($errors->profile->any() && !$errors->has('current_password'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-
-                        <form action="{{ route('setting.profile.update',$profile->id) }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            @method('PUT')
-                            <div class="row g-3">
-                                <!-- Avatar Upload -->
-                                <div class="col-12 text-center mb-3">
-                                    <label class="form-label d-block">Profile Avatar</label>
-                                    <div class="d-flex justify-content-center">
-                                        <img id="avatar_preview" class="avatar-preview"
-                                            src="{{ $profile->avatar ? asset('storage/' . $profile->avatar) : asset('assets/img/avatar/default-avatar.png') }}"
-                                            alt="Avatar"
-                                            data-default="{{ $profile->avatar ? asset('storage/' . $profile->avatar) : asset('assets/img/avatar/default-avatar.png') }}">
-                                    </div>
-                                    <input type="file" name="avatar" id="avatar_input" class="form-control mt-3"
-                                        accept="image/jpeg,image/png,image/jpg,image/webp">
-                                    <small class="text-muted">Format: JPG, PNG, WEBP (Max 2MB)</small>
-                                    @error('avatar')
-                                        <div class="text-danger small">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label">Full Name</label>
-                                    <input type="text" name="name" value="{{ old('name', $profile->name) }}"
-                                        class="form-control @error('name') is-invalid @enderror" required>
-                                    @error('name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Email Address</label>
-                                    <input type="email" name="email" value="{{ old('email', $profile->email) }}"
-                                        class="form-control @error('email') is-invalid @enderror" required>
-                                    @error('email')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <hr class="my-4">
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary px-4">
-                                    <i class="fas fa-save me-2"></i> Update Profile
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Update Role Card -->
-                <div class="card soft-card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-users me-2 text-primary"></i> Change Role</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (session('group_success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                {{ session('group_success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-                        @if ($errors->group->any())
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <ul class="mb-0">
-                                    @foreach ($errors->group->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-
-                        <form action="{{ route('setting.profile.group',$profile->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="row g-3">
-                                <div class="col-md-12">
-                                    <label class="form-label">User Role / Group</label>
-                                    <select name="group_id"
-                                        class="form-select @error('group_id', 'group') is-invalid @enderror">
-                                        <option value="">Select Role</option>
-                                        @foreach ($groups as $group)
-                                            <option value="{{ $group->id }}"
-                                                {{ old('group_id', $profile->group_id) == $group->id ? 'selected' : '' }}>
-                                                {{ $group->group_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('group_id', 'group')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <hr class="my-4">
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary px-4">
-                                    <i class="fas fa-save me-2"></i> Update Role
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Update Outlet Card -->
-                <div class="card soft-card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-building me-2 text-primary"></i> Change Oulet</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (session('company_success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                {{ session('company_success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-                        @if ($errors->company->any())
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <ul class="mb-0">
-                                    @foreach ($errors->company->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-
-                        <form action="{{ route('setting.profile.company',$profile->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="row g-3">
-                                <div class="col-md-12">
-                                    <label class="form-label">Outlet</label>
-                                    <select name="company_id"
-                                        class="form-select @error('company_id', 'company') is-invalid @enderror">
-                                        <option value="">Select Outlet</option>
-                                        @foreach ($companies as $company)
-                                            <option value="{{ $company->id }}"
-                                                {{ old('company_id', $profile->company_id) == $company->id ? 'selected' : '' }}>
-                                                {{ $company->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('company_id', 'company')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <hr class="my-4">
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary px-4">
-                                    <i class="fas fa-save me-2"></i> Update Outlet
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Change Password Card -->
-                <div class="card soft-card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-lock me-2 text-primary"></i> Change Password</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (session('password_success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                {{ session('password_success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-                        @if (
-                            $errors->password->has('current_password') ||
-                                $errors->password->has('password') ||
-                                $errors->password->has('password_confirmation'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-
-                        <form action="{{ route('setting.profile.update',$profile->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Current Password</label>
-                                    <div class="password-toggle-wrapper" id="wrapper-current">
-                                        <input type="password" placeholder="********" name="current_password"
-                                            id="current_password"
-                                            class="form-control @error('current_password') is-invalid @enderror" required>
-                                        <i class="fas fa-eye-slash" id="toggle_current_password"
-                                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
-                                    </div>
-                                    @error('current_password')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">New Password</label>
-                                    <div class="password-toggle-wrapper" id="wrapper-new">
-                                        <input type="password" placeholder="********" name="password" id="new_password"
-                                            class="form-control @error('password') is-invalid @enderror" required>
-                                        <i class="fas fa-eye-slash" id="toggle_new_password"
-                                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
-                                    </div>
-                                    @error('password')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Confirm New Password</label>
-                                    <div class="password-toggle-wrapper" id="wrapper-confirm">
-                                        <input type="password" placeholder="********" name="password_confirmation"
-                                            id="confirm_password" class="form-control" required>
-                                        <i class="fas fa-eye-slash" id="toggle_confirm_password"
-                                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr class="my-4">
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary px-4">
-                                    <i class="fas fa-key me-2"></i> Update Password
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @endif
 @endsection

@@ -12,20 +12,48 @@ use App\Services\StockService;
 
 class StockController extends Controller
 {
+    /*
+    * Global Variable for Access Page
+    */
+    public $accessPage = [];
+
+    /*
+    * Get Access for Controller
+    */
+    public function get_access()
+    {
+        $this->accessPage = $this->get_access_per_page('Stock');
+
+        $data = [
+            "Create" => (int) $this->accessPage['Create'],
+            "Read" => (int) $this->accessPage['Read'],
+            "Update" => (int) $this->accessPage['Update'],
+            "Delete" => (int) $this->accessPage['Delete'],
+        ];
+
+        return $data;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        try {
-            $stocks = Stock::with('productVariant.product')
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+        $access = $this->get_access();
 
-            return view('admin.inventory.stock.index', ['stocks' => $stocks, 'access' => $this->get_access_per_page('Stock')]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $stocks = Stock::with('productVariant.product')
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
+    
+                return view('admin.inventory.stock.index', ['stocks' => $stocks, 'access' => $this->get_access_per_page('Stock')]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -34,14 +62,21 @@ class StockController extends Controller
      */
     public function create()
     {
-        try {
-            $productVariants = ProductVariant::with('product')->get();
+        $access = $this->get_access();
 
-            return view('admin.inventory.stock.create', ['productVariants' => $productVariants]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Create']) || $access['Create'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $productVariants = ProductVariant::with('product')->get();
+    
+                return view('admin.inventory.stock.create', ['productVariants' => $productVariants]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+        
     }
 
     /**
@@ -49,15 +84,21 @@ class StockController extends Controller
      */
     public function store(StockStoreRequest $request, StockService $stockService)
     {
-        try {
-            $stockService->store($request->validated());
+        $access = $this->get_access();
 
-            return redirect()
-                ->route('inventory.stock.index')
-                ->with('success', 'Stock Added Successfully!.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Create']) || $access['Create'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $stockService->store($request->validated());
+    
+                return redirect()
+                    ->route('inventory.stock.index')
+                    ->with('success', 'Stock Added Successfully!.');
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -66,11 +107,17 @@ class StockController extends Controller
      */
     public function show(Stock $stock)
     {
-        try {
-            //
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        $access = $this->get_access();
+
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                //
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -79,13 +126,19 @@ class StockController extends Controller
      */
     public function edit(Stock $stock)
     {
-        try {
-            $productVariants = ProductVariant::with('product')->get();
+        $access = $this->get_access();
 
-            return view('admin.inventory.stock.edit', compact('stock', 'productVariants'));
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $productVariants = ProductVariant::with('product')->get();
+    
+                return view('admin.inventory.stock.edit', compact('stock', 'productVariants'));
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
     }
 
@@ -94,16 +147,23 @@ class StockController extends Controller
      */
     public function update(StockUpdateRequest $request, Stock $stock, StockService $stockService)
     {
-        try {
-            $stockService->update($stock, $request->validated());
+        $access = $this->get_access();
 
-            return redirect()
-                ->route('inventory.stock.index')
-                ->with('success', 'Stock Updated Successfully!.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Update']) || $access['Update'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $stockService->update($stock, $request->validated());
+    
+                return redirect()
+                    ->route('inventory.stock.index')
+                    ->with('success', 'Stock Updated Successfully!.');
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+
     }
 
     /**
@@ -111,21 +171,52 @@ class StockController extends Controller
      */
     public function destroy(Stock $stock, StockService $stockService)
     {
-        try {
-            $stockService->destroy($stock);
+        $access = $this->get_access();
 
-            return redirect()
-                ->route('inventory.stock.index')
-                ->with('success', 'Stock Deleted Successfully!.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Illuminate\Support\Facades\Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            try {
+                $stockService->destroy($stock);
+    
+                return redirect()
+                    ->route('inventory.stock.index')
+                    ->with('success', 'Stock Deleted Successfully!.');
+            } catch (\Illuminate\Database\QueryException $e) {
+                \Illuminate\Support\Facades\Log::error($e->getMessage());
+                return redirect()->back()->with('failed', $e->getMessage());
+            }
         }
+        
     }
 
+    /*
+    * Get Access for Controller
+    */
+    public function get_access_log()
+    {
+        $this->accessPage = $this->get_access_per_page('Log');
+
+        $data = [
+            "Read" => (int) $this->accessPage['Read'],
+        ];
+
+        return $data;
+    }
+
+
+    /*
+    * Get Access for Stock Log
+    */
     public function stockLogs(ModuleService $moduleService)
     {
-        $movements = $moduleService->getStockMovements();
-        return view('admin.inventory.log.stock', ['movements' => $movements,'access' => $this->get_access_per_page('Log')]);
+        $access = $this->get_access();
+
+        if (!isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        } else {
+            $movements = $moduleService->getStockMovements();
+            return view('admin.inventory.log.stock', ['movements' => $movements,'access' => $this->get_access_per_page('Log')]);
+        }
     }
 }
