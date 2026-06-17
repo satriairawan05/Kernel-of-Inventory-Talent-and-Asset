@@ -49,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::resource('stock', \App\Http\Controllers\Admin\StockController::class);
+        Route::resource('stock-in', \App\Http\Controllers\Admin\StockInController::class);
         Route::get('stock-log', [\App\Http\Controllers\Admin\StockController::class, 'stockLogs'])->name('stock.logs');
     });
 

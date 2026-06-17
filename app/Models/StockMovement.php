@@ -26,6 +26,7 @@ class StockMovement extends Model
         'qty',
         'stock_before',
         'stock_after',
+        'pic_id',
         'notes',
     ];
 

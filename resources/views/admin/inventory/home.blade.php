@@ -209,8 +209,8 @@
                         <h5 class="fw-bold">Incoming Goods</h5>
                         <p class="small text-secondary">Catat barang masuk ke gudang.</p>
                         <ul class="submenu-list">
-                            <li><a href="#"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
-                            <li><a href="#"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
+                            <li><a href="{{ route('inventory.stock-in.create') }}"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
+                            <li><a href="{{ route('inventory.stock-in.index') }}"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
                         </ul>
                     </div>
                 </div>
