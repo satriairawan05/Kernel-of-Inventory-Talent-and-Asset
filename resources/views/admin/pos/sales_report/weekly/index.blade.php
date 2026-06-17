@@ -13,12 +13,12 @@
             border: none;
             border-radius: 15px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .filter-card .card-header {
             background: transparent;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             padding: 20px 25px;
         }
 
@@ -43,12 +43,12 @@
             border-radius: 10px;
             border: none;
             padding: 10px 15px;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .filter-card .form-control:focus,
         .filter-card .form-select:focus {
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.5);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
         }
 
         .filter-card .btn-primary {
@@ -63,11 +63,11 @@
         .filter-card .btn-primary:hover {
             background: #ff5252;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .filter-card .btn-secondary {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             border-radius: 10px;
             padding: 10px 30px;
@@ -77,14 +77,14 @@
         }
 
         .filter-card .btn-secondary:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
 
         .report-card {
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             border: none;
         }
 
@@ -117,7 +117,7 @@
 
         .summary-stats:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .summary-stats h3 {
@@ -228,6 +228,18 @@
             <h4><i class="fas fa-chart-line me-2"></i>Weekly Sales Report Filter</h4>
         </div>
         <div class="card-body">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if (session('failed'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('failed') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
             <form method="GET" action="{{ route('pos.report.weekly') }}" id="filterForm">
                 <div class="row align-items-end">
                     <div class="col-md-3 mb-3 mb-md-0">
@@ -236,32 +248,31 @@
                         </label>
                         <select name="company_id" id="company_id" class="form-select">
                             <option value="">All Companies</option>
-                            @foreach($companies as $company)
-                                <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                            @foreach ($companies as $company)
+                                <option value="{{ $company->id }}"
+                                    {{ request('company_id') == $company->id ? 'selected' : '' }}>
                                     {{ $company->company_name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-md-3 mb-3 mb-md-0">
                         <label class="form-label" for="start_date">
                             <i class="fas fa-calendar-alt me-1"></i> Start Date
                         </label>
-                        <input type="date" name="start_date" id="start_date" 
-                            class="form-control" 
+                        <input type="date" name="start_date" id="start_date" class="form-control"
                             value="{{ request('start_date', $startDate ?? date('Y-m-01')) }}">
                     </div>
-                    
+
                     <div class="col-md-3 mb-3 mb-md-0">
                         <label class="form-label" for="end_date">
                             <i class="fas fa-calendar-check me-1"></i> End Date
                         </label>
-                        <input type="date" name="end_date" id="end_date" 
-                            class="form-control" 
+                        <input type="date" name="end_date" id="end_date" class="form-control"
                             value="{{ request('end_date', $endDate ?? date('Y-m-d')) }}">
                     </div>
-                    
+
                     <div class="col-md-3">
                         <div class="d-flex gap-1">
                             <button type="submit" class="btn btn-primary w-100">
@@ -278,7 +289,7 @@
     </div>
 
     <!-- Report Result Section -->
-    @if(isset($weeklyReports) && $weeklyReports->count() > 0)
+    @if (isset($weeklyReports) && $weeklyReports->count() > 0)
         <!-- Summary Cards -->
         <div class="row mb-4">
             <div class="col-md-3 mb-3">
@@ -313,9 +324,10 @@
                 <h5>
                     <i class="fas fa-chart-simple me-2"></i>
                     Weekly Sales Report
-                    @if(request('company_id'))
+                    @if (request('company_id'))
                         <small class="ms-2">
-                            - {{ $companies->where('id', request('company_id'))->first()->company_name ?? 'Selected Company' }}
+                            -
+                            {{ $companies->where('id', request('company_id'))->first()->company_name ?? 'Selected Company' }}
                         </small>
                     @endif
                 </h5>
@@ -343,65 +355,66 @@
                                 $totalAmount = 0;
                                 $totalTransactions = 0;
                             @endphp
-                            
-                            @foreach($weeklyReports as $index => $report)
-                            @php
-                                $totalAccessories += $report->accessories_amount;
-                                $totalService += $report->service_amount;
-                                $totalPulsa += $report->pulsa_amount;
-                                $totalAmount += $report->total_amount;
-                                $totalTransactions += $report->total_transactions;
-                            @endphp
-                            <tr>
-                                <td class="text-center">
-                                    <span class="badge bg-secondary rounded-pill">{{ $index + 1 }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge-week">
-                                        <i class="fas fa-calendar-week me-1"></i>
-                                        {{ $report->week_display }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted">
-                                        Year {{ $report->year }} - Week {{ $report->week_number }}
-                                    </small>
-                                </td>
-                                <td class="text-end">
-                                    <span class="amount-text text-success">
-                                        {{ $report->formatted_accessories ?? Carbon\Carbon::rupiah($report->accessories_amount, 0, ',', '.') }}
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <span class="amount-text text-info">
-                                        {{ $report->formatted_service ?? Carbon\Carbon::rupiah($report->service_amount, 0, ',', '.') }}
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <span class="amount-text text-warning">
-                                        {{ $report->formatted_pulsa ?? Carbon\Carbon::rupiah($report->pulsa_amount, 0, ',', '.') }}
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <strong class="amount-text text-primary" style="font-size: 1rem;">
-                                        {{ $report->formatted_total ?? Carbon\Carbon::rupiah($report->total_amount, 0, ',', '.') }}
-                                    </strong>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-info rounded-pill">
-                                        <i class="fas fa-receipt me-1"></i>
-                                        {{ $report->total_transactions }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <a href="{{ route('pos.report.weekly.detail', [
-                                        'start_date' => $report->week_start,
-                                        'end_date' => $report->week_end,
-                                        'company_id' => request('company_id'),
-                                    ]) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye me-1"></i> Detail
-                                    </a>
-                                </td>
-                            </tr>
+
+                            @foreach ($weeklyReports as $index => $report)
+                                @php
+                                    $totalAccessories += $report->accessories_amount;
+                                    $totalService += $report->service_amount;
+                                    $totalPulsa += $report->pulsa_amount;
+                                    $totalAmount += $report->total_amount;
+                                    $totalTransactions += $report->total_transactions;
+                                @endphp
+                                <tr>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary rounded-pill">{{ $index + 1 }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-week">
+                                            <i class="fas fa-calendar-week me-1"></i>
+                                            {{ $report->week_display }}
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">
+                                            Year {{ $report->year }} - Week {{ $report->week_number }}
+                                        </small>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="amount-text text-success">
+                                            {{ $report->formatted_accessories ?? Carbon\Carbon::rupiah($report->accessories_amount, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="amount-text text-info">
+                                            {{ $report->formatted_service ?? Carbon\Carbon::rupiah($report->service_amount, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="amount-text text-warning">
+                                            {{ $report->formatted_pulsa ?? Carbon\Carbon::rupiah($report->pulsa_amount, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="amount-text text-primary" style="font-size: 1rem;">
+                                            {{ $report->formatted_total ?? Carbon\Carbon::rupiah($report->total_amount, 0, ',', '.') }}
+                                        </strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info rounded-pill">
+                                            <i class="fas fa-receipt me-1"></i>
+                                            {{ $report->total_transactions }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{{ route('pos.report.weekly.detail', [
+                                            'start_date' => $report->week_start,
+                                            'end_date' => $report->week_end,
+                                            'company_id' => request('company_id'),
+                                        ]) }}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i> Detail
+                                        </a>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
@@ -410,16 +423,20 @@
                                     <strong>GRAND TOTAL</strong>
                                 </td>
                                 <td class="text-end">
-                                    <strong class="text-success">{{ Carbon\Carbon::rupiah($totalAccessories, 0, ',', '.') }}</strong>
+                                    <strong
+                                        class="text-success">{{ Carbon\Carbon::rupiah($totalAccessories, 0, ',', '.') }}</strong>
                                 </td>
                                 <td class="text-end">
-                                    <strong class="text-info">{{ Carbon\Carbon::rupiah($totalService, 0, ',', '.') }}</strong>
+                                    <strong
+                                        class="text-info">{{ Carbon\Carbon::rupiah($totalService, 0, ',', '.') }}</strong>
                                 </td>
                                 <td class="text-end">
-                                    <strong class="text-warning">{{ Carbon\Carbon::rupiah($totalPulsa, 0, ',', '.') }}</strong>
+                                    <strong
+                                        class="text-warning">{{ Carbon\Carbon::rupiah($totalPulsa, 0, ',', '.') }}</strong>
                                 </td>
                                 <td class="text-end">
-                                    <strong class="text-primary">{{ Carbon\Carbon::rupiah($totalAmount, 0, ',', '.') }}</strong>
+                                    <strong
+                                        class="text-primary">{{ Carbon\Carbon::rupiah($totalAmount, 0, ',', '.') }}</strong>
                                 </td>
                                 <td class="text-center">
                                     <strong class="bg-white px-2 py-1 rounded">
@@ -436,13 +453,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> 
+                            <i class="fas fa-info-circle"></i>
                             Report generated on: {{ now()->format('d/m/Y H:i:s') }}
                         </small>
                     </div>
                     <div class="col-md-6 text-end">
                         <small class="text-muted">
-                            <i class="fas fa-chart-line"></i> 
+                            <i class="fas fa-chart-line"></i>
                             Showing {{ $weeklyReports->count() }} week(s)
                         </small>
                     </div>
@@ -463,26 +480,26 @@
 @endsection
 
 @push('js')
-<script>
-    // Auto submit form when company changes (optional)
-    document.getElementById('company_id')?.addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
-    
-    // Set default date range for current month if not set
-    document.addEventListener('DOMContentLoaded', function() {
-        const startDate = document.getElementById('start_date');
-        const endDate = document.getElementById('end_date');
-        
-        if (!startDate.value) {
-            const firstDay = new Date();
-            firstDay.setDate(1);
-            startDate.value = firstDay.toISOString().split('T')[0];
-        }
-        
-        if (!endDate.value) {
-            endDate.value = new Date().toISOString().split('T')[0];
-        }
-    });
-</script>
+    <script>
+        // Auto submit form when company changes (optional)
+        document.getElementById('company_id')?.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+
+        // Set default date range for current month if not set
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+
+            if (!startDate.value) {
+                const firstDay = new Date();
+                firstDay.setDate(1);
+                startDate.value = firstDay.toISOString().split('T')[0];
+            }
+
+            if (!endDate.value) {
+                endDate.value = new Date().toISOString().split('T')[0];
+            }
+        });
+    </script>
 @endpush

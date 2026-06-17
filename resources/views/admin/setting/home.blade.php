@@ -79,7 +79,8 @@
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #0f172a;">System Settings</h2>
                     <p class="mb-0 text-secondary">Halo, <strong>{{ auth()->user()->name }}</strong>! Kelola fondasi
-                        <strong>KITA</strong> dari sini.</p>
+                        <strong>KITA</strong> dari sini.
+                    </p>
                     <div class="mt-2 small text-muted">
                         <i class="fas fa-cog me-1"></i> Atur outlet, shift, unit, roles, dan akun pengguna.
                     </div>
@@ -92,6 +93,21 @@
 
         <!-- Menu System Settings (5 menu) -->
         <div class="row g-4">
+            <div class="col-12">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+                @if (session('failed'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('failed') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+            </div>
+
             <!-- Outlets -->
             <div class="col-xl-4 col-md-6">
                 <div class="card setting-card p-3">
@@ -195,7 +211,7 @@
 
         <!-- Pesan Motivasi KITA -->
         <div class="row mt-4">
-            <div class="col-12">    
+            <div class="col-12">
                 <div class="alert alert-light border rounded-4 shadow-sm d-flex align-items-center gap-3"
                     style="background: #ffffff;">
                     <i class="fas fa-heart text-danger fa-2x"></i>

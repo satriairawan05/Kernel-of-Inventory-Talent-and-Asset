@@ -136,9 +136,9 @@
             </div>
             <div class="col-md-3 col-6">
                 <div class="card inventory-card p-3 text-center">
-                    <h6 class="text-muted">Stok Menipis (<=5)</h6>
-                    <h3 class="fw-bold text-warning">{{ number_format($stats['low_stock_count']) }}</h3>
-                    <small class="text-muted">perlu restok</small>
+                    <h6 class="text-muted">Stok Menipis (<=5)< /h6>
+                            <h3 class="fw-bold text-warning">{{ number_format($stats['low_stock_count']) }}</h3>
+                            <small class="text-muted">perlu restok</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
@@ -154,6 +154,23 @@
                     <h3 class="fw-bold text-info">{{ number_format($stats['outgoing_transactions']) }}</h3>
                     <small class="text-muted">transaksi</small>
                 </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+                @if (session('failed'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('failed') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -174,7 +191,8 @@
                                     Category</a></li>
                             <li><a href="{{ route('inventory.product.index') }}"><i class="fas fa-box-open fa-fw"></i>
                                     Product</a></li>
-                            <li><a href="{{ route('inventory.stock.index') }}"><i class="fas fa-chart-line fa-fw"></i> Stock</a></li>
+                            <li><a href="{{ route('inventory.stock.index') }}"><i class="fas fa-chart-line fa-fw"></i>
+                                    Stock</a></li>
                         </ul>
                     </div>
                 </div>

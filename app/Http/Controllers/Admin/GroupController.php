@@ -191,5 +191,6 @@ class GroupController extends Controller
                 return redirect()->back()->with('failed', 'Gagal menghapus data role.');
             }
         }
+
     }
 }

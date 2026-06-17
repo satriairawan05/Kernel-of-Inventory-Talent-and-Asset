@@ -107,6 +107,18 @@
                 </div>
 
                 <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+                    @if (session('failed'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('failed') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead>
@@ -158,7 +170,8 @@
                                                                 </div>
                                                                 <h5 class="mb-3">Are you sure?</h5>
                                                                 <p class="text-muted mb-0">You are about to delete the role:
-                                                                    <strong>{{ $role->group_name }}</strong>.</p>
+                                                                    <strong>{{ $role->group_name }}</strong>.
+                                                                </p>
                                                                 <p class="text-danger small mt-2 mb-0">This action cannot be
                                                                     undone.</p>
                                                             </div>

@@ -109,6 +109,18 @@
                             {{ $categories->count() }} categories</span>
                     </div>
                     <div class="card-body">
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+                        @if (session('failed'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ session('failed') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
                         <div class="table-responsive mb-3">
                             <table class="table table-hover align-middle mb-0">
                                 <thead>

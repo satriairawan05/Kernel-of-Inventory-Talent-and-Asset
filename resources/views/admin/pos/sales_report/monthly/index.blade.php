@@ -13,12 +13,12 @@
             border: none;
             border-radius: 15px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .filter-card .card-header {
             background: transparent;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             padding: 20px 25px;
         }
 
@@ -43,12 +43,12 @@
             border-radius: 10px;
             border: none;
             padding: 10px 15px;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .filter-card .form-control:focus,
         .filter-card .form-select:focus {
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.5);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
         }
 
         .filter-card .btn-primary {
@@ -63,11 +63,11 @@
         .filter-card .btn-primary:hover {
             background: #ff5252;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .filter-card .btn-secondary {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             border-radius: 10px;
             padding: 10px 30px;
@@ -77,14 +77,14 @@
         }
 
         .filter-card .btn-secondary:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
 
         .report-card {
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             border: none;
         }
 
@@ -117,7 +117,7 @@
 
         .summary-stats:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .summary-stats h3 {
@@ -249,7 +249,7 @@
             .amount-text {
                 font-size: 0.7rem;
             }
-            
+
             .badge-month {
                 font-size: 0.65rem;
                 padding: 4px 8px;
@@ -265,6 +265,18 @@
             <h4><i class="fas fa-chart-line me-2"></i> Monthly Sales Report Filter</h4>
         </div>
         <div class="card-body">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if (session('failed'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('failed') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
             <form method="GET" action="{{ route('pos.report.monthly') }}" id="filterForm">
                 <div class="row align-items-end">
                     <div class="col-md-3 mb-3 mb-md-0">
@@ -273,32 +285,31 @@
                         </label>
                         <select name="company_id" id="company_id" class="form-select">
                             <option value="">All Companies</option>
-                            @foreach($companies as $company)
-                                <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                            @foreach ($companies as $company)
+                                <option value="{{ $company->id }}"
+                                    {{ request('company_id') == $company->id ? 'selected' : '' }}>
                                     {{ $company->company_name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-md-3 mb-3 mb-md-0">
                         <label class="form-label" for="start_date">
                             <i class="fas fa-calendar-alt me-1"></i> Start Date (Month)
                         </label>
-                        <input type="month" name="start_date" id="start_date" 
-                            class="form-control" 
+                        <input type="month" name="start_date" id="start_date" class="form-control"
                             value="{{ request('start_date', $startDate ?? date('Y-m')) }}">
                     </div>
-                    
+
                     <div class="col-md-3 mb-3 mb-md-0">
                         <label class="form-label" for="end_date">
                             <i class="fas fa-calendar-check me-1"></i> End Date (Month)
                         </label>
-                        <input type="month" name="end_date" id="end_date" 
-                            class="form-control" 
+                        <input type="month" name="end_date" id="end_date" class="form-control"
                             value="{{ request('end_date', $endDate ?? date('Y-m')) }}">
                     </div>
-                    
+
                     <div class="col-md-2">
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary w-100">
@@ -311,7 +322,7 @@
                     </div>
                 </div>
             </form>
-            
+
             <!-- Quick Filter for Current/Previous Year -->
             <div class="quick-filter mt-3">
                 <small class="text-muted me-2">Quick Navigation:</small>
@@ -319,18 +330,18 @@
                     $currentYear = date('Y');
                     $currentMonth = date('m');
                 @endphp
-                @for($i = $currentYear; $i >= $currentYear-2; $i--)
-                    <a href="?{{ http_build_query(array_merge(request()->all(), ['start_date' => $i.'-01', 'end_date' => $i.'-12'])) }}" 
-                       class="btn btn-sm btn-outline-primary btn-filter">
+                @for ($i = $currentYear; $i >= $currentYear - 2; $i--)
+                    <a href="?{{ http_build_query(array_merge(request()->all(), ['start_date' => $i . '-01', 'end_date' => $i . '-12'])) }}"
+                        class="btn btn-sm btn-outline-primary btn-filter">
                         {{ $i }}
                     </a>
                 @endfor
-                <a href="?{{ http_build_query(array_merge(request()->all(), ['start_date' => date('Y-m'), 'end_date' => date('Y-m')])) }}" 
-                   class="btn btn-sm btn-outline-secondary btn-filter">
+                <a href="?{{ http_build_query(array_merge(request()->all(), ['start_date' => date('Y-m'), 'end_date' => date('Y-m')])) }}"
+                    class="btn btn-sm btn-outline-secondary btn-filter">
                     Current Month
                 </a>
-                <a href="?{{ http_build_query(array_merge(request()->all(), ['start_date' => date('Y-m', strtotime('-1 month')), 'end_date' => date('Y-m', strtotime('-1 month'))])) }}" 
-                   class="btn btn-sm btn-outline-secondary btn-filter">
+                <a href="?{{ http_build_query(array_merge(request()->all(), ['start_date' => date('Y-m', strtotime('-1 month')), 'end_date' => date('Y-m', strtotime('-1 month'))])) }}"
+                    class="btn btn-sm btn-outline-secondary btn-filter">
                     Previous Month
                 </a>
             </div>
@@ -338,7 +349,7 @@
     </div>
 
     <!-- Report Result Section -->
-    @if(isset($monthlyReports) && $monthlyReports->count() > 0)
+    @if (isset($monthlyReports) && $monthlyReports->count() > 0)
         <!-- Summary Cards -->
         <div class="row mb-4">
             <div class="col-md-3 mb-3">
@@ -373,9 +384,10 @@
                 <h5>
                     <i class="fas fa-chart-simple me-2"></i>
                     Monthly Sales Report
-                    @if(request('company_id'))
+                    @if (request('company_id'))
                         <small class="ms-2">
-                            - {{ $companies->where('id', request('company_id'))->first()->company_name ?? 'Selected Company' }}
+                            -
+                            {{ $companies->where('id', request('company_id'))->first()->company_name ?? 'Selected Company' }}
                         </small>
                     @endif
                 </h5>
@@ -405,141 +417,144 @@
                                 $totalTransactions = 0;
                                 $previousAmount = null;
                             @endphp
-                            
-                            @foreach($monthlyReports as $index => $report)
-                            @php
-                                $totalAccessories += $report->accessories_amount;
-                                $totalService += $report->service_amount;
-                                $totalPulsa += $report->pulsa_amount;
-                                $totalAmount += $report->total_amount;
-                                $totalTransactions += $report->total_transactions;
-                                
-                                // Calculate trend percentage
-                                $trendClass = '';
-                                $trendIcon = '';
-                                $trendText = '';
-                                if($previousAmount && $previousAmount > 0) {
-                                    $trendPercent = (($report->total_amount - $previousAmount) / $previousAmount) * 100;
-                                    if($trendPercent > 0) {
-                                        $trendClass = 'trend-up';
-                                        $trendIcon = 'fa-arrow-up';
-                                        $trendText = '+'.number_format($trendPercent, 1).'%';
-                                    } elseif($trendPercent < 0) {
-                                        $trendClass = 'trend-down';
-                                        $trendIcon = 'fa-arrow-down';
-                                        $trendText = number_format($trendPercent, 1).'%';
-                                    } else {
-                                        $trendIcon = 'fa-minus';
-                                        $trendText = '0%';
+
+                            @foreach ($monthlyReports as $index => $report)
+                                @php
+                                    $totalAccessories += $report->accessories_amount;
+                                    $totalService += $report->service_amount;
+                                    $totalPulsa += $report->pulsa_amount;
+                                    $totalAmount += $report->total_amount;
+                                    $totalTransactions += $report->total_transactions;
+
+                                    // Calculate trend percentage
+                                    $trendClass = '';
+                                    $trendIcon = '';
+                                    $trendText = '';
+                                    if ($previousAmount && $previousAmount > 0) {
+                                        $trendPercent =
+                                            (($report->total_amount - $previousAmount) / $previousAmount) * 100;
+                                        if ($trendPercent > 0) {
+                                            $trendClass = 'trend-up';
+                                            $trendIcon = 'fa-arrow-up';
+                                            $trendText = '+' . number_format($trendPercent, 1) . '%';
+                                        } elseif ($trendPercent < 0) {
+                                            $trendClass = 'trend-down';
+                                            $trendIcon = 'fa-arrow-down';
+                                            $trendText = number_format($trendPercent, 1) . '%';
+                                        } else {
+                                            $trendIcon = 'fa-minus';
+                                            $trendText = '0%';
+                                        }
                                     }
-                                }
-                                $previousAmount = $report->total_amount;
-                            @endphp
-                            <tr>
-                                <td class="text-center">
-                                    <span class="badge bg-secondary rounded-pill">{{ $index + 1 }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge-month">
-                                        <i class="fas fa-calendar-alt month-icon"></i>
-                                        {{ $report->month_display }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted">
-                                        {{ $report->month_year }}
-                                    </small>
-                                </td>
-                                <td class="text-end">
-                                    <span class="amount-text text-success">
-                                        {{ $report->formatted_accessories ?? 'Rp ' . number_format($report->accessories_amount, 0, ',', '.') }}
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <span class="amount-text text-info">
-                                        {{ $report->formatted_service ?? 'Rp ' . number_format($report->service_amount, 0, ',', '.') }}
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <span class="amount-text text-warning">
-                                        {{ $report->formatted_pulsa ?? 'Rp ' . number_format($report->pulsa_amount, 0, ',', '.') }}
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <strong class="amount-text text-primary" style="font-size: 1rem;">
-                                        {{ $report->formatted_total ?? 'Rp ' . number_format($report->total_amount, 0, ',', '.') }}
-                                    </strong>
-                                    @if($report->total_amount > 0)
+                                    $previousAmount = $report->total_amount;
+                                @endphp
+                                <tr>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary rounded-pill">{{ $index + 1 }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-month">
+                                            <i class="fas fa-calendar-alt month-icon"></i>
+                                            {{ $report->month_display }}
+                                        </span>
                                         <br>
                                         <small class="text-muted">
-                                            Avg: Rp {{ number_format($report->total_amount / ($report->total_transactions ?: 1), 0, ',', '.') }}
+                                            {{ $report->month_year }}
                                         </small>
-                                    @endif
-                                 </td>
-                                <td class="text-center">
-                                    <span class="badge bg-info rounded-pill">
-                                        <i class="fas fa-receipt me-1"></i>
-                                        {{ $report->total_transactions }}
-                                    </span>
-                                 </td>
-                                <td class="text-center">
-                                    @if($trendIcon)
-                                        <i class="fas {{ $trendIcon }} {{ $trendClass }}"></i>
-                                        <small class="{{ $trendClass }} d-block">{{ $trendText }}</small>
-                                    @else
-                                        <small class="text-muted">-</small>
-                                    @endif
-                                </td>
-                                <td class="text-center">
-                                    <a href="{{ route('pos.report.monthly.detail', [
-                                        'start_date' => \Carbon\Carbon::createFromFormat('Y-m', $report->month_year)->startOfMonth()->toDateString(),
-                                        'end_date' => \Carbon\Carbon::createFromFormat('Y-m', $report->month_year)->endOfMonth()->toDateString(),
-                                        'company_id' => request('company_id'),
-                                    ]) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye me-1"></i> Detail
-                                    </a>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="amount-text text-success">
+                                            {{ $report->formatted_accessories ?? 'Rp ' . number_format($report->accessories_amount, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="amount-text text-info">
+                                            {{ $report->formatted_service ?? 'Rp ' . number_format($report->service_amount, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="amount-text text-warning">
+                                            {{ $report->formatted_pulsa ?? 'Rp ' . number_format($report->pulsa_amount, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="amount-text text-primary" style="font-size: 1rem;">
+                                            {{ $report->formatted_total ?? 'Rp ' . number_format($report->total_amount, 0, ',', '.') }}
+                                        </strong>
+                                        @if ($report->total_amount > 0)
+                                            <br>
+                                            <small class="text-muted">
+                                                Avg: Rp
+                                                {{ number_format($report->total_amount / ($report->total_transactions ?: 1), 0, ',', '.') }}
+                                            </small>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info rounded-pill">
+                                            <i class="fas fa-receipt me-1"></i>
+                                            {{ $report->total_transactions }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if ($trendIcon)
+                                            <i class="fas {{ $trendIcon }} {{ $trendClass }}"></i>
+                                            <small class="{{ $trendClass }} d-block">{{ $trendText }}</small>
+                                        @else
+                                            <small class="text-muted">-</small>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{{ route('pos.report.monthly.detail', [
+                                            'start_date' => \Carbon\Carbon::createFromFormat('Y-m', $report->month_year)->startOfMonth()->toDateString(),
+                                            'end_date' => \Carbon\Carbon::createFromFormat('Y-m', $report->month_year)->endOfMonth()->toDateString(),
+                                            'company_id' => request('company_id'),
+                                        ]) }}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i> Detail
+                                        </a>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
                             <tr class="total-row">
                                 <td colspan="2" class="text-end">
                                     <strong>GRAND TOTAL</strong>
-                                 </td>
+                                </td>
                                 <td class="text-end">
                                     <strong class="text-success">{{ \Carbon\Carbon::rupiah($totalAccessories) }}</strong>
-                                 </td>
+                                </td>
                                 <td class="text-end">
                                     <strong class="text-info">{{ \Carbon\Carbon::rupiah($totalService) }}</strong>
-                                 </td>
+                                </td>
                                 <td class="text-end">
                                     <strong class="text-warning">{{ \Carbon\Carbon::rupiah($totalPulsa) }}</strong>
-                                 </td>
+                                </td>
                                 <td class="text-end">
                                     <strong class="text-primary">{{ \Carbon\Carbon::rupiah($totalAmount) }}</strong>
-                                 </td>
+                                </td>
                                 <td class="text-center">
                                     <strong class="bg-white px-2 py-1 rounded">
                                         {{ $totalTransactions }}
                                     </strong>
-                                 </td>
+                                </td>
                                 <td></td>
-                             </tr>
+                            </tr>
                         </tfoot>
-                     </table>
+                    </table>
                 </div>
             </div>
             <div class="card-footer bg-light">
                 <div class="row">
                     <div class="col-md-6">
                         <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> 
+                            <i class="fas fa-info-circle"></i>
                             Report generated on: {{ now()->format('d/m/Y H:i:s') }}
                         </small>
                     </div>
                     <div class="col-md-6 text-end">
                         <small class="text-muted">
-                            <i class="fas fa-chart-line"></i> 
+                            <i class="fas fa-chart-line"></i>
                             Showing {{ $monthlyReports->count() }} month(s)
                         </small>
                     </div>
@@ -570,127 +585,129 @@
 @endsection
 
 @push('js')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Auto submit form when company changes (optional)
-    document.getElementById('company_id')?.addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
-    
-    // Set default date range if not set
-    document.addEventListener('DOMContentLoaded', function() {
-        const startDate = document.getElementById('start_date');
-        const endDate = document.getElementById('end_date');
-        
-        if (!startDate.value) {
-            startDate.value = new Date().toISOString().slice(0, 7);
-        }
-        
-        if (!endDate.value) {
-            endDate.value = new Date().toISOString().slice(0, 7);
-        }
-    });
-    
-    // Monthly Chart
-    @if(isset($monthlyReports) && $monthlyReports->count() > 0)
-    document.addEventListener('DOMContentLoaded', function () {
-        const ctx = document.getElementById('monthlyChart');
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Auto submit form when company changes (optional)
+        document.getElementById('company_id')?.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
 
-        if (!ctx) {
-            return;
-        }
+        // Set default date range if not set
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
 
-        const chartLabels = @json($monthlyReports->pluck('month_display')->values()->all());
-        const chartTotals = @json($monthlyReports->map(fn ($item) => (float) ($item->total_amount ?? 0))->values()->all());
-        const chartTransactions = @json($monthlyReports->map(fn ($item) => (int) ($item->total_transactions ?? 0))->values()->all());
+            if (!startDate.value) {
+                startDate.value = new Date().toISOString().slice(0, 7);
+            }
 
-        if (!chartLabels.length || !ctx.getContext) {
-            return;
-        }
-
-        const chartContext = ctx.getContext('2d');
-
-        if (!window.Chart) {
-            console.error('Chart.js is not loaded.');
-            return;
-        }
-
-        new Chart(chartContext, {
-            type: 'line',
-            data: {
-                labels: chartLabels,
-                datasets: [
-                    {
-                        label: 'Total Amount (Rp)',
-                        data: chartTotals,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#764ba2',
-                        pointBorderColor: '#fff',
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    },
-                    {
-                        label: 'Transactions Count',
-                        data: chartTransactions,
-                        borderColor: '#ff6b6b',
-                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#ff5252',
-                        pointBorderColor: '#fff',
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                const label = context.dataset.label || '';
-                                const value = context.raw;
-
-                                if (context.dataset.label && context.dataset.label.includes('Amount')) {
-                                    return label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                                }
-
-                                return label + ': ' + new Intl.NumberFormat('id-ID').format(value);
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function (value) {
-                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                            }
-                        }
-                    },
-                    y1: {
-                        position: 'right',
-                        beginAtZero: true,
-                        grid: {
-                            drawOnChartArea: false
-                        }
-                    }
-                }
+            if (!endDate.value) {
+                endDate.value = new Date().toISOString().slice(0, 7);
             }
         });
-    });
-    @endif
-</script>
+
+        // Monthly Chart
+        @if (isset($monthlyReports) && $monthlyReports->count() > 0)
+            document.addEventListener('DOMContentLoaded', function() {
+                const ctx = document.getElementById('monthlyChart');
+
+                if (!ctx) {
+                    return;
+                }
+
+                const chartLabels = @json($monthlyReports->pluck('month_display')->values()->all());
+                const chartTotals = @json($monthlyReports->map(fn($item) => (float) ($item->total_amount ?? 0))->values()->all());
+                const chartTransactions = @json($monthlyReports->map(fn($item) => (int) ($item->total_transactions ?? 0))->values()->all());
+
+                if (!chartLabels.length || !ctx.getContext) {
+                    return;
+                }
+
+                const chartContext = ctx.getContext('2d');
+
+                if (!window.Chart) {
+                    console.error('Chart.js is not loaded.');
+                    return;
+                }
+
+                new Chart(chartContext, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                                label: 'Total Amount (Rp)',
+                                data: chartTotals,
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#764ba2',
+                                pointBorderColor: '#fff',
+                                pointRadius: 5,
+                                pointHoverRadius: 7
+                            },
+                            {
+                                label: 'Transactions Count',
+                                data: chartTransactions,
+                                borderColor: '#ff6b6b',
+                                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#ff5252',
+                                pointBorderColor: '#fff',
+                                pointRadius: 5,
+                                pointHoverRadius: 7,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.raw;
+
+                                        if (context.dataset.label && context.dataset.label.includes(
+                                                'Amount')) {
+                                            return label + ': Rp ' + new Intl.NumberFormat('id-ID')
+                                                .format(value);
+                                        }
+
+                                        return label + ': ' + new Intl.NumberFormat('id-ID').format(
+                                            value);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                                    }
+                                }
+                            },
+                            y1: {
+                                position: 'right',
+                                beginAtZero: true,
+                                grid: {
+                                    drawOnChartArea: false
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        @endif
+    </script>
 @endpush
