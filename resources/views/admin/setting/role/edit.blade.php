@@ -20,7 +20,7 @@
 <div class="container-fluid py-4 page-shell">
     <section class="page-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div>
-            <h2 class="mb-1 text-white">Update Role: {{ $group->group_name }}</h2>
+            <h2 class="mb-1 text-white  ">Update Role: {{ $group->group_name }}</h2>
         </div>
         <span class="badge bg-white text-primary fs-6 px-3 py-2"><i class="fas fa-pen me-1"></i> Edit Role</span>
     </section>

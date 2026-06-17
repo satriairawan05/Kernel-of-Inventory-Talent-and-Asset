@@ -16,7 +16,7 @@ class CompanyController extends Controller
     {
         try {
             $companies = Company::paginate(5);
-            return view('admin.setting.company.index', ['companies' => $companies, 'name' => 'Company']);
+            return view('admin.setting.company.index', ['companies' => $companies, 'name' => 'Company','access' => $this->get_access_per_page('Company')]);
         } catch (\Illuminate\Database\QueryException $e) {
             \Illuminate\Support\Facades\Log::error($e->getMessage());
             return redirect()->back()->with('failed', $e->getMessage());
