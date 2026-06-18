@@ -26,7 +26,6 @@ class AppServiceProvider extends ServiceProvider
     {
         config('app.locale', 'id');
         \Carbon\Carbon::setLocale('id');
-
         
         Paginator::useBootstrapFive();
     }

@@ -36,9 +36,12 @@ return new class extends Migration
         Schema::create('stock_opnames', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->date('period_start')->nullable();
+            $table->date('period_end')->nullable();
             $table->decimal('system_stock', 15, 2)->nullable();
             $table->decimal('physical_stock', 15, 2)->nullable();
             $table->decimal('difference', 15, 2)->nullable();
+            $table->text('status')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->index('product_variant_id');
