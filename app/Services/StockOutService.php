@@ -46,7 +46,7 @@ class StockOutService
             // Create movement record (qty stored as negative value for out)
             return StockMovement::create([
                 'product_variant_id' => $variantId,
-                'movement_type'      => StockMovementTypeEnum::SALE,
+                'movement_type'      => $data['movement_type'],
                 'qty'                => -$qty, // Negative indicates stock out
                 'stock_before'       => $stockBefore,
                 'stock_after'        => $stockAfter,
@@ -90,6 +90,7 @@ class StockOutService
             // Update movement record (qty stored as negative)
             $movement->update([
                 'qty'           => -$newQty,
+                'movement_type' => $data['movement_type'],
                 'stock_before'  => $stockBefore,
                 'stock_after'   => $stockAfter,
                 'notes'         => $data['notes'] ?? null,

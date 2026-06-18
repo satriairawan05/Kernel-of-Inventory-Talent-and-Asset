@@ -298,12 +298,12 @@
                     <div class="parent-wrapper label-1">
                         <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-stockopnames">
                             <li class="collapsed-nav-item-title d-none">Stock Opnames</li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            {{-- <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-opname.create') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">New Report</span>
                                     </div>
                                 </a><!-- more inner pages-->
-                            </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            </li> --}}
+                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-opname.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Reports</span>
                                     </div>
                                 </a><!-- more inner pages-->

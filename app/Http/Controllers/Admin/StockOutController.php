@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\StockMovementTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockOutStoreRequest;
 use App\Http\Requests\StockOutUpdateRequest;
@@ -70,7 +71,11 @@ class StockOutController extends Controller
         } else {
             try {
                 $productVariants = ProductVariant::with('product')->get();
-                return view('admin.inventory.stock-out.create', compact('productVariants'));
+                $allTypes = StockMovementTypeEnum::labels();
+                $allowedKeys = ['sale', 'adjustment', 'return'];
+                $movementTypes = array_intersect_key($allTypes, array_flip($allowedKeys));
+
+                return view('admin.inventory.stock-out.create', compact('productVariants', 'movementTypes'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -130,7 +135,11 @@ class StockOutController extends Controller
         } else {
             try {
                 $productVariants = ProductVariant::with('product')->get();
-                return view('admin.inventory.stock-out.edit', compact('stockOut', 'productVariants'));
+                $allTypes = StockMovementTypeEnum::labels();
+                $allowedKeys = ['sale', 'adjustment', 'return'];
+                $movementTypes = array_intersect_key($allTypes, array_flip($allowedKeys));
+
+                return view('admin.inventory.stock-out.edit', compact('stockOut', 'productVariants', 'movementTypes'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());

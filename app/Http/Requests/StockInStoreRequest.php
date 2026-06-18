@@ -26,6 +26,7 @@ class StockInStoreRequest extends FormRequest
             'product_variant_id' => ['required', 'exists:product_variants,id'],
             'qty' => ['required', 'numeric', 'min:0.01'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'movement_type'      => ['required'],
         ];
     }
 }

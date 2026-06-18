@@ -41,7 +41,7 @@ class StockInService
             // Create movement record
             return StockMovement::create([
                 'product_variant_id' => $variantId,
-                'movement_type' => StockMovementTypeEnum::PURCHASE,
+                'movement_type' => $data['movement_type'],
                 'qty' => $qty,
                 'stock_before' => $stockBefore,
                 'stock_after' => $stockAfter,
@@ -82,6 +82,7 @@ class StockInService
                 'qty' => $newQty,
                 'stock_before' => $stockBefore,
                 'stock_after' => $stockAfter,
+                'movement_type' => $data['movement_type'],
                 'notes' => $data['notes'] ?? null,
                 'user_id' => auth()->user()->id
             ]);

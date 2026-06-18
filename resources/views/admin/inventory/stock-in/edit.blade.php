@@ -53,6 +53,18 @@
                     </div>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label" for="movement_type">Tipe Transaksi</label>
+                    <select id="movement_type" name="movement_type" class="form-select @error('movement_type') is-invalid @enderror">
+                        <option value="">Pilih Tipe</option>
+                        @foreach ($movementTypes as $key => $label)
+                            <option value="{{ $key }}" {{ old('movement_type', $stockIn->movement_type) == $key ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('movement_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="mb-3">
                     <label class="form-label" for="notes">Catatan</label>
                     <textarea id="notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror" placeholder="Catatan tambahan (opsional)">{{ old('notes', $stockIn->notes) }}</textarea>
                     @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror

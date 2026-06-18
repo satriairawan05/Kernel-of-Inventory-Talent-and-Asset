@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\StockMovementTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockInStoreRequest;
 use App\Http\Requests\StockInUpdateRequest;
@@ -70,7 +71,12 @@ class StockInController extends Controller
         } else {
             try {
                 $productVariants = ProductVariant::with('product')->get();
-                return view('admin.inventory.stock-in.create', compact('productVariants'));
+                $allTypes = \App\Enums\StockMovementTypeEnum::labels();
+                $movementTypes = array_filter($allTypes, function ($key) {
+                    return in_array($key, ['opening', 'purchase', 'transfer']);
+                }, ARRAY_FILTER_USE_KEY);
+
+                return view('admin.inventory.stock-in.create', compact('productVariants', 'movementTypes'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -129,10 +135,13 @@ class StockInController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                abort_if($stockMovement->movement_type !== 'purchase', 404);
-
                 $productVariants = ProductVariant::with('product')->get();
-                return view('admin.inventory.stock-in.edit', compact('stockIn', 'productVariants'));
+                $allTypes = \App\Enums\StockMovementTypeEnum::labels();
+                $movementTypes = array_filter($allTypes, function ($key) {
+                    return in_array($key, ['opening', 'purchase', 'transfer']);
+                }, ARRAY_FILTER_USE_KEY);
+
+                return view('admin.inventory.stock-in.edit', compact('stockIn', 'productVariants', 'movementTypes'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -151,7 +160,6 @@ class StockInController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                abort_if($stockMovement->movement_type !== 'purchase', 404);
                 $stockInService->update($stockMovement, $request->validated());
                 return redirect()->route('inventory.stock-in.index')
                     ->with('success', 'Barang masuk berhasil diperbarui.');
@@ -173,7 +181,6 @@ class StockInController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                abort_if($stockMovement->movement_type !== 'purchase', 404);
                 $stockInService->destroy($stockMovement);
                 return redirect()->route('inventory.stock-in.index')
                     ->with('success', 'Barang masuk berhasil dihapus.');
