@@ -7,14 +7,16 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Auth::routes(['login' => true, 'register' => true]);
+Auth::routes(['login' => true]);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
     Route::group(['prefix' => 'setting', 'as' => 'setting.'], function () {
-        Route::get('/', function () {
-            return view('admin.setting.home');
+        Route::get('/', function (\App\Services\ModuleService $moduleService) {
+            return view('admin.setting.home',[
+                'access' => $moduleService->getAccessByModule('System Setting', auth()->user()->group_id)
+            ]);
         })->name('home');
 
         Route::resource('company', App\Http\Controllers\Admin\CompanyController::class);
@@ -35,7 +37,8 @@ Route::middleware(['auth'])->group(function () {
     Route::group(['prefix' => 'inventory', 'as' => 'inventory.'], function () {
         Route::get('/', function (\App\Services\ModuleService $moduleService) {
             return view('admin.inventory.home', [
-                'stats' => $moduleService->getInventoryStats()
+                'stats' => $moduleService->getInventoryStats(),
+                'access' => $moduleService->getAccessByModule('Inventory',auth()->user()->id)
             ]);
         })->name('home');
 
@@ -57,8 +60,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::group(['prefix' => 'pos', 'as' => 'pos.'], function () {
-        Route::get('/', function () {
-            return view('admin.pos.home');
+        Route::get('/', function (\App\Services\ModuleService $moduleService) {
+            return view('admin.pos.home',[
+                'access' => $moduleService->getAccessByModule('Point Of Sales',auth()->user()->group_id)
+            ]);
         })->name('home');
 
         Route::get('report/daily', [\App\Http\Controllers\Admin\SalesReportController::class, 'dailyIndex'])->name('report.daily');
@@ -70,8 +75,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::group(['prefix' => 'hr', 'as' => 'hr.'], function () {
-        Route::get('/', function () {
-            return view('admin.hr.home');
+        Route::get('/', function (\App\Services\ModuleService $moduleService) {
+            return view('admin.hr.home',[
+                'access' => $moduleService->getAccessByModule('Human Resources',auth()->user()->group_id)
+            ]);
         })->name('home');
     });
 

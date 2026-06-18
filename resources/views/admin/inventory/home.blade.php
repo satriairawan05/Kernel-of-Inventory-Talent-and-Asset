@@ -176,6 +176,7 @@
 
         <!-- Menu Groups -->
         <div class="row g-4">
+            @if ($access['Category']['Read'] == 1 || $access['Product']['Read'] == 1 || $access['Stock']['Read'] == 1)
             <!-- Master Data -->
             <div class="col-xl-4 col-md-6">
                 <div class="card inventory-card">
@@ -187,108 +188,142 @@
                         <h5 class="fw-bold">Master Data</h5>
                         <p class="small text-secondary">Kelola kategori, produk, dan stok awal.</p>
                         <ul class="submenu-list">
-                            <li><a href="{{ route('inventory.category.index') }}"><i class="fas fa-tag fa-fw"></i>
-                                    Category</a></li>
-                            <li><a href="{{ route('inventory.product.index') }}"><i class="fas fa-box-open fa-fw"></i>
-                                    Product</a></li>
-                            <li><a href="{{ route('inventory.stock.index') }}"><i class="fas fa-chart-line fa-fw"></i>
-                                    Stock</a></li>
+                            @if ($access['Category']['Read'] == 1)
+                                <li><a href="{{ route('inventory.category.index') }}"><i class="fas fa-tag fa-fw"></i>
+                                        Category</a></li>
+                            @endif
+                            @if ($access['Product']['Read'] == 1)
+                                <li><a href="{{ route('inventory.product.index') }}"><i class="fas fa-box-open fa-fw"></i>
+                                        Product</a></li>
+                            @endif
+                            @if ($access['Stock']['Read'] == 1)
+                                <li><a href="{{ route('inventory.stock.index') }}"><i class="fas fa-chart-line fa-fw"></i>
+                                        Stock</a></li>
+                            @endif
                         </ul>
                     </div>
                 </div>
             </div>
+            @endif
 
-            <!-- Incoming Goods -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card inventory-card">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="card-icon mb-2"><i class="fas fa-download"></i></div>
-                            <span class="badge-subtle">Penerimaan</span>
+            @if ($access['Incoming Good']['Read'] == 1)
+                <!-- Incoming Goods -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card inventory-card">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="card-icon mb-2"><i class="fas fa-download"></i></div>
+                                <span class="badge-subtle">Penerimaan</span>
+                            </div>
+                            <h5 class="fw-bold">Incoming Goods</h5>
+                            <p class="small text-secondary">Catat barang masuk ke gudang.</p>
+                            <ul class="submenu-list">
+                                @if ($access['Incoming Good']['Create'] == 1)
+                                    <li><a href="{{ route('inventory.stock-in.create') }}"><i
+                                                class="fas fa-plus-circle fa-fw"></i>
+                                            New Transaction</a></li>
+                                @endif
+                                <li><a href="{{ route('inventory.stock-in.index') }}"><i class="fas fa-history fa-fw"></i>
+                                        Transaction List</a></li>
+                            </ul>
                         </div>
-                        <h5 class="fw-bold">Incoming Goods</h5>
-                        <p class="small text-secondary">Catat barang masuk ke gudang.</p>
-                        <ul class="submenu-list">
-                            <li><a href="{{ route('inventory.stock-in.create') }}"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
-                            <li><a href="{{ route('inventory.stock-in.index') }}"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
-                        </ul>
                     </div>
                 </div>
-            </div>
+            @endif
 
-            <!-- Exit Items -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card inventory-card">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="card-icon mb-2"><i class="fas fa-upload"></i></div>
-                            <span class="badge-subtle">Pengeluaran</span>
+            @if ($access['Exit Item']['Read'] == 1)
+                <!-- Exit Items -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card inventory-card">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="card-icon mb-2"><i class="fas fa-upload"></i></div>
+                                <span class="badge-subtle">Pengeluaran</span>
+                            </div>
+                            <h5 class="fw-bold">Exit Items</h5>
+                            <p class="small text-secondary">Catat barang keluar (penjualan, pemakaian).</p>
+                            <ul class="submenu-list">
+                                @if ($access['Exit Item']['Create'] == 1)
+                                    <li><a href="{{ route('inventory.stock-out.create') }}"><i
+                                                class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
+                                @endif
+                                <li><a href="{{ route('inventory.stock-out.index') }}"><i class="fas fa-history fa-fw"></i>
+                                        Transaction List</a></li>
+                            </ul>
                         </div>
-                        <h5 class="fw-bold">Exit Items</h5>
-                        <p class="small text-secondary">Catat barang keluar (penjualan, pemakaian).</p>
-                        <ul class="submenu-list">
-                            <li><a href="{{ route('inventory.stock-out.create') }}"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
-                            <li><a href="{{ route('inventory.stock-out.index') }}"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
-                        </ul>
                     </div>
                 </div>
-            </div>
+            @endif
 
-            <!-- Return Items -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card inventory-card">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="card-icon mb-2"><i class="fas fa-undo-alt"></i></div>
-                            <span class="badge-subtle">Return</span>
+            @if ($access['Return Item']['Read'] == 1)
+                <!-- Return Items -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card inventory-card">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="card-icon mb-2"><i class="fas fa-undo-alt"></i></div>
+                                <span class="badge-subtle">Return</span>
+                            </div>
+                            <h5 class="fw-bold">Return Items</h5>
+                            <p class="small text-secondary">Proses return barang dari pelanggan.</p>
+                            <ul class="submenu-list">
+                                @if ($access['Return Item']['Create'] == 1)
+                                    <li><a href="{{ route('inventory.return-stock.create') }}"><i
+                                                class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
+                                @endif
+                                <li><a href="{{ route('inventory.return-stock.index') }}"><i
+                                            class="fas fa-history fa-fw"></i> Transaction List</a></li>
+                            </ul>
                         </div>
-                        <h5 class="fw-bold">Return Items</h5>
-                        <p class="small text-secondary">Proses return barang dari pelanggan.</p>
-                        <ul class="submenu-list">
-                            <li><a href="{{ route('inventory.return-stock.create') }}"><i class="fas fa-plus-circle fa-fw"></i> New Transaction</a></li>
-                            <li><a href="{{ route('inventory.return-stock.index') }}"><i class="fas fa-history fa-fw"></i> Transaction List</a></li>
-                        </ul>
                     </div>
                 </div>
-            </div>
+            @endif
 
-            <!-- Stock Opnames -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card inventory-card">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="card-icon mb-2"><i class="fas fa-clipboard-list"></i></div>
-                            <span class="badge-subtle">Stok Opname</span>
+            @if ($access['Stock Opname']['Read'] == 1)
+                <!-- Stock Opnames -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card inventory-card">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="card-icon mb-2"><i class="fas fa-clipboard-list"></i></div>
+                                <span class="badge-subtle">Stok Opname</span>
+                            </div>
+                            <h5 class="fw-bold">Stock Opnames</h5>
+                            <p class="small text-secondary">Lakukan pengecekan fisik stok.</p>
+                            <ul class="submenu-list">
+                                @if ($access['Stock Opname']['Create'] == 1)
+                                    <li><a href="{{ route('inventory.stock-opname.create') }}"><i
+                                                class="fas fa-file-alt fa-fw"></i> New Report</a></li>
+                                @endif
+                                <li><a href="{{ route('inventory.stock-opname.index') }}"><i
+                                            class="fas fa-chart-bar fa-fw"></i> Reports</a></li>
+                            </ul>
                         </div>
-                        <h5 class="fw-bold">Stock Opnames</h5>
-                        <p class="small text-secondary">Lakukan pengecekan fisik stok.</p>
-                        <ul class="submenu-list">
-                            <li><a href="#"><i class="fas fa-file-alt fa-fw"></i> New Report</a></li>
-                            <li><a href="#"><i class="fas fa-chart-bar fa-fw"></i> Reports</a></li>
-                        </ul>
                     </div>
                 </div>
-            </div>
+            @endif
 
-            <!-- Reports -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card inventory-card">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="card-icon mb-2"><i class="fas fa-chart-pie"></i></div>
-                            <span class="badge-subtle">Analisa</span>
+            @if ($access['Report']['Read'] == 1)
+                <!-- Reports -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card inventory-card">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="card-icon mb-2"><i class="fas fa-chart-pie"></i></div>
+                                <span class="badge-subtle">Analisa</span>
+                            </div>
+                            <h5 class="fw-bold">Reports</h5>
+                            <p class="small text-secondary">Pantau pergerakan stok secara periodik.</p>
+                            <ul class="submenu-list">
+                                <li><a href="#"><i class="fas fa-sun fa-fw"></i> Daily</a></li>
+                                <li><a href="#"><i class="fas fa-calendar-week fa-fw"></i> Weekly</a></li>
+                                <li><a href="#"><i class="fas fa-calendar-alt fa-fw"></i> Monthly</a></li>
+                            </ul>
                         </div>
-                        <h5 class="fw-bold">Reports</h5>
-                        <p class="small text-secondary">Pantau pergerakan stok secara periodik.</p>
-                        <ul class="submenu-list">
-                            <li><a href="#"><i class="fas fa-sun fa-fw"></i> Daily</a></li>
-                            <li><a href="#"><i class="fas fa-calendar-week fa-fw"></i> Weekly</a></li>
-                            <li><a href="#"><i class="fas fa-calendar-alt fa-fw"></i> Monthly</a></li>
-                        </ul>
                     </div>
                 </div>
-            </div>
         </div>
+        @endif
 
         <!-- Motivasi KITA -->
         <div class="row mt-4">

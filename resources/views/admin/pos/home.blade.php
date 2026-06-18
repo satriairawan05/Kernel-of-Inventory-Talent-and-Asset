@@ -167,44 +167,50 @@
 
         <!-- Menu Sales Groups -->
         <div class="row g-4">
-            <!-- Point of Sales -->
-            <div class="col-xl-6 col-md-6">
-                <div class="card sales-card">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="card-icon mb-2"><i class="fas fa-cash-register"></i></div>
-                            <span class="badge-subtle">Aktif</span>
-                        </div>
-                        <h5 class="fw-bold">Point of Sales</h5>
-                        <p class="small text-secondary">Lakukan transaksi penjualan langsung, kelola keranjang, diskon, dan
-                            cetak struk.</p>
-                        <div class="info-row">
-                            <a href="#" class="small text-success fw-semibold">Mulai Transaksi <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+            @if ($access['POS']['Read'] == 1)
+                <!-- Point of Sales -->
+                <div class="col-xl-6 col-md-6">
+                    <div class="card sales-card">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="card-icon mb-2"><i class="fas fa-cash-register"></i></div>
+                                <span class="badge-subtle">Aktif</span>
+                            </div>
+                            <h5 class="fw-bold">Point of Sales</h5>
+                            <p class="small text-secondary">Lakukan transaksi penjualan langsung, kelola keranjang, diskon,
+                                dan
+                                cetak struk.</p>
+                            <div class="info-row">
+                                <a href="#" class="small text-success fw-semibold">Mulai Transaksi <i
+                                        class="fas fa-arrow-right ms-1"></i></a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
 
-            <!-- Sales Reports -->
-            <div class="col-xl-6 col-md-6">
-                <div class="card sales-card">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="card-icon mb-2"><i class="fas fa-chart-bar"></i></div>
-                            <span class="badge-subtle">Laporan</span>
+            @if ($access['Sale Reports (POS)']['Read'] == 1)
+                <!-- Sales Reports -->
+                <div class="col-xl-6 col-md-6">
+                    <div class="card sales-card">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="card-icon mb-2"><i class="fas fa-chart-bar"></i></div>
+                                <span class="badge-subtle">Laporan</span>
+                            </div>
+                            <h5 class="fw-bold">Sales Reports</h5>
+                            <p class="small text-secondary">Lihat laporan penjualan berdasarkan periode untuk analisa
+                                bisnis.
+                            </p>
+                            <ul class="submenu-list">
+                                <li><a href="#"><i class="fas fa-calendar-day fa-fw"></i> Daily</a></li>
+                                <li><a href="#"><i class="fas fa-calendar-week fa-fw"></i> Weekly</a></li>
+                                <li><a href="#"><i class="fas fa-calendar-alt fa-fw"></i> Monthly</a></li>
+                            </ul>
                         </div>
-                        <h5 class="fw-bold">Sales Reports</h5>
-                        <p class="small text-secondary">Lihat laporan penjualan berdasarkan periode untuk analisa bisnis.
-                        </p>
-                        <ul class="submenu-list">
-                            <li><a href="#"><i class="fas fa-calendar-day fa-fw"></i> Daily</a></li>
-                            <li><a href="#"><i class="fas fa-calendar-week fa-fw"></i> Weekly</a></li>
-                            <li><a href="#"><i class="fas fa-calendar-alt fa-fw"></i> Monthly</a></li>
-                        </ul>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         <!-- Motivasi KITA -->

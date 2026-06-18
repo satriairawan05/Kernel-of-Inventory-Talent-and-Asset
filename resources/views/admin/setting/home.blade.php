@@ -108,46 +108,52 @@
                 @endif
             </div>
 
-            <!-- Outlets -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card setting-card p-3">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="card-icon"><i class="fas fa-store"></i></div>
-                            <span class="badge-subtle">Perusahaan</span>
-                        </div>
-                        <h5 class="fw-bold mt-3 mb-2">Outlets</h5>
-                        <p class="small text-secondary">Kelola data cabang/outlet, alamat, kontak, logo, dan tipe bisnis
-                            (Rumah Makan, Counter HP, dll).</p>
-                        <div class="info-row d-flex justify-content-between">
-                            <span><i class="fas fa-check-circle text-success me-1"></i> Aktif</span>
-                            <a href="{{ route('setting.company.index') }}" class="text-primary fw-semibold small">Kelola <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+            @if ($access['Outlet']['Read'] == 1)
+                <!-- Outlets -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card setting-card p-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div class="card-icon"><i class="fas fa-store"></i></div>
+                                <span class="badge-subtle">Perusahaan</span>
+                            </div>
+                            <h5 class="fw-bold mt-3 mb-2">Outlets</h5>
+                            <p class="small text-secondary">Kelola data cabang/outlet, alamat, kontak, logo, dan tipe bisnis
+                                (Rumah Makan, Counter HP, dll).</p>
+                            <div class="info-row d-flex justify-content-between">
+                                <span><i class="fas fa-check-circle text-success me-1"></i> Aktif</span>
+                                <a href="{{ route('setting.company.index') }}" class="text-primary fw-semibold small">Kelola
+                                    <i class="fas fa-arrow-right ms-1"></i></a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
 
             <!-- Shift -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card setting-card p-3">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="card-icon"><i class="fas fa-clock"></i></div>
-                            <span class="badge-subtle">Jam Kerja</span>
-                        </div>
-                        <h5 class="fw-bold mt-3 mb-2">Shifts</h5>
-                        <p class="small text-secondary">Atur jadwal shift kerja, jam masuk, jam pulang, dan hari libur untuk
-                            setiap outlet.</p>
-                        <div class="info-row d-flex justify-content-between">
-                            <span><i class="fas fa-calendar-week me-1"></i> Fleksibel</span>
-                            <a href="{{ route('setting.shift.index') }}" class="text-primary fw-semibold small">Kelola <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+            @if ($access['Shift']['Read'] == 1)
+                <div class="col-xl-4 col-md-6">
+                    <div class="card setting-card p-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                                <span class="badge-subtle">Jam Kerja</span>
+                            </div>
+                            <h5 class="fw-bold mt-3 mb-2">Shifts</h5>
+                            <p class="small text-secondary">Atur jadwal shift kerja, jam masuk, jam pulang, dan hari libur
+                                untuk
+                                setiap outlet.</p>
+                            <div class="info-row d-flex justify-content-between">
+                                <span><i class="fas fa-calendar-week me-1"></i> Fleksibel</span>
+                                <a href="{{ route('setting.shift.index') }}" class="text-primary fw-semibold small">Kelola
+                                    <i class="fas fa-arrow-right ms-1"></i></a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
 
+            @if ($access['Unit']['Read'] == 1)
             <!-- Unit -->
             <div class="col-xl-4 col-md-6">
                 <div class="card setting-card p-3">
@@ -167,7 +173,9 @@
                     </div>
                 </div>
             </div>
+            @endif
 
+            @if ($access['Roles']['Read'] == 1)
             <!-- Roles -->
             <div class="col-xl-4 col-md-6">
                 <div class="card setting-card p-3">
@@ -187,7 +195,9 @@
                     </div>
                 </div>
             </div>
+            @endif
 
+            @if ($access['Account']['Read'] == 1)
             <!-- Accounts -->
             <div class="col-xl-4 col-md-6">
                 <div class="card setting-card p-3">
@@ -207,6 +217,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
 
         <!-- Pesan Motivasi KITA -->

@@ -93,6 +93,13 @@
                         </div>
                     </a>
                 </div>
+                <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
+                        data-bs-toggle="" aria-expanded="false">
+                        <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-dollar"></i></span><span class="nav-link-text-wrapper"><span
+                                    class="nav-link-text">Cash Summary</span></span>
+                        </div>
+                    </a>
+                </div>
                 <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-pos-reports"
                         role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-pos-reports">
                         <div class="d-flex align-items-center">

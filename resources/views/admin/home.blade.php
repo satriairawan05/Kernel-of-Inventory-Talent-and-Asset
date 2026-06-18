@@ -157,6 +157,36 @@
 
         </div>
 
+        <!-- Footer -->
+        <footer class="footer mt-5 pt-3">
+            <div class="container-fluid">
+                <div class="row align-items-center justify-content-between g-2">
+                    <div class="col-12 col-md-6 text-center text-md-start">
+                        <p class="mb-0 text-muted small running-text-wrapper">
+                            <span class="running-text">
+                                <i class="fa-regular fa-copyright me-1"></i>
+                                <span class="d-none d-sm-inline">Created by</span>
+                                <a href="https://www.linkedin.com/in/satriai418" target="_blank"
+                                    class="text-decoration-none fw-semibold text-dark">
+                                    Deuwi Satriya Irawan
+                                </a>
+                                <span class="d-none d-sm-inline"> &bull; </span>
+                                <span class="d-block d-sm-inline">2026 - {{ date('Y') }}</span>
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-12 col-md-6 text-center text-md-end">
+                        <p class="mb-0 text-muted small">
+                            <i class="fa-regular fa-heart text-danger me-1"></i>
+                            <span class="fw-semibold">KITA</span>
+                            <span class="mx-1 text-secondary">|</span>
+                            <span
+                                class="badge bg-dark bg-opacity-10 text-dark fw-normal">v{{ config('app.version') }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <style>
@@ -239,6 +269,58 @@
             background: linear-gradient(135deg, #0a1a3a, #1e3a6b);
         }
 
+        .footer {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(0, 31, 63, 0.03) 50%, rgba(0, 31, 63, 0.06) 100%);
+            border-top: 1px solid rgba(0, 0, 0, .05);
+            backdrop-filter: blur(2px);
+            padding-bottom: 1.5rem;
+            transition: background 0.5s ease;
+        }
+
+        /* ===== RUNNING TEXT (MARQUEE) ===== */
+        .running-text-wrapper {
+            overflow: hidden;
+            white-space: nowrap;
+            display: inline-block;
+            max-width: 100%;
+        }
+
+        .running-text {
+            display: inline-block;
+            animation: runningText 25s linear infinite;
+            padding-left: 100%;
+        }
+
+        /* Efek berhenti saat hover (opsional) */
+        .running-text-wrapper:hover .running-text {
+            animation-play-state: paused;
+        }
+
+        @keyframes runningText {
+            0% {
+                transform: translateX(0%);
+            }
+
+            25% {
+                font-weight: bold;
+                color: #4a0d1a;
+            }
+
+            50% {
+                font-weight: bolder;
+                color: #0a1a3a;
+            }
+
+            75% {
+                font-weight: bold;
+                color: #4a0d1a;
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
         /* MOBILE */
 
         @media (max-width: 768px) {
@@ -261,6 +343,10 @@
 
             .dropdown button {
                 font-size: .85rem;
+            }
+
+            .running-text {
+                animation-duration: 18s;
             }
         }
     </style>

@@ -7,6 +7,7 @@ use App\Models\ProductVariant;
 use App\Models\Stock;
 use App\Models\StockMovement;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ModuleService
 {
@@ -106,5 +107,76 @@ class ModuleService
     public function getProfile(): ?\App\Models\User
     {
         return \App\Models\User::find(auth()->user()->id);
+    }
+
+    /**
+     * Get access permissions for all pages within a specific module.
+     *
+     * Returns an array where keys are page names, values are arrays of action => access (0 or 1).
+     * All standard CRUD actions (Create, Read, Update, Delete) are always present.
+     *
+     * @param string $module
+     * @param int $groupId
+     * @param string|null $pageName
+     * @return array
+     */
+    public function getAccessByModule(string $module, int $groupId, ?string $pageName = null): array
+    {
+        // Query untuk mengambil semua action + access per halaman
+        $query = DB::table('group_pages')
+            ->join('pages', 'pages.id', '=', 'group_pages.page_id')
+            ->where('pages.module', $module)
+            ->where('group_pages.group_id', $groupId);
+
+        if ($pageName !== null) {
+            $query->where('pages.page_name', $pageName);
+        }
+
+        $pages = $query->select('pages.module','pages.page_name', 'pages.action', 'group_pages.access')->get();
+
+        // Definisikan semua action yang mungkin (CRUD)
+        $allActions = ['Create', 'Read', 'Update', 'Delete'];
+
+        // Bangun hasil akhir
+        $result = [];
+
+        // Kelompokkan data per page_name
+        $grouped = $pages->groupBy('page_name');
+
+        foreach ($grouped as $pageName => $actions) {
+            // Inisialisasi semua action dengan 0
+            $accessMap = array_fill_keys($allActions, 0);
+
+            // Isi access yang tersedia dari database
+            foreach ($actions as $action) {
+                if (in_array($action->action, $allActions)) {
+                    $accessMap[$action->action] = (int) $action->access;
+                }
+            }
+
+            $result[$pageName] = $accessMap;
+        }
+
+        // Jika pageName spesifik dan tidak ada data, tetap kembalikan array dengan semua action 0
+        if ($pageName !== null && !isset($result[$pageName])) {
+            $result[$pageName] = array_fill_keys($allActions, 0);
+        }
+
+        return $result;
+    }
+
+     /**
+     * Get access for all modules (optional, if you want to load all at once)
+     */
+    public function getAllAccess(int $groupId): array
+    {
+        $modules = DB::table('pages')->distinct()->pluck('module')->toArray();
+        $result = [];
+
+        foreach ($modules as $module) {
+            $result[$module] = $this->getAccessByModule($module, $groupId);
+        }
+
+        return $result;
     }
 }

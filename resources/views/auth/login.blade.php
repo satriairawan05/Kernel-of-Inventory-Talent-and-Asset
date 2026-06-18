@@ -83,8 +83,8 @@
                                                     {{-- <a class="fs-9 fw-semibold"
                                                         href="{{ route('password.request') }}">Forgot Password?</a></div> --}}
                                             </div><button class="btn btn-primary w-100 mb-3">Sign In</button>
-                                            <div class="text-center"><a class="fs-9 fw-bold" href="{{ route('register') }}">Create an
-                                                    account</a></div>
+                                            {{-- <div class="text-center"><a class="fs-9 fw-bold" href="{{ route('register') }}">Create an
+                                                    account</a></div> --}}
                                     </div>
                                 </div>
                             </div>
