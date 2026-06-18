@@ -9,8 +9,9 @@ use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\AccountService;
 use App\Services\ModuleService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
@@ -54,7 +55,7 @@ class HomeController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function profile(ModuleService $moduleService)
+    public function profile(ModuleService $moduleService): View
     {
         $access = $this->get_access();
 
@@ -64,7 +65,7 @@ class HomeController extends Controller
             $groups = \App\Models\Group::when(auth()->user()->group_id != 1, function ($query) {
                 return $query->where('id', '!=', 1);
             })->latest()->get();
-            
+
             return view('admin.setting.account.profile', ['profile' => $moduleService->getProfile(), 'companies' => \App\Models\Company::latest()->get(), 'groups' => $groups, 'access' => $moduleService->getAccessByModule('Personal', auth()->user()->group_id)]);
         }
     }
@@ -137,5 +138,21 @@ class HomeController extends Controller
 
             return redirect()->back()->with('company_success', 'Perusahaan berhasil diperbarui.');
         }
+    }
+
+    /**
+     * Display the dashboard view.
+     *
+     * This method retrieves all necessary data for the dashboard,
+     * such as statistics, summaries, or recent records, and passes
+     * them to the admin dashboard view for display.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function getDashboard(\App\Services\ModuleService $moduleService): View
+    {
+        return view('admin.dashboard.home',[
+            'access' => $moduleService->getAccessByModule('Dashboard',auth()->user()->id)
+        ]);
     }
 }

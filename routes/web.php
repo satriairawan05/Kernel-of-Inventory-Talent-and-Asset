@@ -83,10 +83,14 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::group(['prefix' => 'presence', 'as' => 'presence.'], function () {
-        //
+        Route::get('/', function(\App\Services\ModuleService $moduleService){
+            return view('admin.presence.home',[
+                'access' => $moduleService->getAccessByModule('Presence',auth()->user()->group_id)
+            ]);
+        })->name('home');
     });
 
     Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
-        //
+        Route::get('/', [\App\Http\Controllers\HomeController::class,'getDashboard'])->name('home');
     });
 });
