@@ -33,7 +33,7 @@
                 @csrf
                 <div class="mb-3">
                     <label class="form-label" for="company_id">Company</label>
-                    <select id="company_id" name="company_id" class="form-select @error('company_id') is-invalid @enderror">
+                    <select id="company_id" name="company_id" class="form-select select2 @error('company_id') is-invalid @enderror">
                         <option value="">-- Select Company --</option>
                         @foreach ($companies as $company)
                             <option value="{{ $company->id }}" @selected(old('company_id') == $company->id)>{{ $company->company_name }}</option>

@@ -35,7 +35,7 @@
                 <div class="row g-3">
                     <div class="col-md-4 mb-3">
                         <label class="form-label" for="company_id">Company</label>
-                        <select id="company_id" name="company_id" class="form-select @error('company_id') is-invalid @enderror">
+                        <select id="company_id" name="company_id" class="form-select select2 @error('company_id') is-invalid @enderror">
                             <option value="">Select Company</option>
                             @foreach ($companies as $company)
                                 <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>{{ $company->company_name }}</option>

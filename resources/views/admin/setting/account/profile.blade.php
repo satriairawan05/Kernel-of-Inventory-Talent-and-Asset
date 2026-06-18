@@ -149,7 +149,7 @@
 @endpush
 
 @section('content')
-    @if ($access['Read'] == 1)
+    @if ($access['Profile']['Read'] == 1)
         <div class="container-fluid py-4 profile-shell">
             <!-- Hero Section -->
             <div class="profile-hero d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -169,7 +169,7 @@
 
             <div class="row justify-content-center mt-4">
                 <div class="col-lg-10">
-                    @if ($access['Update'] == 1)
+                    @if ($access['Profile']['Update'] == 1)
                         <!-- Update Profile Card -->
                         <div class="card soft-card mb-4">
                             <div class="card-header">
@@ -272,7 +272,7 @@
                                         <div class="col-md-12">
                                             <label class="form-label">User Role / Group</label>
                                             <select name="group_id"
-                                                class="form-select @error('group_id', 'group') is-invalid @enderror">
+                                                class="form-select select2 @error('group_id', 'group') is-invalid @enderror">
                                                 <option value="">Select Role</option>
                                                 @foreach ($groups as $group)
                                                     <option value="{{ $group->id }}"
@@ -326,7 +326,7 @@
                                         <div class="col-md-12">
                                             <label class="form-label">Outlet</label>
                                             <select name="company_id"
-                                                class="form-select @error('company_id', 'company') is-invalid @enderror">
+                                                class="form-select select2 @error('company_id', 'company') is-invalid @enderror">
                                                 <option value="">Select Outlet</option>
                                                 @foreach ($companies as $company)
                                                     <option value="{{ $company->id }}"

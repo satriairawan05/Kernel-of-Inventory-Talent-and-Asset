@@ -15,16 +15,6 @@ use Illuminate\Support\Facades\Auth;
 class HomeController extends Controller
 {
     /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    /**
      * Show the application dashboard.
      *
      * @return \Illuminate\Contracts\Support\Renderable
@@ -71,7 +61,11 @@ class HomeController extends Controller
         if (!isset($access['Read']) || $access['Read'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
-            return view('admin.setting.account.profile', ['profile' => $moduleService->getProfile(),'companies' => \App\Models\Company::latest()->get(),'groups' => \App\Models\Group::latest()->get(),'access' => $this->get_access_per_page('Profile')]);
+            $groups = \App\Models\Group::when(auth()->user()->group_id != 1, function ($query) {
+                return $query->where('id', '!=', 1);
+            })->latest()->get();
+            
+            return view('admin.setting.account.profile', ['profile' => $moduleService->getProfile(), 'companies' => \App\Models\Company::latest()->get(), 'groups' => $groups, 'access' => $moduleService->getAccessByModule('Personal', auth()->user()->group_id)]);
         }
     }
 
@@ -87,9 +81,9 @@ class HomeController extends Controller
         } else {
             $user = Auth::user();
             $avatarFile = $request->file('avatar');
-    
+
             $accountService->updateProfile($user, $request->validated(), $avatarFile);
-    
+
             return redirect()->back()->with('profile_success', 'Profil berhasil diperbarui.');
         }
     }
@@ -106,7 +100,7 @@ class HomeController extends Controller
         } else {
             $user = Auth::user();
             $accountService->updatePassword($user, $request->password);
-            
+
             return redirect()->back()->with('password_success', 'Password berhasil diubah.');
         }
     }
@@ -123,10 +117,9 @@ class HomeController extends Controller
         } else {
             $user = Auth::user();
             $accountService->updateGroup($user, $request->group_id);
-    
+
             return redirect()->back()->with('group_success', 'Role berhasil diperbarui.');
         }
-
     }
 
     /**
@@ -141,7 +134,7 @@ class HomeController extends Controller
         } else {
             $user = Auth::user();
             $accountService->updateCompany($user, $request->company_id);
-    
+
             return redirect()->back()->with('company_success', 'Perusahaan berhasil diperbarui.');
         }
     }

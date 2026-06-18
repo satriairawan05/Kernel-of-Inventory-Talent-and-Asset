@@ -95,7 +95,7 @@
                 @csrf
                 <div class="col-md-6">
                     <label class="form-label">Outlet</label>
-                    <select name="company_id" class="form-select @error('company_id') is-invalid @enderror" required>
+                    <select name="company_id" class="form-select select2 @error('company_id') is-invalid @enderror" required>
                         <option value="">Select Outlet</option>
                         @foreach($companies as $company)
                             <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>{{ $company->company_name }}</option>
@@ -106,7 +106,7 @@
                 
                 <div class="col-md-6">
                     <label class="form-label">Category</label>
-                    <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
+                    <select name="category_id" class="form-select select2 @error('category_id') is-invalid @enderror" required>
                         <option value="">Select Category</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->category_name }}</option>
@@ -117,7 +117,7 @@
                 
                 <div class="col-md-6">
                     <label class="form-label">Unit</label>
-                    <select name="unit_id" class="form-select @error('unit_id') is-invalid @enderror" required>
+                    <select name="unit_id" class="form-select select2 @error('unit_id') is-invalid @enderror" required>
                         <option value="">Select Unit</option>
                         @foreach($units as $unit)
                             <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>{{ $unit->unit_code }}</option>
@@ -140,7 +140,7 @@
                 
                 <div class="col-md-6">
                     <label class="form-label">Status</label>
-                    <select name="is_active" class="form-select @error('is_active') is-invalid @enderror" required>
+                    <select name="is_active" class="form-select select2 @error('is_active') is-invalid @enderror" required>
                         <option value="1" {{ old('is_active', 1) == '1' ? 'selected' : '' }}>Active</option>
                         <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Inactive</option>
                     </select>
@@ -149,7 +149,7 @@
                 
                 <div class="col-12">
                     <label class="form-label">Has Variant</label>
-                    <select name="has_variant" class="form-select @error('has_variant') is-invalid @enderror" required>
+                    <select name="has_variant" class="form-select select2 @error('has_variant') is-invalid @enderror" required>
                         <option value="1" {{ old('has_variant') == '1' ? 'selected' : '' }}>Yes</option>
                         <option value="0" {{ old('has_variant', 0) == '0' ? 'selected' : '' }}>No</option>
                     </select>

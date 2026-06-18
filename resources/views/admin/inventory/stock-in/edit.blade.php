@@ -36,7 +36,7 @@
                 <div class="row g-3">
                     <div class="col-md-6 mb-3">
                         <label class="form-label" for="product_variant_id">Varian Produk</label>
-                        <select id="product_variant_id" name="product_variant_id" class="form-select @error('product_variant_id') is-invalid @enderror">
+                        <select id="product_variant_id" name="product_variant_id" class="form-select select2 @error('product_variant_id') is-invalid @enderror">
                             <option value="">Pilih Varian</option>
                             @foreach ($productVariants as $variant)
                                 <option value="{{ $variant->id }}" {{ old('product_variant_id', $stockIn->product_variant_id) == $variant->id ? 'selected' : '' }}>
@@ -54,7 +54,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label" for="movement_type">Tipe Transaksi</label>
-                    <select id="movement_type" name="movement_type" class="form-select @error('movement_type') is-invalid @enderror">
+                    <select id="movement_type" name="movement_type" class="form-select select2 @error('movement_type') is-invalid @enderror">
                         <option value="">Pilih Tipe</option>
                         @foreach ($movementTypes as $key => $label)
                             <option value="{{ $key }}" {{ old('movement_type', $stockIn->movement_type) == $key ? 'selected' : '' }}>

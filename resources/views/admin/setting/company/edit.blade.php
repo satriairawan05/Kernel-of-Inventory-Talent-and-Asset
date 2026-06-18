@@ -133,7 +133,7 @@
                     <div class="mb-3">
                         <label class="form-label" for="company_name">Outlet Name</label>
                         <input type="text" id="company_name" name="company_name"
-                            class="form-control @error('company_name') is-invalid @enderror"
+                            class="form-control select2 @error('company_name') is-invalid @enderror"
                             value="{{ old('company_name', $company->company_name) }}" placeholder="Raja Kepiting">
                         @error('company_name')
                             <div class="invalid-feedback">{{ $message }}</div>

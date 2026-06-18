@@ -36,7 +36,7 @@
                 <div class="row g-3">
                     <div class="col-md-6 mb-3">
                         <label class="form-label" for="product_variant_id">Product Variant</label>
-                        <select id="product_variant_id" name="product_variant_id" class="form-select @error('product_variant_id') is-invalid @enderror">
+                        <select id="product_variant_id" name="product_variant_id" class="form-select select2 @error('product_variant_id') is-invalid @enderror">
                             <option value="">Select Variant</option>
                             @foreach ($productVariants as $variant)
                                 <option value="{{ $variant->id }}" {{ old('product_variant_id', $stock->product_variant_id) == $variant->id ? 'selected' : '' }}>

@@ -181,7 +181,7 @@
                             <span class="fw-semibold">KITA</span>
                             <span class="mx-1 text-secondary">|</span>
                             <span
-                                class="badge bg-dark bg-opacity-10 text-dark fw-normal">v{{ config('app.version') }}</span>
+                                class="badge bg-dark bg-opacity-10 text-dark fw-normal">{{ config('app.version') }}</span>
                         </p>
                     </div>
                 </div>
