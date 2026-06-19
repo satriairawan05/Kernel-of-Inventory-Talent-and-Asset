@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StockOpnameUpdateRequest extends FormRequest
+class StockOpnamePeriodStoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,8 +23,11 @@ class StockOpnameUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'notes'   => ['nullable', 'string', 'max:500'],
-            'status'  => ['nullable', 'string', 'max:500'],
+            'period_start' => ['required', 'date'],
+            'period_end'   => ['required', 'date', 'after_or_equal:period_start'],
+            'details'      => ['required', 'array'],
+            'details.*'    => ['nullable', 'numeric', 'min:0'],
+            'notes'        => ['nullable', 'string', 'max:500'],
         ];
     }
 }

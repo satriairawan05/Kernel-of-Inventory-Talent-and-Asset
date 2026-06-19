@@ -1,7 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\{Auth, Route};
-
+use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\Admin\GroupController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ReturnStockController;
+use App\Http\Controllers\Admin\SalesReportController;
+use App\Http\Controllers\Admin\ShiftController;
+use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\StockInController;
+use App\Http\Controllers\Admin\StockOpnameController;
+use App\Http\Controllers\Admin\StockOutController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\HomeController;
+use App\Services\ModuleService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -10,87 +25,92 @@ Route::get('/', function () {
 Auth::routes(['login' => true]);
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
 
     Route::group(['prefix' => 'setting', 'as' => 'setting.'], function () {
-        Route::get('/', function (\App\Services\ModuleService $moduleService) {
-            return view('admin.setting.home',[
-                'access' => $moduleService->getAccessByModule('System Setting', auth()->user()->group_id)
+        Route::get('/', function (ModuleService $moduleService) {
+            return view('admin.setting.home', [
+                'access' => $moduleService->getAccessByModule('System Setting', auth()->user()->group_id),
             ]);
         })->name('home');
 
-        Route::resource('company', App\Http\Controllers\Admin\CompanyController::class);
-        Route::resource('shift', \App\Http\Controllers\Admin\ShiftController::class);
-        Route::resource('unit', \App\Http\Controllers\Admin\UnitController::class);
-        Route::resource('account', App\Http\Controllers\Admin\AccountController::class);
-        Route::resource('role',\App\Http\Controllers\Admin\GroupController::class);
+        Route::resource('company', CompanyController::class);
+        Route::resource('shift', ShiftController::class);
+        Route::resource('unit', UnitController::class);
+        Route::resource('account', AccountController::class);
+        Route::resource('role', GroupController::class);
 
         Route::middleware(['auth'])->prefix('profile')->group(function () {
-            Route::get('/', [App\Http\Controllers\HomeController::class, 'profile'])->name('profile');
-            Route::put('/{user:id}/update', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('profile.update');
-            Route::put('/{user:id}/password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('profile.password');
-            Route::put('/{user:id}/group', [App\Http\Controllers\HomeController::class, 'updateGroup'])->name('profile.group');
-            Route::put('/{user:id}/company', [App\Http\Controllers\HomeController::class, 'updateCompany'])->name('profile.company');
+            Route::get('/', [HomeController::class, 'profile'])->name('profile');
+            Route::put('/{user:id}/update', [HomeController::class, 'updateProfile'])->name('profile.update');
+            Route::put('/{user:id}/password', [HomeController::class, 'updatePassword'])->name('profile.password');
+            Route::put('/{user:id}/group', [HomeController::class, 'updateGroup'])->name('profile.group');
+            Route::put('/{user:id}/company', [HomeController::class, 'updateCompany'])->name('profile.company');
         });
     });
 
     Route::group(['prefix' => 'inventory', 'as' => 'inventory.'], function () {
-        Route::get('/', function (\App\Services\ModuleService $moduleService) {
+        Route::get('/', function (ModuleService $moduleService) {
             return view('admin.inventory.home', [
                 'stats' => $moduleService->getInventoryStats(),
-                'access' => $moduleService->getAccessByModule('Inventory',auth()->user()->id)
+                'access' => $moduleService->getAccessByModule('Inventory', auth()->user()->id),
             ]);
         })->name('home');
 
-        Route::resource('category', \App\Http\Controllers\Admin\CategoryController::class);
+        Route::resource('category', CategoryController::class);
 
-        Route::resource('product', \App\Http\Controllers\Admin\ProductController::class);
+        Route::resource('product', ProductController::class);
         Route::prefix('product')->name('product.')->group(function () {
-            Route::post('product/{product}/variants', [\App\Http\Controllers\Admin\ProductController::class, 'storeVariant'])->name('product-variant.store');
-            Route::put('product/{product}/variants/{variant}', [\App\Http\Controllers\Admin\ProductController::class, 'updateVariant'])->name('product-variant.update');
-            Route::delete('product/{product}/variants/{variant}', [\App\Http\Controllers\Admin\ProductController::class, 'destroyVariant'])->name('product-variant.destroy');
+            Route::post('product/{product}/variants', [ProductController::class, 'storeVariant'])->name('product-variant.store');
+            Route::put('product/{product}/variants/{variant}', [ProductController::class, 'updateVariant'])->name('product-variant.update');
+            Route::delete('product/{product}/variants/{variant}', [ProductController::class, 'destroyVariant'])->name('product-variant.destroy');
         });
 
-        Route::resource('stock', \App\Http\Controllers\Admin\StockController::class);
-        Route::resource('stock-in', \App\Http\Controllers\Admin\StockInController::class);
-        Route::resource('stock-out', \App\Http\Controllers\Admin\StockOutController::class);
-        Route::resource('return-stock', \App\Http\Controllers\Admin\ReturnStockController::class);
-        Route::resource('stock-opname', \App\Http\Controllers\Admin\StockOpnameController::class);
-        Route::get('stock-log', [\App\Http\Controllers\Admin\StockController::class, 'stockLogs'])->name('stock.logs');
+        Route::resource('stock', StockController::class);
+        Route::resource('stock-in', StockInController::class);
+        Route::resource('stock-out', StockOutController::class);
+        Route::resource('return-stock', ReturnStockController::class);
+        Route::resource('stock-opname', StockOpnameController::class)->except(['create','edit','destroy']);
+        Route::prefix('stock-opname')->name('stock-opname.')->group(function(){
+            Route::put('/detail/{detail}', [StockOpnameController::class, 'updateDetail'])->name('update-detail');
+            Route::put('/{period}/close', [StockOpnameController::class, 'close'])->name('close');
+        });
+        
+        Route::get('stock-log', [StockController::class, 'stockLogs'])->name('stock.logs');
     });
 
     Route::group(['prefix' => 'pos', 'as' => 'pos.'], function () {
-        Route::get('/', function (\App\Services\ModuleService $moduleService) {
-            return view('admin.pos.home',[
-                'access' => $moduleService->getAccessByModule('Point Of Sales',auth()->user()->group_id)
+        Route::get('/', function (ModuleService $moduleService) {
+            return view('admin.pos.home', [
+                'access' => $moduleService->getAccessByModule('Point Of Sales', auth()->user()->group_id),
             ]);
         })->name('home');
 
-        Route::get('report/daily', [\App\Http\Controllers\Admin\SalesReportController::class, 'dailyIndex'])->name('report.daily');
-        Route::get('report/weekly', [\App\Http\Controllers\Admin\SalesReportController::class, 'weeklyIndex'])->name('report.weekly');
-        Route::get('report/weekly/detail/{start_date}/{end_date}/{company_id}', [\App\Http\Controllers\Admin\SalesReportController::class, 'showWeekly'])->name('report.weekly.detail');
-        Route::get('report/monthly', [\App\Http\Controllers\Admin\SalesReportController::class, 'monthlyIndex'])->name('report.monthly');
-        Route::get('report/monthly/detail/{start_date}/{end_date}/{company_id}', [\App\Http\Controllers\Admin\SalesReportController::class, 'showMonthly'])->name('report.monthly.detail');
-        Route::resource('report', \App\Http\Controllers\Admin\SalesReportController::class)->except('index');
+        Route::get('report/daily', [SalesReportController::class, 'dailyIndex'])->name('report.daily');
+        Route::get('report/weekly', [SalesReportController::class, 'weeklyIndex'])->name('report.weekly');
+        Route::get('report/weekly/detail/{start_date}/{end_date}/{company_id}', [SalesReportController::class, 'showWeekly'])->name('report.weekly.detail');
+        Route::get('report/monthly', [SalesReportController::class, 'monthlyIndex'])->name('report.monthly');
+        Route::get('report/monthly/detail/{start_date}/{end_date}/{company_id}', [SalesReportController::class, 'showMonthly'])->name('report.monthly.detail');
+        Route::resource('report', SalesReportController::class)->except('index');
     });
 
     Route::group(['prefix' => 'hr', 'as' => 'hr.'], function () {
-        Route::get('/', function (\App\Services\ModuleService $moduleService) {
-            return view('admin.hr.home',[
-                'access' => $moduleService->getAccessByModule('Human Resources',auth()->user()->group_id)
+        Route::get('/', function (ModuleService $moduleService) {
+            return view('admin.hr.home', [
+                'access' => $moduleService->getAccessByModule('Human Resources', auth()->user()->group_id),
             ]);
         })->name('home');
     });
 
     Route::group(['prefix' => 'presence', 'as' => 'presence.'], function () {
-        Route::get('/', function(\App\Services\ModuleService $moduleService){
-            return view('admin.presence.home',[
-                'access' => $moduleService->getAccessByModule('Presence',auth()->user()->group_id)
+        Route::get('/', function (ModuleService $moduleService) {
+            return view('admin.presence.home', [
+                'access' => $moduleService->getAccessByModule('Presence', auth()->user()->group_id),
             ]);
         })->name('home');
     });
 
     Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
-        Route::get('/', [\App\Http\Controllers\HomeController::class,'getDashboard'])->name('home');
+        Route::get('/', [HomeController::class, 'getDashboard'])->name('home');
     });
 });

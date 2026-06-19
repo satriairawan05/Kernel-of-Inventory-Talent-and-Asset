@@ -102,8 +102,6 @@
                         class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                         <div>
                             <h4 class="mb-1">List of Category</h4>
-                            <p class="text-muted mb-0">Data kategori tetap sama, hanya tampilan yang disesuaikan dengan gaya
-                                setting.</p>
                         </div>
                         <span class="stat-chip bg-primary-subtle text-primary"><i class="fas fa-tags me-1"></i>
                             {{ $categories->count() }} categories</span>

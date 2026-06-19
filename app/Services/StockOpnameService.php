@@ -2,187 +2,151 @@
 
 namespace App\Services;
 
-use App\Models\Stock;
-use App\Models\StockOpname;
-use App\Models\StockMovement;
 use App\Enums\StockMovementTypeEnum;
+use App\Models\Stock;
+use App\Models\StockMovement;
+use App\Models\StockOpnameDetail;
+use App\Models\StockOpnamePeriod;
 use Illuminate\Support\Facades\DB;
 
 class StockOpnameService
 {
     /**
-     * Calculate total stock before a given date (sum of all current stocks at that moment).
-     * This is simplified: we sum stock_after from the last movement before date for each variant.
+     * Create new opname period with details.
      */
-    private function getTotalStockBefore(Carbon $date): float
+    public function storePeriod(array $data, array $details): StockOpnamePeriod
     {
-        // Get all variant IDs that have stock
-        $variantIds = StockMovement::distinct('product_variant_id')->pluck('product_variant_id');
-
-        $total = 0;
-        foreach ($variantIds as $vid) {
-            $lastMovement = StockMovement::where('product_variant_id', $vid)
-                ->where('created_at', '<', $date)
-                ->orderBy('created_at', 'desc')
-                ->first();
-            if ($lastMovement) {
-                $total += $lastMovement->stock_after;
-            } else {
-                // Fallback to stock table
-                $stock = Stock::where('product_variant_id', $vid)->first();
-                $total += $stock ? $stock->current_stock : 0;
-            }
-        }
-        return $total;
-    }
-
-        /**
-     * Create a new stock opname and adjust stock if difference exists.
-     *
-     * @param array $data
-     * @return \App\Models\StockOpname
-     */
-    public function store(array $data): StockOpname
-    {
-        return DB::transaction(function () use ($data) {
-            $variantId = $data['product_variant_id'];
-            $physicalStock = $data['physical_stock'];
-
-            // Get system stock with lock for update (avoid race condition)
-            $stock = Stock::where('product_variant_id', $variantId)->lockForUpdate()->first();
-
-            if (!$stock) {
-                $stock = Stock::create([
-                    'product_variant_id' => $variantId,
-                    'current_stock'      => 0,
-                ]);
-            }
-
-            $systemStock = $stock->current_stock;
-            $difference = $physicalStock - $systemStock;
-
-            // Create opname record
-            $opname = StockOpname::create([
-                'product_variant_id' => $variantId,
-                'system_stock'       => $systemStock,
-                'physical_stock'     => $physicalStock,
-                'difference'         => $difference,
-                'notes'              => $data['notes'] ?? null,
+        return DB::transaction(function () use ($data, $details) {
+            $period = StockOpnamePeriod::create([
+                'period_start' => $data['period_start'],
+                'period_end'   => $data['period_end'],
+                'status'       => 'active',
+                'notes'        => $data['notes'] ?? null,
             ]);
 
-            // If difference exists, adjust stock and create movement
-            if (abs($difference) > 0.00001) {
-                $stockBefore = $systemStock;
-                $stockAfter = $physicalStock;
+            foreach ($details as $variantId => $physicalStock) {
+                $stock = Stock::where('product_variant_id', $variantId)->first();
+                $systemStock = $stock ? $stock->current_stock : 0;
+                $difference = $physicalStock - $systemStock;
 
-                $stock->update(['current_stock' => $physicalStock]);
-
-                StockMovement::create([
-                    'product_variant_id' => $variantId,
-                    'movement_type'      => StockMovementTypeEnum::OPNAME,
-                    'qty'                => $difference,
-                    'stock_before'       => $stockBefore,
-                    'stock_after'        => $stockAfter,
-                    'notes'              => 'Penyesuaian opname: ' . ($data['notes'] ?? ''),
-                    'user_id'            => auth()->user()->id,
+                StockOpnameDetail::create([
+                    'stock_opname_period_id' => $period->id,
+                    'product_variant_id'     => $variantId,
+                    'system_stock'           => $systemStock,
+                    'physical_stock'         => $physicalStock,
+                    'difference'             => $difference,
+                    'notes'                  => $data['detail_notes'][$variantId] ?? null,
                 ]);
+
+                // Jika selisih tidak nol, sesuaikan stok & catat movement
+                if (abs($difference) > 0.00001) {
+                    if (!$stock) {
+                        $stock = Stock::create([
+                            'product_variant_id' => $variantId,
+                            'current_stock'      => 0,
+                        ]);
+                    }
+                    $stock->current_stock = $physicalStock;
+                    $stock->last_update_at = now();
+                    $stock->save();
+
+                    StockMovement::create([
+                        'product_variant_id' => $variantId,
+                        'movement_type'      => StockMovementTypeEnum::OPNAME,
+                        'qty'                => $difference,
+                        'stock_before'       => $systemStock,
+                        'stock_after'        => $physicalStock,
+                        'notes'              => "Opname periode {$period->period_start} s/d {$period->period_end}",
+                        'user_id'            => auth()->id(),
+                    ]);
+                }
             }
 
-            return $opname;
+            return $period;
         });
     }
 
     /**
-     * Update an existing opname and re-adjust stock.
-     *
-     * @param \App\Models\StockOpname $opname
-     * @param array $data
-     * @return \App\Models\StockOpname
+     * Update a single detail (physical stock).
      */
-    public function update(StockOpname $opname, array $data): StockOpname
+    public function updateDetail(StockOpnameDetail $detail, array $data): StockOpnameDetail
     {
-        return DB::transaction(function () use ($opname, $data) {
-            $variantId = $data['product_variant_id'];
+        if ($detail->period->status === 'closed') {
+            throw new \Exception('Periode sudah ditutup, tidak bisa diubah.');
+        }
+
+        return DB::transaction(function () use ($detail, $data) {
             $newPhysical = $data['physical_stock'];
+            $oldPhysical = $detail->physical_stock ?? $detail->system_stock;
 
-            // Get current stock with lock
-            $stock = Stock::where('product_variant_id', $variantId)->lockForUpdate()->firstOrFail();
+            // Jika belum pernah diupdate, system_stock dianggap sebagai stok awal
+            $systemStock = $detail->system_stock;
+            $difference = $newPhysical - $systemStock;
 
-            // Rollback previous opname effect
-            $oldDiff = $opname->difference;
-            $stock->current_stock -= $oldDiff; // revert to before opname
+            $detail->physical_stock = $newPhysical;
+            $detail->difference = $difference;
+            $detail->notes = $data['notes'] ?? $detail->notes;
+            $detail->save();
 
-            // Calculate new difference
-            $systemStock = $stock->current_stock;
-            $newDiff = $newPhysical - $systemStock;
+            // Sesuaikan stok & movement
+            $stock = Stock::where('product_variant_id', $detail->product_variant_id)->firstOrFail();
+            $stock->current_stock = $newPhysical;
+            $stock->save();
 
-            // Update opname record
-            $opname->update([
-                'physical_stock' => $newPhysical,
-                'difference'     => $newDiff,
-                'notes'          => $data['notes'] ?? null,
-            ]);
-
-            // Remove old movement if exists (only one movement per opname)
-            StockMovement::where('product_variant_id', $variantId)
+            // Cek apakah sudah ada movement untuk opname ini sebelumnya? Kita bisa hapus yang lama lalu buat baru
+            // Untuk sederhana, kita catat movement baru setiap update (bisa jadi banyak). Atau kita timpa?
+            // Lebih baik: hapus movement yang terkait dengan detail ini jika ada, lalu buat baru.
+            StockMovement::where('product_variant_id', $detail->product_variant_id)
                 ->where('movement_type', StockMovementTypeEnum::OPNAME)
-                ->where('notes', 'like', 'Penyesuaian opname%')
-                ->where('created_at', '>=', $opname->created_at->subSeconds(5))
+                ->where('notes', 'like', '%Opname periode%')
+                ->where('created_at', '>=', $detail->period->created_at)
                 ->delete();
 
-            // Adjust stock if new difference exists
-            if (abs($newDiff) > 0.00001) {
-                $stockBefore = $systemStock;
-                $stockAfter = $newPhysical;
-
-                $stock->update(['current_stock' => $newPhysical]);
-
+            if (abs($difference) > 0.00001) {
                 StockMovement::create([
-                    'product_variant_id' => $variantId,
+                    'product_variant_id' => $detail->product_variant_id,
                     'movement_type'      => StockMovementTypeEnum::OPNAME,
-                    'qty'                => $newDiff,
-                    'stock_before'       => $stockBefore,
-                    'stock_after'        => $stockAfter,
-                    'notes'              => 'Penyesuaian opname: ' . ($data['notes'] ?? ''),
-                    'user_id'            => auth()->user()->id,
+                    'qty'                => $difference,
+                    'stock_before'       => $systemStock,
+                    'stock_after'        => $newPhysical,
+                    'notes'              => "Opname periode {$detail->period->period_start} s/d {$detail->period->period_end} (update)",
+                    'user_id'            => auth()->id(),
                 ]);
-            } else {
-                // If no difference, ensure stock is set to system stock (unchanged)
-                $stock->update(['current_stock' => $systemStock]);
             }
 
-            return $opname->fresh();
+            return $detail;
         });
     }
 
     /**
-     * Delete an opname and revert stock to before opname.
-     *
-     * @param \App\Models\StockOpname $opname
-     * @return bool
+     * Close period (status = closed).
      */
-    public function destroy(StockOpname $opname): bool
+    public function closePeriod(StockOpnamePeriod $period): StockOpnamePeriod
     {
-        return DB::transaction(function () use ($opname) {
-            $variantId = $opname->product_variant_id;
-            $diff = $opname->difference;
+        if ($period->status === 'closed') {
+            throw new \Exception('Periode sudah ditutup.');
+        }
+        $period->status = 'closed';
+        $period->save();
 
-            if (abs($diff) > 0.00001) {
-                $stock = Stock::where('product_variant_id', $variantId)->lockForUpdate()->firstOrFail();
+        return $period;
+    }
 
-                // Revert stock
-                $stock->current_stock -= $diff;
-                $stock->save();
+    /**
+     * Get paginated periods with stats.
+     */
+    public function getPeriods()
+    {
+        return StockOpnamePeriod::with('details')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+    }
 
-                // Delete associated movement
-                StockMovement::where('product_variant_id', $variantId)
-                    ->where('movement_type', StockMovementTypeEnum::OPNAME)
-                    ->where('notes', 'like', 'Penyesuaian opname%')
-                    ->where('created_at', '>=', $opname->created_at->subSeconds(5))
-                    ->delete();
-            }
-
-            return $opname->delete();
-        });
+    /**
+     * Get a period with its details loaded.
+     */
+    public function getPeriodWithDetails(StockOpnamePeriod $period): StockOpnamePeriod
+    {
+        return $period->load('details.productVariant.product');
     }
 }

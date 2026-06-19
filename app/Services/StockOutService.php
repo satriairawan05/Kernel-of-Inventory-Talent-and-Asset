@@ -41,11 +41,12 @@ class StockOutService
             $stockAfter = $stockBefore - $qty;
 
             // Update stock (reduce)
-            $stock->update(['current_stock' => $stockAfter]);
+            $stock->update(['current_stock' => $stockAfter, 'last_updated_at' => now()]);
 
             // Create movement record (qty stored as negative value for out)
             return StockMovement::create([
                 'product_variant_id' => $variantId,
+                'receiver_sender'    => $data['receiver_sender'],
                 'movement_type'      => $data['movement_type'],
                 'qty'                => -$qty, // Negative indicates stock out
                 'stock_before'       => $stockBefore,
@@ -85,16 +86,17 @@ class StockOutService
             $stockAfter = $stockBefore - $newQty;
 
             // Update stock
-            $stock->update(['current_stock' => $stockAfter]);
+            $stock->update(['current_stock' => $stockAfter, 'last_updated_at' => now()]);
 
             // Update movement record (qty stored as negative)
             $movement->update([
-                'qty'           => -$newQty,
-                'movement_type' => $data['movement_type'],
-                'stock_before'  => $stockBefore,
-                'stock_after'   => $stockAfter,
-                'notes'         => $data['notes'] ?? null,
-                'user_id'       => auth()->user()->id,
+                'qty'             => -$newQty,
+                'receiver_sender' => $data['receiver_sender'],
+                'movement_type'   => $data['movement_type'],
+                'stock_before'    => $stockBefore,
+                'stock_after'     => $stockAfter,
+                'notes'           => $data['notes'] ?? null,
+                'user_id'         => auth()->user()->id,
             ]);
 
             return $movement->fresh();
@@ -118,7 +120,7 @@ class StockOutService
 
             // Reverse the movement (add back qty)
             $newStock = $stock->current_stock + $qty;
-            $stock->update(['current_stock' => $newStock]);
+            $stock->update(['current_stock' => $newStock,'last_updated_at' => now()]);
 
             // Delete the movement record
             return $movement->delete();

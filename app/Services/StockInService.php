@@ -36,17 +36,18 @@ class StockInService
             $stockAfter = $stockBefore + $qty;
 
             // Update stock
-            $stock->update(['current_stock' => $stockAfter]);
+            $stock->update(['current_stock' => $stockAfter,'last_updated_at' => now()]);
 
             // Create movement record
             return StockMovement::create([
                 'product_variant_id' => $variantId,
+                'receiver_sender' => $data['receiver_sender'],
                 'movement_type' => $data['movement_type'],
                 'qty' => $qty,
                 'stock_before' => $stockBefore,
                 'stock_after' => $stockAfter,
                 'notes' => $data['notes'] ?? null,
-                'user_id' => auth()->user()->id
+                'user_id' => auth()->user()->id,
             ]);
         });
     }
@@ -75,13 +76,14 @@ class StockInService
             $stockAfter = $stockBefore + $newQty;
 
             // Update stock
-            $stock->update(['current_stock' => $stockAfter]);
+            $stock->update(['current_stock' => $stockAfter, 'last_updated_at' => now()]);
 
             // Update movement record
             $movement->update([
                 'qty' => $newQty,
                 'stock_before' => $stockBefore,
                 'stock_after' => $stockAfter,
+                'receiver_sender' => $data['receiver_sender'],
                 'movement_type' => $data['movement_type'],
                 'notes' => $data['notes'] ?? null,
                 'user_id' => auth()->user()->id
@@ -108,7 +110,7 @@ class StockInService
 
             // Reverse the movement (subtract qty)
             $newStock = $stock->current_stock - $qty;
-            $stock->update(['current_stock' => $newStock]);
+            $stock->update(['current_stock' => $newStock,'last_updated_at' => now()]);
 
             // Delete the movement record
             return $movement->delete();

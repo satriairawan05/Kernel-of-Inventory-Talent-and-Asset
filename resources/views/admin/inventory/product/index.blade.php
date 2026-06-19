@@ -109,7 +109,6 @@
                     class="card-header bg-white border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                     <div>
                         <h4 class="mb-1">Latest Product List</h4>
-                        <p class="text-muted mb-0">Data tetap sama, tampilannya dibuat lebih modern dan mudah dibaca.</p>
                     </div>
                     <span class="pill-chip bg-primary-subtle text-primary"><i class="fas fa-boxes-stacked"></i>
                         {{ $products->count() }} items</span>

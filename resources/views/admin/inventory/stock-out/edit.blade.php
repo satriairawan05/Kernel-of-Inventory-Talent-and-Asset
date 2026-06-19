@@ -92,7 +92,7 @@
                     @csrf
                     @method('PUT')
                     <div class="row g-3">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label" for="product_variant_id">Product Variant <span
                                     class="text-danger">*</span></label>
                             <select id="product_variant_id" name="product_variant_id"
@@ -110,7 +110,7 @@
                             @enderror
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label" for="qty">Jumlah Keluar <span
                                     class="text-danger">*</span></label>
                             <input type="number" step="0.01" id="qty" name="qty"
@@ -123,42 +123,53 @@
                             @enderror
                         </div>
 
-                        <!-- Tambahan: Select Movement Type -->
-                        <div class="col-12 mb-3">
-                            <label class="form-label" for="movement_type">Tipe Transaksi</label>
-                            <select id="movement_type" name="movement_type"
-                                class="form-select select2 @error('movement_type') is-invalid @enderror">
-                                <option value="">Pilih Tipe</option>
-                                @foreach ($movementTypes as $key => $label)
-                                    <option value="{{ $key }}"
-                                        {{ old('movement_type', $stockOut->movement_type) == $key ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('movement_type')
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="receiver_sender">Pengirim</label>
+                            <input type="text" id="receiver_sender" name="receiver_sender"
+                                value="{{ old('receiver_sender', $stockOut->receiver_sender) }}"
+                                class="form-control @error('receiver_sender') is-invalid @enderror"
+                                placeholder="Nama pengirim">
+                            @error('receiver_sender')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
 
-                        <div class="col-12 mb-3">
-                            <label class="form-label" for="notes">Catatan</label>
-                            <textarea id="notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror"
-                                placeholder="Catatan tambahan...">{{ old('notes', $stockOut->notes) }}</textarea>
-                            @error('notes')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <!-- Tambahan: Select Movement Type -->
+                    <div class="mb-3">
+                        <label class="form-label" for="movement_type">Tipe Transaksi</label>
+                        <select id="movement_type" name="movement_type"
+                            class="form-select select2 @error('movement_type') is-invalid @enderror">
+                            <option value="">Pilih Tipe</option>
+                            @foreach ($movementTypes as $key => $label)
+                                <option value="{{ $key }}"
+                                    {{ old('movement_type', $stockOut->movement_type) == $key ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('movement_type')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        <!-- Info Tambahan -->
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <small>
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Transaksi ini dibuat oleh <strong>{{ $stockOut->user->name ?? '-' }}</strong>
-                                    pada {{ $stockOut->created_at->format('d/m/Y H:i') }}
-                                </small>
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="notes">Catatan</label>
+                        <textarea id="notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror"
+                            placeholder="Catatan tambahan...">{{ old('notes', $stockOut->notes) }}</textarea>
+                        @error('notes')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Info Tambahan -->
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                Transaksi ini dibuat oleh <strong>{{ $stockOut->user->name ?? '-' }}</strong>
+                                pada {{ $stockOut->created_at->format('d/m/Y H:i') }}
+                            </small>
                         </div>
                     </div>
 

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
             $table->decimal('current_stock', 15, 2)->nullable()->default(0);
+            $table->timestamp('last_updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamps();
             $table->index('product_variant_id');
         });
@@ -28,23 +29,34 @@ return new class extends Migration
             $table->decimal('stock_before', 15, 2)->nullable();
             $table->decimal('stock_after', 15, 2)->nullable();
             $table->text('notes')->nullable();
+            $table->string('receiver_sender')->nullable();
             $table->timestamps();
             $table->index('product_variant_id');
             $table->index('pic_id');
         });
 
-        Schema::create('stock_opnames', function (Blueprint $table) {
+        Schema::create('stock_opname_periods', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
-            $table->date('period_start')->nullable();
-            $table->date('period_end')->nullable();
+            $table->date('period_start');
+            $table->date('period_end');
+            $table->string('status')->nullable();
+            $table->text('notes')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('stock_opname_details', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('stock_opname_period_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete();
             $table->decimal('system_stock', 15, 2)->nullable();
             $table->decimal('physical_stock', 15, 2)->nullable();
             $table->decimal('difference', 15, 2)->nullable();
-            $table->text('status')->nullable();
             $table->text('notes')->nullable();
+            $table->foreignId('reported_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
+            $table->index('stock_opname_period_id');
             $table->index('product_variant_id');
+            $table->index('reported_by');
         });
     }
 
@@ -55,6 +67,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('stocks');
         Schema::dropIfExists('stock_movements');
-        Schema::dropIfExists('stock_opnames');
+        Schema::dropIfExists('stock_opname_periods');
+        Schema::dropIfExists('stock_opname_details');
     }
 };

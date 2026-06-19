@@ -136,7 +136,7 @@
             </div>
             <div class="col-md-3 col-6">
                 <div class="card inventory-card p-3 text-center">
-                    <h6 class="text-muted">Stok Menipis (<=5)< /h6>
+                    <h6 class="text-muted">Stok Menipis (<=5)</h6>
                             <h3 class="fw-bold text-warning">{{ number_format($stats['low_stock_count']) }}</h3>
                             <small class="text-muted">perlu restok</small>
                 </div>
@@ -291,10 +291,6 @@
                             <h5 class="fw-bold">Stock Opnames</h5>
                             <p class="small text-secondary">Lakukan pengecekan fisik stok.</p>
                             <ul class="submenu-list">
-                                @if ($access['Stock Opname']['Create'] == 1)
-                                    <li><a href="{{ route('inventory.stock-opname.create') }}"><i
-                                                class="fas fa-file-alt fa-fw"></i> New Report</a></li>
-                                @endif
                                 <li><a href="{{ route('inventory.stock-opname.index') }}"><i
                                             class="fas fa-chart-bar fa-fw"></i> Reports</a></li>
                             </ul>

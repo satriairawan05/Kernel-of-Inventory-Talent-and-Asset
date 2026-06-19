@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StockOpnameStoreRequest;
-use App\Http\Requests\StockOpnameUpdateRequest;
+use App\Http\Requests\StockOpnameDetailUpdateRequest;
+use App\Http\Requests\StockOpnamePeriodStoreRequest;
+use App\Http\Requests\StockOpnamePeriodUpdateRequest;
 use App\Models\ProductVariant;
-use App\Models\StockOpname;
+use App\Models\StockOpnameDetail;
+use App\Models\StockOpnamePeriod;
 use App\Services\StockOpnameService;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 
 class StockOpnameController extends Controller
 {
@@ -37,7 +39,7 @@ class StockOpnameController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(StockOpnameService $stockOpnameService)
     {
         $access = $this->get_access();
 
@@ -45,13 +47,10 @@ class StockOpnameController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $opnames = StockOpname::with(['productVariant.product', 'productVariant.stock'])
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(15);
+                $productVariants = ProductVariant::with('product')->get();
+                $periods = $stockOpnameService->getPeriods();
 
-                $productVariants = ProductVariant::with(['product', 'stock'])->get();
-
-                return view('admin.inventory.stock-opname.index', compact('opnames', 'productVariants','access'));
+                return view('admin.inventory.stock-opname.index', compact('periods','productVariants', 'access'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -81,7 +80,7 @@ class StockOpnameController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StockOpnameStoreRequest $request, StockOpnameService $stockOpnameService)
+    public function store(StockOpnamePeriodStoreRequest $request, StockOpnameService $stockOpnameService)
     {
         $access = $this->get_access();
 
@@ -89,9 +88,13 @@ class StockOpnameController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $stockOpnameService->store($request->validated());
-                return redirect()->route('inventory.stock-opname.index')
-                    ->with('success', 'Opname berhasil dicatat.');
+                $validated = $request->validated();
+                $details = $validated['details'];
+                unset($validated['details']);
+
+                $stockOpnameService->storePeriod($validated, $details);
+
+                return redirect()->route('inventory.stock-opname.index')->with('success', 'Periode opname berhasil dibuat.');
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -102,7 +105,7 @@ class StockOpnameController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(StockOpname $stockOpname)
+    public function show(StockOpnameService $stockOpnameService, StockOpnamePeriod $stockOpnamePeriod)
     {
         $access = $this->get_access();
 
@@ -110,7 +113,8 @@ class StockOpnameController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                //
+                $period = $stockOpnameService->getPeriodWithDetails($stockOpnamePeriod);
+                return view('admin.inventory.stock-opname.show', compact('period'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -121,7 +125,7 @@ class StockOpnameController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(StockOpname $stockOpname)
+    public function edit()
     {
         $access = $this->get_access();
 
@@ -138,9 +142,30 @@ class StockOpnameController extends Controller
     }
 
     /**
+     * Update a single detail (physical stock).
+     */
+    public function updateDetail(StockOpnameDetailUpdateRequest $request, StockOpnameDetail $stockOpnameDetail, StockOpnameService $stockOpnameService): RedirectResponse
+    {
+        $stockOpnameService->updateDetail($stockOpnameDetail, $request->validated());
+
+        return redirect()->back()->with('success', 'Stok fisik berhasil diperbarui.');
+    }
+
+    /**
+     * Close period (set status closed).
+     */
+    public function close(StockOpnamePeriod $stockOpnamePeriod, StockOpnameService $stockOpnameService): RedirectResponse
+    {
+        $stockOpnameService->closePeriod($stockOpnamePeriod);
+
+        return redirect()->route('inventory.stock-opname.index')
+            ->with('success', 'Periode opname ditutup.');
+    }
+
+    /**
      * Update the specified resource in storage.
      */
-    public function update(StockOpnameUpdateRequest $request, StockOpname $stockOpname, StockOpnameService $stockOpnameService)
+    public function update(StockOpnamePeriodUpdateRequest $request, StockOpnameService $stockOpnameService)
     {
         $access = $this->get_access();
 
@@ -148,9 +173,7 @@ class StockOpnameController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $stockOpnameService->update($stockOpname, $request->validated());
-                return redirect()->route('inventory.stock-opname.index')
-                    ->with('success', 'Opname berhasil diperbarui.');
+                //
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -161,7 +184,7 @@ class StockOpnameController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(StockOpname $stockOpname, StockOpnameService $stockOpnameService)
+    public function destroy(StockOpnameService $stockOpnameService)
     {
         $access = $this->get_access();
 
@@ -169,9 +192,7 @@ class StockOpnameController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $stockOpnameService->destroy($stockOpname);
-                return redirect()->route('inventory.stock-opname.index')
-                    ->with('success', 'Opname berhasil dihapus dan stok dikembalikan.');
+                //
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());

@@ -2173,7 +2173,7 @@
             }
         </script>
         <div class="content">
-            @include('admin.partials.alert')
+            {{-- @include('admin.partials.alert') --}}
             @yield('content')
             @include('admin.partials.watermark')
         </div>

@@ -92,7 +92,7 @@
                 <form action="{{ route('inventory.stock-in.store') }}" method="POST">
                     @csrf
                     <div class="row g-3">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label" for="product_variant_id">Varian Produk</label>
                             <select id="product_variant_id" name="product_variant_id"
                                 class="form-select select2 @error('product_variant_id') is-invalid @enderror">
@@ -108,11 +108,21 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label" for="qty">Jumlah Masuk</label>
                             <input type="number" step="0.01" id="qty" name="qty" value="{{ old('qty', 0) }}"
                                 class="form-control @error('qty') is-invalid @enderror" placeholder="0.00">
                             @error('qty')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="receiver_sender">Penerima</label>
+                            <input type="text" id="receiver_sender" name="receiver_sender"
+                                value="{{ old('receiver_sender') }}"
+                                class="form-control @error('receiver_sender') is-invalid @enderror"
+                                placeholder="Nama penerima / pengirim">
+                            @error('receiver_sender')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

@@ -19,7 +19,7 @@ class CompanyController extends Controller
     */
     public function get_access()
     {
-        $this->accessPage = $this->get_access_per_page('Company');
+        $this->accessPage = $this->get_access_per_page('Outlet');
 
         $data = [
             "Create" => (int) $this->accessPage['Create'],
@@ -43,7 +43,7 @@ class CompanyController extends Controller
         } else {
             try {
                 $companies = Company::paginate(5);
-                return view('admin.setting.company.index', ['companies' => $companies, 'name' => 'Company','access' => $this->get_access_per_page('Company')]);
+                return view('admin.setting.company.index', ['companies' => $companies, 'name' => 'Company','access' => $this->get_access_per_page('Outlet')]);
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());

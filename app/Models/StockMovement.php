@@ -27,6 +27,7 @@ class StockMovement extends Model
         'stock_before',
         'stock_after',
         'pic_id',
+        'receiver_sender',
         'notes',
     ];
 

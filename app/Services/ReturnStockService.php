@@ -35,7 +35,7 @@ class ReturnStockService
             $stockAfter = $stockBefore + $qty;
 
             // Update stock
-            $stock->update(['current_stock' => $stockAfter]);
+            $stock->update(['current_stock' => $stockAfter, 'last_updated_at' => now()]);
 
             // Create movement record
             return StockMovement::create([
@@ -73,7 +73,7 @@ class ReturnStockService
             $stockAfter = $stockBefore + $newQty;
 
             // Update stock
-            $stock->update(['current_stock' => $stockAfter]);
+            $stock->update(['current_stock' => $stockAfter, 'last_updated_at' => now()]);
 
             // Update movement
             $movement->update([
@@ -104,7 +104,7 @@ class ReturnStockService
 
             // Reverse: subtract qty
             $newStock = $stock->current_stock - $qty;
-            $stock->update(['current_stock' => $newStock]);
+            $stock->update(['current_stock' => $newStock, 'last_updated_at' => now()]);
 
             return $movement->delete();
         });
