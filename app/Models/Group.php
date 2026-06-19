@@ -18,6 +18,9 @@ class Group extends Model
      */
     protected $table = 'groups';
 
+    /*
+    * Get Pages
+    */
     public function pages(): BelongsToMany
     {
         return $this->belongsToMany(Page::class, 'group_pages', 'id', 'page_id')

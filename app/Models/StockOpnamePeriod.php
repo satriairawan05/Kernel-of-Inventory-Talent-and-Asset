@@ -50,7 +50,7 @@ class StockOpnamePeriod extends Model
      */
     public function getTotalProductsAttribute()
     {
-        return $this->details->count();
+        return $this->details?->count();
     }
 
     /**
@@ -58,7 +58,7 @@ class StockOpnamePeriod extends Model
      */
     public function getMatchedProductsAttribute()
     {
-        return $this->details->where('difference', 0)->count();
+        return $this->details?->where('difference', 0)->count();
     }
 
     /**
@@ -66,6 +66,6 @@ class StockOpnamePeriod extends Model
      */
     public function getDifferenceProductsAttribute()
     {
-        return $this->details->where('difference', '!=', 0)->count();
+        return $this->details?->where('difference', '!=', 0)->count();
     }
 }

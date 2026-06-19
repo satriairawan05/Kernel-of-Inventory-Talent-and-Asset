@@ -26,19 +26,21 @@ class Stock extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Atribut yang harus di-cast ke tipe data tertentu.
      *
-     * @return array<string, string>
+     * @var array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'current_stock' => 'decimal:2',
-        ];
-    }
+    protected $casts = [
+        'qty' => 'decimal:2',
+        'stock_before' => 'decimal:2',
+        'stock_after' => 'decimal:2',
+    ];
 
     /**
-     * Get the product variant that owns the stock.
+     * Relasi Many-to-One ke ProductVariant.
+     * Setiap stok terkait dengan satu varian produk.
+     *
+     * @return BelongsTo
      */
     public function productVariant(): BelongsTo
     {

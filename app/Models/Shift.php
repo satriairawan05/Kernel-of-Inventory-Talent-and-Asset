@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Models\Company;
+use App\Models\ReportPeriod;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shift extends Model
 {
@@ -36,5 +38,16 @@ class Shift extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id', 'id');
+    }
+
+    /**
+     * Relasi One-to-Many ke ReportPeriod.
+     * Satu shift dapat memiliki banyak periode laporan.
+     *
+     * @return HasMany
+     */
+    public function reportPeriods(): HasMany
+    {
+        return $this->hasMany(ReportPeriod::class);
     }
 }

@@ -40,7 +40,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('account', AccountController::class);
         Route::resource('role', GroupController::class);
 
-        Route::middleware(['auth'])->prefix('profile')->group(function () {
+        Route::prefix('profile')->group(function () {
             Route::get('/', [HomeController::class, 'profile'])->name('profile');
             Route::put('/{user:id}/update', [HomeController::class, 'updateProfile'])->name('profile.update');
             Route::put('/{user:id}/password', [HomeController::class, 'updatePassword'])->name('profile.password');
@@ -74,6 +74,16 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('stock-opname')->name('stock-opname.')->group(function(){
             Route::put('/detail/{detail}', [StockOpnameController::class, 'updateDetail'])->name('update-detail');
             Route::put('/{period}/close', [StockOpnameController::class, 'close'])->name('close');
+        });
+
+        Route::prefix('report')->as('report.')->group(function(){
+            Route::get('daily',[\App\Http\Controllers\HomeController::class, 'getDailyReport'])->name('daily');
+            Route::get('weekly',[\App\Http\Controllers\HomeController::class, 'getWeeklyReport'])->name('weekly');
+            Route::get('monthly',[\App\Http\Controllers\HomeController::class, 'getMonthlyReport'])->name('monthly');
+            Route::get('/{id}/preview', [\App\Http\Controllers\HomeController::class, 'getPreview'])->name('getPreview');
+            Route::get('/preview-aggregated', [\App\Http\Controllers\HomeController::class, 'getPreviewAggregated'])->name('getPreviewAggregated');
+            Route::post('/{id}/print', [\App\Http\Controllers\HomeController::class, 'getPrint'])->name('getPrint');
+            Route::post('/print-aggregated', [\App\Http\Controllers\HomeController::class, 'getPrintAggregated'])->name('getPrintAggregated');
         });
         
         Route::get('stock-log', [StockController::class, 'stockLogs'])->name('stock.logs');
