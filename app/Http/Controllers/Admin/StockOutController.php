@@ -50,8 +50,12 @@ class StockOutController extends Controller
                     ->where('movement_type', \App\Enums\StockMovementTypeEnum::SALE)
                     ->orderBy('created_at', 'desc')
                     ->paginate(15);
+                $productVariants = ProductVariant::with('product')->get();
+                $allTypes = StockMovementTypeEnum::labels();
+                $allowedKeys = ['sale', 'adjustment', 'return'];
+                $movementTypes = array_intersect_key($allTypes, array_flip($allowedKeys));
 
-                return view('admin.inventory.stock-out.index', compact('movements'));
+                return view('admin.inventory.stock-out.index', compact('movements','productVariants','movementTypes','access'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());

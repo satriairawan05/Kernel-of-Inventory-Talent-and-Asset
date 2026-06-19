@@ -50,8 +50,12 @@ class ReturnStockController extends Controller
                     ->where('movement_type', StockMovementTypeEnum::RETURN)
                     ->orderBy('created_at', 'desc')
                     ->paginate(15);
+                $productVariants = ProductVariant::with('product')->get();
+                $allTypes = StockMovementTypeEnum::labels();
+                $allowedKeys = ['return'];
+                $movementTypes = array_intersect_key($allTypes, array_flip($allowedKeys));
 
-                return view('admin.inventory.return-stock.index', compact('movements'));
+                return view('admin.inventory.return-stock.index', compact('movements','productVariants','movementTypes','access'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());

@@ -47,8 +47,9 @@ class CategoryController extends Controller
         } else {
             try {
                 $categories = Category::paginate(10);
+                $companies = Company::all();
     
-                return view('admin.inventory.category.index', ['categories' => $categories, 'access' => $this->get_access_per_page('Category')]);
+                return view('admin.inventory.category.index', ['categories' => $categories, 'companies' => $companies, 'access' => $this->get_access_per_page('Category')]);
             } catch (QueryException $e) {
                 Log::error($e->getMessage());
     
@@ -68,9 +69,7 @@ class CategoryController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $companies = Company::all();
-    
-                return view('admin.inventory.category.create', ['companies' => $companies]);
+                //
             } catch (QueryException $e) {
                 Log::error($e->getMessage());
     
@@ -132,9 +131,7 @@ class CategoryController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $companies = Company::all();
-    
-                return view('admin.inventory.category.edit', ['category' => $category, 'companies' => $companies]);
+                //
             } catch (QueryException $e) {
                 Log::error($e->getMessage());
     

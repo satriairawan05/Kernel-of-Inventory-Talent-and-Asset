@@ -48,8 +48,9 @@ class StockController extends Controller
                 $stocks = Stock::with('productVariant.product')
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
+                $productVariants = ProductVariant::with('product')->get();
     
-                return view('admin.inventory.stock.index', ['stocks' => $stocks, 'access' => $this->get_access_per_page('Stock')]);
+                return view('admin.inventory.stock.index', ['stocks' => $stocks, 'access' => $this->get_access_per_page('Stock'), 'productVariants' => $productVariants]);
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -68,9 +69,7 @@ class StockController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $productVariants = ProductVariant::with('product')->get();
-    
-                return view('admin.inventory.stock.create', ['productVariants' => $productVariants]);
+                //
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
@@ -132,9 +131,7 @@ class StockController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $productVariants = ProductVariant::with('product')->get();
-    
-                return view('admin.inventory.stock.edit', compact('stock', 'productVariants'));
+                //
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());

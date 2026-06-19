@@ -52,15 +52,19 @@ class ProductController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $keyword = $request->query('search', '');
+                $search = $request->query('search', '');
     
-                $products = $productService->search($keyword)
-                    ->load(['company', 'category', 'unit']);
+                $products = Product::with(['company', 'category', 'unit'])->when($search, function ($q) use ($search) {
+                    return $q->where('product_name', 'like', "%$search%")->orWhere('product_code', 'like', "%$search%");
+                    })->paginate(10);
     
                 return view('admin.inventory.product.index', [
                     'products' => $products,
-                    'search' => $keyword,
-                    'access' => $this->get_access_per_page('Product')
+                    'search' => $search,
+                    'access' => $this->get_access_per_page('Product'),
+                    'companies' => Company::query()->latest('id')->get(),
+                    'categories' => Category::query()->latest('id')->get(),
+                    'units' => Unit::query()->latest('id')->get(),
                 ]);
             } catch (\Illuminate\Database\QueryException $e) {
                 Log::error($e->getMessage());

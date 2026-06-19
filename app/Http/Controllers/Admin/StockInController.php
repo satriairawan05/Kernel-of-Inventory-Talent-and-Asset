@@ -50,8 +50,13 @@ class StockInController extends Controller
                     ->whereIn('movement_type', ['purchase', 'opening'])
                     ->orderBy('created_at', 'desc')
                     ->paginate(15);
+                $productVariants = ProductVariant::with('product')->get();
+                $allTypes = \App\Enums\StockMovementTypeEnum::labels();
+                $movementTypes = array_filter($allTypes, function ($key) {
+                    return in_array($key, ['opening', 'purchase', 'transfer']);
+                }, ARRAY_FILTER_USE_KEY);
 
-                return view('admin.inventory.stock-in.index', compact('stockIns'));
+                return view('admin.inventory.stock-in.index', compact('stockIns','productVariants','movementTypes','access'));
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());

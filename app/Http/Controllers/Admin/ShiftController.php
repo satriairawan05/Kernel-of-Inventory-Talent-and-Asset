@@ -47,8 +47,9 @@ class ShiftController extends Controller
         } else {
             try {
                 $shifts = Shift::paginate(5);
+                $companies = Company::all();
     
-                return view('admin.setting.shift.index', ['shifts' => $shifts,'access' => $this->get_access_per_page('Shift')]);
+                return view('admin.setting.shift.index', ['shifts' => $shifts,'access' => $this->get_access_per_page('Shift'),'companies' => $companies]);
             } catch (QueryException $e) {
                 Log::error($e->getMessage());
     
