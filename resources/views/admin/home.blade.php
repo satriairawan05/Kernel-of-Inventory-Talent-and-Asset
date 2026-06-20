@@ -244,29 +244,28 @@
             margin: 0;
         }
 
-        /* MODULE COLORS */
         .dash-card {
-            background: linear-gradient(135deg, #0a2540, #1a3a5f);
+            background: linear-gradient(135deg, #0f2a4a, #1f4a7a);
         }
 
         .hr-card {
-            background: linear-gradient(135deg, #3d1c00, #7a3d00);
+            background: linear-gradient(135deg, #4a1a0a, #7a3a1a);
         }
 
         .pos-card {
-            background: linear-gradient(135deg, #0d3b2b, #1b5e48);
+            background: linear-gradient(135deg, #0f3a2a, #1f6a4a);
         }
 
         .inv-card {
-            background: linear-gradient(135deg, #0d3d35, #1b6b5e);
+            background: linear-gradient(135deg, #0f3a3a, #1f6a6a);
         }
 
         .presence-card {
-            background: linear-gradient(135deg, #4a0d1a, #8b1e2e);
+            background: linear-gradient(135deg, #4a0a1a, #7a2a3a);
         }
 
         .sys-card {
-            background: linear-gradient(135deg, #0a1a3a, #1e3a6b);
+            background: linear-gradient(135deg, #0f1a4a, #2f4a7a);
         }
 
         .footer {
