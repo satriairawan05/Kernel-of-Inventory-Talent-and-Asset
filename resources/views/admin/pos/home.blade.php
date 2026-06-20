@@ -96,7 +96,7 @@
 
 @section('content')
     <div class="container-fluid px-4 py-3">
-        <!-- Hero Section : Sambutan Hangat -->
+        <!-- Hero Section -->
         <div class="sales-hero d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-4">
                 <div class="greeting-icon">
@@ -104,10 +104,9 @@
                 </div>
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #065f46;">Sales Management</h2>
-                    <p class="mb-0 text-secondary">Halo, <strong>{{ auth()->user()->name }}</strong>! Pantau penjualan, buat
-                        transaksi, dan lihat laporan realtime.</p>
+                    <p class="mb-0 text-secondary">Hello, <strong>{{ auth()->user()->name }}</strong>! Monitor sales, create transactions, and view realtime reports.</p>
                     <div class="mt-2 small text-muted">
-                        <i class="fas fa-cash-register me-1"></i> KITA bantu tingkatkan omzet dan efisiensi kasir.
+                        <i class="fas fa-cash-register me-1"></i> KITA helps boost revenue and cashier efficiency.
                     </div>
                 </div>
             </div>
@@ -133,39 +132,39 @@
             </div>
         </div>
 
-        <!-- Statistik Cepat (contoh, bisa diganti data real) -->
+        <!-- Quick Stats -->
         <div class="row g-4 mb-5">
             <div class="col-md-3 col-6">
                 <div class="card sales-card p-3 text-center">
-                    <h6 class="text-muted">Total Transaksi (hari ini)</h6>
+                    <h6 class="text-muted">Total Transactions (today)</h6>
                     <h3 class="fw-bold text-success">64</h3>
-                    <small class="text-muted">+12 dari kemarin</small>
+                    <small class="text-muted">+12 from yesterday</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card sales-card p-3 text-center">
-                    <h6 class="text-muted">Pendapatan Kotor</h6>
+                    <h6 class="text-muted">Gross Revenue</h6>
                     <h3 class="fw-bold text-primary">Rp 12.8jt</h3>
-                    <small class="text-muted">hari ini</small>
+                    <small class="text-muted">today</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card sales-card p-3 text-center">
-                    <h6 class="text-muted">Rata-rata Transaksi</h6>
+                    <h6 class="text-muted">Average Transaction</h6>
                     <h3 class="fw-bold text-info">Rp 200k</h3>
-                    <small class="text-muted">per nota</small>
+                    <small class="text-muted">per receipt</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card sales-card p-3 text-center">
-                    <h6 class="text-muted">Produk Terlaris</h6>
+                    <h6 class="text-muted">Best Selling Product</h6>
                     <h3 class="fw-bold text-warning">Ayam Geprek</h3>
-                    <small class="text-muted">37 porsi</small>
+                    <small class="text-muted">37 portions</small>
                 </div>
             </div>
         </div>
 
-        <!-- Menu Sales Groups -->
+        <!-- Sales Menu Cards -->
         <div class="row g-4">
             @if ($access['POS']['Read'] == 1)
                 <!-- Point of Sales -->
@@ -174,15 +173,12 @@
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="card-icon mb-2"><i class="fas fa-cash-register"></i></div>
-                                <span class="badge-subtle">Aktif</span>
+                                <span class="badge-subtle">Active</span>
                             </div>
                             <h5 class="fw-bold">Point of Sales</h5>
-                            <p class="small text-secondary">Lakukan transaksi penjualan langsung, kelola keranjang, diskon,
-                                dan
-                                cetak struk.</p>
+                            <p class="small text-secondary">Process direct sales transactions, manage cart, discounts, and print receipts.</p>
                             <div class="info-row">
-                                <a href="#" class="small text-success fw-semibold">Mulai Transaksi <i
-                                        class="fas fa-arrow-right ms-1"></i></a>
+                                <a href="#" class="small text-success fw-semibold">Start Transaction <i class="fas fa-arrow-right ms-1"></i></a>
                             </div>
                         </div>
                     </div>
@@ -196,12 +192,10 @@
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="card-icon mb-2"><i class="fas fa-chart-bar"></i></div>
-                                <span class="badge-subtle">Laporan</span>
+                                <span class="badge-subtle">Reports</span>
                             </div>
                             <h5 class="fw-bold">Sales Reports</h5>
-                            <p class="small text-secondary">Lihat laporan penjualan berdasarkan periode untuk analisa
-                                bisnis.
-                            </p>
+                            <p class="small text-secondary">View sales reports by period for business analysis.</p>
                             <ul class="submenu-list">
                                 <li><a href="#"><i class="fas fa-calendar-day fa-fw"></i> Daily</a></li>
                                 <li><a href="#"><i class="fas fa-calendar-week fa-fw"></i> Weekly</a></li>
@@ -213,7 +207,7 @@
             @endif
         </div>
 
-        <!-- Motivasi KITA -->
+        <!-- KITA Motivation -->
         <div class="row mt-4">
             <div class="col-12">
                 <div class="alert alert-light border rounded-4 shadow-sm d-flex align-items-center gap-3"
@@ -221,9 +215,7 @@
                     <i class="fas fa-heart text-danger fa-2x"></i>
                     <div>
                         <strong class="d-block">💡 KITA — Kernel of Inventory, Talent & Asset</strong>
-                        <span class="small text-secondary">Penjualan adalah nadi bisnis. Pantau setiap transaksi, kenali
-                            tren, dan maksimalkan keuntungan dengan data yang akurat. KITA siap mendukung kesuksesan
-                            penjualan Anda!</span>
+                        <span class="small text-secondary">Sales are the lifeblood of business. Monitor every transaction, identify trends, and maximize profits with accurate data. KITA is ready to support your sales success!</span>
                     </div>
                 </div>
             </div>

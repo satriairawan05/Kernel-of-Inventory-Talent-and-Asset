@@ -70,7 +70,7 @@
 
 @section('content')
     <div class="container-fluid px-4 py-3">
-        <!-- Hero Section : Sambutan Hangat -->
+        <!-- Hero Section -->
         <div class="setting-hero d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-4">
                 <div class="greeting-icon">
@@ -78,11 +78,9 @@
                 </div>
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #0f172a;">System Settings</h2>
-                    <p class="mb-0 text-secondary">Halo, <strong>{{ auth()->user()->name }}</strong>! Kelola fondasi
-                        <strong>KITA</strong> dari sini.
-                    </p>
+                    <p class="mb-0 text-secondary">Hello, <strong>{{ auth()->user()->name }}</strong>! Manage the foundation of <strong>KITA</strong> from here.</p>
                     <div class="mt-2 small text-muted">
-                        <i class="fas fa-cog me-1"></i> Atur outlet, shift, unit, roles, dan akun pengguna.
+                        <i class="fas fa-cog me-1"></i> Configure outlets, shifts, units, roles, and user accounts.
                     </div>
                 </div>
             </div>
@@ -91,7 +89,7 @@
             </div>
         </div>
 
-        <!-- Menu System Settings (5 menu) -->
+        <!-- System Settings Menu (5 menus) -->
         <div class="row g-4">
             <div class="col-12">
                 @if (session('success'))
@@ -115,38 +113,33 @@
                         <div class="card-body">
                             <div class="d-flex align-items-start justify-content-between">
                                 <div class="card-icon"><i class="fas fa-store"></i></div>
-                                <span class="badge-subtle">Perusahaan</span>
+                                <span class="badge-subtle">Outlets</span>
                             </div>
                             <h5 class="fw-bold mt-3 mb-2">Outlets</h5>
-                            <p class="small text-secondary">Kelola data cabang/outlet, alamat, kontak, logo, dan tipe bisnis
-                                (Rumah Makan, Counter HP, dll).</p>
+                            <p class="small text-secondary">Manage branch/outlet data, address, contact, logo, and business type (Restaurant, Phone Counter, etc.).</p>
                             <div class="info-row d-flex justify-content-between">
-                                <span><i class="fas fa-check-circle text-success me-1"></i> Aktif</span>
-                                <a href="{{ route('setting.company.index') }}" class="text-primary fw-semibold small">Kelola
-                                    <i class="fas fa-arrow-right ms-1"></i></a>
+                                <span><i class="fas fa-check-circle text-success me-1"></i> Active</span>
+                                <a href="{{ route('setting.company.index') }}" class="text-primary fw-semibold small">Manage <i class="fas fa-arrow-right ms-1"></i></a>
                             </div>
                         </div>
                     </div>
                 </div>
             @endif
 
-            <!-- Shift -->
             @if ($access['Shift']['Read'] == 1)
+                <!-- Shifts -->
                 <div class="col-xl-4 col-md-6">
                     <div class="card setting-card p-3">
                         <div class="card-body">
                             <div class="d-flex align-items-start justify-content-between">
                                 <div class="card-icon"><i class="fas fa-clock"></i></div>
-                                <span class="badge-subtle">Jam Kerja</span>
+                                <span class="badge-subtle">Work Schedule</span>
                             </div>
                             <h5 class="fw-bold mt-3 mb-2">Shifts</h5>
-                            <p class="small text-secondary">Atur jadwal shift kerja, jam masuk, jam pulang, dan hari libur
-                                untuk
-                                setiap outlet.</p>
+                            <p class="small text-secondary">Manage shift schedules, start/end times, and holidays for each outlet.</p>
                             <div class="info-row d-flex justify-content-between">
-                                <span><i class="fas fa-calendar-week me-1"></i> Fleksibel</span>
-                                <a href="{{ route('setting.shift.index') }}" class="text-primary fw-semibold small">Kelola
-                                    <i class="fas fa-arrow-right ms-1"></i></a>
+                                <span><i class="fas fa-calendar-week me-1"></i> Flexible</span>
+                                <a href="{{ route('setting.shift.index') }}" class="text-primary fw-semibold small">Manage <i class="fas fa-arrow-right ms-1"></i></a>
                             </div>
                         </div>
                     </div>
@@ -154,73 +147,67 @@
             @endif
 
             @if ($access['Unit']['Read'] == 1)
-            <!-- Unit -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card setting-card p-3">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="card-icon"><i class="fas fa-ruler-combined"></i></div>
-                            <span class="badge-subtle">Satuan</span>
-                        </div>
-                        <h5 class="fw-bold mt-3 mb-2">Units</h5>
-                        <p class="small text-secondary">Buat satuan barang (pcs, kg, liter, box, dll) yang akan digunakan di
-                            modul Inventory.</p>
-                        <div class="info-row d-flex justify-content-between">
-                            <span><i class="fas fa-boxes me-1"></i> Konsistensi stok</span>
-                            <a href="{{ route('setting.unit.index') }}" class="text-primary fw-semibold small">Kelola <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+                <!-- Units -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card setting-card p-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div class="card-icon"><i class="fas fa-ruler-combined"></i></div>
+                                <span class="badge-subtle">Unit</span>
+                            </div>
+                            <h5 class="fw-bold mt-3 mb-2">Units</h5>
+                            <p class="small text-secondary">Create product units (pcs, kg, liter, box, etc.) to be used in the Inventory module.</p>
+                            <div class="info-row d-flex justify-content-between">
+                                <span><i class="fas fa-boxes me-1"></i> Stock consistency</span>
+                                <a href="{{ route('setting.unit.index') }}" class="text-primary fw-semibold small">Manage <i class="fas fa-arrow-right ms-1"></i></a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             @endif
 
             @if ($access['Roles']['Read'] == 1)
-            <!-- Roles -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card setting-card p-3">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="card-icon"><i class="fas fa-user-cog"></i></div>
-                            <span class="badge-subtle">Hak Akses</span>
-                        </div>
-                        <h5 class="fw-bold mt-3 mb-2">Roles</h5>
-                        <p class="small text-secondary">Buat peran (Admin, Kasir, Manajer, HRD) dan atur izin akses ke
-                            setiap modul KITA.</p>
-                        <div class="info-row d-flex justify-content-between">
-                            <span><i class="fas fa-shield-alt me-1"></i> RBAC</span>
-                            <a href="{{ route('setting.role.index') }}" class="text-primary fw-semibold small">Kelola <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+                <!-- Roles -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card setting-card p-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div class="card-icon"><i class="fas fa-user-cog"></i></div>
+                                <span class="badge-subtle">Access Rights</span>
+                            </div>
+                            <h5 class="fw-bold mt-3 mb-2">Roles</h5>
+                            <p class="small text-secondary">Create roles (Admin, Cashier, Manager, HRD) and set permissions for each KITA module.</p>
+                            <div class="info-row d-flex justify-content-between">
+                                <span><i class="fas fa-shield-alt me-1"></i> RBAC</span>
+                                <a href="{{ route('setting.role.index') }}" class="text-primary fw-semibold small">Manage <i class="fas fa-arrow-right ms-1"></i></a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             @endif
 
             @if ($access['Account']['Read'] == 1)
-            <!-- Accounts -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card setting-card p-3">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="card-icon"><i class="fas fa-user-circle"></i></div>
-                            <span class="badge-subtle">Pengguna</span>
-                        </div>
-                        <h5 class="fw-bold mt-3 mb-2">Accounts</h5>
-                        <p class="small text-secondary">Kelola akun pengguna, reset password, aktivasi/nonaktifkan user, dan
-                            tautkan ke role.</p>
-                        <div class="info-row d-flex justify-content-between">
-                            <span><i class="fas fa-users me-1"></i> Semua user</span>
-                            <a href="{{ route('setting.account.index') }}" class="text-primary fw-semibold small">Kelola <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+                <!-- Accounts -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card setting-card p-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div class="card-icon"><i class="fas fa-user-circle"></i></div>
+                                <span class="badge-subtle">Users</span>
+                            </div>
+                            <h5 class="fw-bold mt-3 mb-2">Accounts</h5>
+                            <p class="small text-secondary">Manage user accounts, reset passwords, activate/deactivate users, and assign roles.</p>
+                            <div class="info-row d-flex justify-content-between">
+                                <span><i class="fas fa-users me-1"></i> All users</span>
+                                <a href="{{ route('setting.account.index') }}" class="text-primary fw-semibold small">Manage <i class="fas fa-arrow-right ms-1"></i></a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             @endif
         </div>
 
-        <!-- Pesan Motivasi KITA -->
+        <!-- KITA Motivation -->
         <div class="row mt-4">
             <div class="col-12">
                 <div class="alert alert-light border rounded-4 shadow-sm d-flex align-items-center gap-3"
@@ -228,8 +215,7 @@
                     <i class="fas fa-heart text-danger fa-2x"></i>
                     <div>
                         <strong class="d-block">💡 KITA — Kernel of Inventory, Talent & Asset</strong>
-                        <span class="small text-secondary">Pengaturan adalah fondasi kesuksesan operasional. Pastikan
-                            Outlet, Shift, Unit, Roles, dan Accounts sudah sesuai dengan kebutuhan bisnis Anda.</span>
+                        <span class="small text-secondary">Settings are the foundation of operational success. Ensure Outlets, Shifts, Units, Roles, and Accounts are properly configured to match your business needs.</span>
                     </div>
                 </div>
             </div>

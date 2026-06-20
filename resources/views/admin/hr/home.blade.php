@@ -96,7 +96,7 @@
 
 @section('content')
     <div class="container-fluid px-4 py-3">
-        <!-- Hero Section : Sambutan Hangat -->
+        <!-- Hero Section -->
         <div class="hr-hero d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-4">
                 <div class="greeting-icon">
@@ -104,10 +104,9 @@
                 </div>
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #78350f;">Human Resources</h2>
-                    <p class="mb-0 text-secondary">Halo, <strong>{{ auth()->user()->name }}</strong>! Kelola talenta,
-                        kehadiran, dan kesejahteraan karyawan.</p>
+                    <p class="mb-0 text-secondary">Hello, <strong>{{ auth()->user()->name }}</strong>! Manage talent, attendance, and employee welfare.</p>
                     <div class="mt-2 small text-muted">
-                        <i class="fas fa-user-tie me-1"></i> KITA bantu ciptakan lingkungan kerja yang produktif.
+                        <i class="fas fa-user-tie me-1"></i> KITA helps you create a productive work environment.
                     </div>
                 </div>
             </div>
@@ -116,34 +115,34 @@
             </div>
         </div>
 
-        <!-- Statistik Cepat (contoh, bisa diganti data real) -->
+        <!-- Quick Stats -->
         <div class="row g-4 mb-5">
             <div class="col-md-3 col-6">
                 <div class="card hr-card p-3 text-center">
-                    <h6 class="text-muted">Total Karyawan</h6>
+                    <h6 class="text-muted">Total Employees</h6>
                     <h3 class="fw-bold text-warning">124</h3>
-                    <small class="text-muted">+5 bulan ini</small>
+                    <small class="text-muted">+5 this month</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card hr-card p-3 text-center">
-                    <h6 class="text-muted">Hadir Hari Ini</h6>
+                    <h6 class="text-muted">Present Today</h6>
                     <h3 class="fw-bold text-success">98</h3>
-                    <small class="text-muted">dari 124</small>
+                    <small class="text-muted">out of 124</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card hr-card p-3 text-center">
-                    <h6 class="text-muted">Izin / Sakit</h6>
+                    <h6 class="text-muted">Leave / Sick</h6>
                     <h3 class="fw-bold text-danger">12</h3>
-                    <small class="text-muted">hari ini</small>
+                    <small class="text-muted">today</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card hr-card p-3 text-center">
-                    <h6 class="text-muted">Lowongan Aktif</h6>
+                    <h6 class="text-muted">Active Vacancies</h6>
                     <h3 class="fw-bold text-primary">6</h3>
-                    <small class="text-muted">posisi</small>
+                    <small class="text-muted">positions</small>
                 </div>
             </div>
         </div>
@@ -165,21 +164,20 @@
             </div>
         </div>
 
-        <!-- Menu HR Groups -->
+        <!-- HR Menu Cards -->
         <div class="row g-4">
-            <!-- Presences (Absensi) -->
+            <!-- Presences -->
             <div class="col-xl-4 col-md-6">
                 <div class="card hr-card">
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="card-icon mb-2"><i class="fas fa-fingerprint"></i></div>
-                            <span class="badge-subtle">Kehadiran</span>
+                            <span class="badge-subtle">Attendance</span>
                         </div>
                         <h5 class="fw-bold">Presences</h5>
-                        <p class="small text-secondary">Rekam absensi, izin, cuti, dan lembur karyawan.</p>
+                        <p class="small text-secondary">Record attendance, leave, time-off, and overtime.</p>
                         <div class="info-row">
-                            <a href="#" class="small text-warning fw-semibold">Kelola Kehadiran <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+                            <a href="#" class="small text-warning fw-semibold">Manage Attendance <i class="fas fa-arrow-right ms-1"></i></a>
                         </div>
                     </div>
                 </div>
@@ -191,13 +189,12 @@
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="card-icon mb-2"><i class="fas fa-chart-line"></i></div>
-                            <span class="badge-subtle">Laporan</span>
+                            <span class="badge-subtle">Reports</span>
                         </div>
                         <h5 class="fw-bold">Reports</h5>
-                        <p class="small text-secondary">Laporan kehadiran, payroll, turnover, dan rekap karyawan.</p>
+                        <p class="small text-secondary">Attendance, payroll, turnover, and employee summaries.</p>
                         <div class="info-row">
-                            <a href="#" class="small text-warning fw-semibold">Lihat Laporan <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+                            <a href="#" class="small text-warning fw-semibold">View Reports <i class="fas fa-arrow-right ms-1"></i></a>
                         </div>
                     </div>
                 </div>
@@ -209,13 +206,12 @@
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="card-icon mb-2"><i class="fas fa-file-alt"></i></div>
-                            <span class="badge-subtle">Standar</span>
+                            <span class="badge-subtle">Standard</span>
                         </div>
                         <h5 class="fw-bold">SOP</h5>
-                        <p class="small text-secondary">Kelola prosedur operasional standar dan kebijakan perusahaan.</p>
+                        <p class="small text-secondary">Manage standard operating procedures and company policies.</p>
                         <div class="info-row">
-                            <a href="#" class="small text-warning fw-semibold">Kelola SOP <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+                            <a href="#" class="small text-warning fw-semibold">Manage SOP <i class="fas fa-arrow-right ms-1"></i></a>
                         </div>
                     </div>
                 </div>
@@ -227,13 +223,12 @@
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="card-icon mb-2"><i class="fas fa-coins"></i></div>
-                            <span class="badge-subtle">Penggajian</span>
+                            <span class="badge-subtle">Payroll</span>
                         </div>
                         <h5 class="fw-bold">Payroll</h5>
-                        <p class="small text-secondary">Hitung gaji, potongan, bonus, dan slip gaji karyawan.</p>
+                        <p class="small text-secondary">Calculate salary, deductions, bonuses, and pay slips.</p>
                         <div class="info-row">
-                            <a href="#" class="small text-warning fw-semibold">Proses Payroll <i
-                                    class="fas fa-arrow-right ms-1"></i></a>
+                            <a href="#" class="small text-warning fw-semibold">Process Payroll <i class="fas fa-arrow-right ms-1"></i></a>
                         </div>
                     </div>
                 </div>
@@ -245,10 +240,10 @@
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="card-icon mb-2"><i class="fas fa-user-plus"></i></div>
-                            <span class="badge-subtle">Rekrutmen</span>
+                            <span class="badge-subtle">Recruitment</span>
                         </div>
                         <h5 class="fw-bold">Recruitments</h5>
-                        <p class="small text-secondary">Proses rekrutmen dari karir, interview hingga onboarding.</p>
+                        <p class="small text-secondary">Recruitment process from career, interview to onboarding.</p>
                         <ul class="submenu-list">
                             <li><a href="#"><i class="fas fa-briefcase fa-fw"></i> Career</a></li>
                             <li><a href="#"><i class="fas fa-comments fa-fw"></i> Interview</a></li>
@@ -259,7 +254,7 @@
             </div>
         </div>
 
-        <!-- Motivasi KITA -->
+        <!-- KITA Motivation -->
         <div class="row mt-4">
             <div class="col-12">
                 <div class="alert alert-light border rounded-4 shadow-sm d-flex align-items-center gap-3"
@@ -267,8 +262,7 @@
                     <i class="fas fa-heart text-danger fa-2x"></i>
                     <div>
                         <strong class="d-block">💡 KITA — Kernel of Inventory, Talent & Asset</strong>
-                        <span class="small text-secondary">Karyawan adalah aset terpenting. Kelola kehadiran, rekrutmen,
-                            dan kesejahteraan mereka dengan baik. KITA siap membantu transformasi SDM Anda!</span>
+                        <span class="small text-secondary">Employees are the most important asset. Manage attendance, recruitment, and their welfare properly. KITA is ready to help transform your HR!</span>
                     </div>
                 </div>
             </div>
