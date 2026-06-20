@@ -88,11 +88,10 @@
         <section class="page-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div>
                 <p class="eyebrow mb-2">Settings</p>
-                <h2 class="mb-1">Account Management</h2>
+                <h2 class="mb-1">Managemen Akun</h2>
             </div>
             @if ($access['Create'] == 1)
-                <a href="{{ route('setting.account.create') }}" class="btn btn-success"><i class="fas fa-plus me-1"></i> Add
-                    New</a>
+                <a href="{{ route('setting.account.create') }}" class="btn btn-success"><i class="fas fa-plus me-1"></i> Tambah Akun Baru</a>
             @endif
         </section>
 
@@ -100,10 +99,10 @@
             <div class="card soft-card mt-4">
                 <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                     <div>
-                        <h4 class="mb-1">List Account</h4>
+                        <h4 class="mb-1">Account List</h4>
                     </div>
                     <span class="stat-chip bg-primary-subtle text-primary"><i class="fas fa-users me-1"></i>
-                        {{ $accounts->count() }} accounts</span>
+                        {{ $accounts->count() }} account{{ $accounts->count() > 1 ? 's' : '' }}</span>
                 </div>
                 <div class="card-body">
                     @if (session('success'))

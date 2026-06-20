@@ -178,7 +178,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         <label class="form-label">Category</label>
                         <select name="category_id" class="form-select select2 @error('category_id') is-invalid @enderror"
                             required>
@@ -192,7 +192,7 @@
                         @error('category_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                    </div>
+                    </div> --}}
 
                     <div class="col-md-6">
                         <label class="form-label">Unit</label>
@@ -209,7 +209,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Product Name</label>
                         <input type="text" name="product_name" placeholder="Ayam Kecil"
                             value="{{ old('product_name', $product->product_name) }}"
@@ -219,7 +219,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Product Code</label>
                         <input type="text" name="product_code" placeholder="AK-001"
                             value="{{ old('product_code', $product->product_code) }}"
@@ -229,7 +229,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Status</label>
                         <select name="is_active" class="form-select select2 @error('is_active') is-invalid @enderror"
                             required>

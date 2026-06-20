@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview Laporan Inventory</title>
+    <title>Preview Inventory Report</title>
     <style>
         * {
             margin: 0;
@@ -90,26 +90,26 @@
     <div class="receipt" id="receipt">
         <!-- HEADER -->
         <div class="text-center bold" style="font-size:16px; margin-bottom:4px;">
-            LAPORAN INVENTORY
+            Inventory Report
         </div>
         <div class="dashed"></div>
 
         @if(isset($report) && !isset($isAggregated))
             {{-- ==================== LAPORAN HARIAN (DAILY) ==================== --}}
-            <div class="row"><span>Lokasi</span><span>{{ $report->location }}</span></div>
-            <div class="row"><span>Tanggal</span><span>{{ $report->report_date }}</span></div>
+            <div class="row"><span>Location</span><span>{{ $report->location }}</span></div>
+            <div class="row"><span>Date</span><span>{{ $report->report_date }}</span></div>
             <div class="row"><span>Shift</span><span>{{ $report->period->shift->name ?? '-' }}</span></div>
-            <div class="row"><span>Kasir</span><span>{{ $report->cashier_name }}</span></div>
-            <div class="row"><span>Pelapor</span><span>{{ $report->reported_by }}</span></div>
-            <div class="row"><span>Total Terjual</span><span>{{ number_format($report->total_products_sold, 0) }}</span></div>
+            <div class="row"><span>Cashier</span><span>{{ $report->cashier_name }}</span></div>
+            <div class="row"><span>Report By</span><span>{{ $report->reported_by }}</span></div>
+            <div class="row"><span>Total Product Sold</span><span>{{ number_format($report->total_products_sold, 0) }}</span></div>
             <div class="dashed"></div>
 
             <div class="row row-header">
-                <span class="item-name">Produk</span>
-                <span class="item-qty">Awal</span>
-                <span class="item-qty">Masuk</span>
-                <span class="item-qty">Jual</span>
-                <span class="item-qty">Sisa</span>
+                <span class="item-name">Product</span>
+                <span class="item-qty">First Stock</span>
+                <span class="item-qty">Stock In</span>
+                <span class="item-qty">Selling</span>
+                <span class="item-qty">Remain</span>
             </div>
 
             @foreach($report->items as $item)
@@ -130,20 +130,20 @@
         @else
             {{-- ==================== LAPORAN MINGGUAN / BULANAN (WEEKLY / MONTHLY) ==================== --}}
             <div class="text-center bold" style="font-size:14px;">
-                {{ strtoupper($type) === 'WEEKLY' ? 'LAPORAN MINGGUAN' : 'LAPORAN BULANAN' }}
+                {{ strtoupper($type) === 'WEEKLY' ? 'Weekly Report' : 'Monthly Report' }}
             </div>
             <div class="row">
-                <span>Periode</span>
+                <span>Period</span>
                 <span>{{ $date ? \Carbon\Carbon::parse($date)->format('d/m/Y') : now()->format('d/m/Y') }}</span>
             </div>
             <div class="dashed"></div>
 
             <div class="row row-header">
-                <span class="item-name">Produk</span>
-                <span class="item-qty">Awal</span>
-                <span class="item-qty">Masuk</span>
-                <span class="item-qty">Jual</span>
-                <span class="item-qty">Sisa</span>
+                <span class="item-name">Product</span>
+                <span class="item-qty">First Stock</span>
+                <span class="item-qty">Stock In</span>
+                <span class="item-qty">Selling</span>
+                <span class="item-qty">Remain</span>
             </div>
 
             @forelse($data as $item)
@@ -155,7 +155,7 @@
                     <span class="item-qty">{{ number_format($item['remain'], 0) }}</span>
                 </div>
             @empty
-                <div class="text-center" style="margin:8px 0;">Tidak ada data</div>
+                <div class="text-center" style="margin:8px 0;">Data not found</div>
             @endforelse
 
             <div class="dashed"></div>
@@ -168,7 +168,7 @@
 
         <!-- Tombol cetak fisik (tampil hanya di layar) -->
         <div class="print-btn">
-            <button onclick="window.print()">🖨️ Cetak</button>
+            <button onclick="window.print()">🖨️ Print</button>
         </div>
     </div>
 </body>

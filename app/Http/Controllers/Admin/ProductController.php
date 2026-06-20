@@ -54,7 +54,7 @@ class ProductController extends Controller
             try {
                 $search = $request->query('search', '');
     
-                $products = Product::with(['company', 'category', 'unit'])->when($search, function ($q) use ($search) {
+                $products = Product::with(['company', 'unit'])->when($search, function ($q) use ($search) {
                     return $q->where('product_name', 'like', "%$search%")->orWhere('product_code', 'like', "%$search%");
                     })->paginate(10);
     

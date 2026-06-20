@@ -187,23 +187,23 @@
                             <div class="dropdown-indicator-icon-wrapper"><span
                                     class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
                                 class="nav-link-icon"><i class="fas fa-database"></i></span><span
-                                class="nav-link-text">Masted Data</span>
+                                class="nav-link-text">Master Data</span>
                         </div>
                     </a>
                     <div class="parent-wrapper label-1">
                         <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-masters">
                             <li class="collapsed-nav-item-title d-none">Master Data</li>
-                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.category.*') ? 'active' : '' }}" href="{{ route('inventory.category.index') }}">
+                            {{-- <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.category.*') ? 'active' : '' }}" href="{{ route('inventory.category.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Category</span>
                                     </div>
                                 </a><!-- more inner pages-->
-                            </li>
-                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.product.*') }}" href="{{ route('inventory.product.index') }}">
+                            </li> --}}
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.product.*') ? 'active' : '' }}" href="{{ route('inventory.product.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Product</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock.*') }}" href="{{ route('inventory.stock.index') }}">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock.*') ? 'active' : '' }}" href="{{ route('inventory.stock.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Stock</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -217,43 +217,18 @@
                             <div class="dropdown-indicator-icon-wrapper"><span
                                     class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
                                 class="nav-link-icon"><i class="fas fa-download"></i></span><span
-                                class="nav-link-text">Incoming Goods</span>
+                                class="nav-link-text">Incoming Good</span>
                         </div>
                     </a>
                     <div class="parent-wrapper label-1">
                         <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-ingoods">
-                            <li class="collapsed-nav-item-title d-none">Incoming Goods</li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-in.create') }}">
+                            <li class="collapsed-nav-item-title d-none">Incoming Good</li>
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock.create') ? 'active' : '' }}" href="{{ route('inventory.stock-in.create') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">New Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-in.index') }}">
-                                    <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
-                                    </div>
-                                </a><!-- more inner pages-->
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nav-returnitems"
-                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nav-returnitems">
-                        <div class="d-flex align-items-center">
-                            <div class="dropdown-indicator-icon-wrapper"><span
-                                    class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
-                                class="nav-link-icon"><i class="fas fa-upload"></i></span><span
-                                class="nav-link-text">Exit Items</span>
-                        </div>
-                    </a>
-                    <div class="parent-wrapper label-1">
-                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-returnitems">
-                            <li class="collapsed-nav-item-title d-none">Exit Items</li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-out.create') }}">
-                                    <div class="d-flex align-items-center"><span class="nav-link-text">New Transaction</span>
-                                    </div>
-                                </a><!-- more inner pages-->
-                            </li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-out.index') }}">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock.*') ? 'active' : '' }}" href="{{ route('inventory.stock-in.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -266,19 +241,44 @@
                         <div class="d-flex align-items-center">
                             <div class="dropdown-indicator-icon-wrapper"><span
                                     class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
+                                class="nav-link-icon"><i class="fas fa-upload"></i></span><span
+                                class="nav-link-text">Exit Items</span>
+                        </div>
+                    </a>
+                    <div class="parent-wrapper label-1">
+                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-exititems">
+                            <li class="collapsed-nav-item-title d-none">Exit Items</li>
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock-out.create') ? 'active' : '' }}" href="{{ route('inventory.stock-out.create') }}">
+                                    <div class="d-flex align-items-center"><span class="nav-link-text">New Transaction</span>
+                                    </div>
+                                </a><!-- more inner pages-->
+                            </li>
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock-out.*') ? 'active' : '' }}" href="{{ route('inventory.stock-out.index') }}">
+                                    <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
+                                    </div>
+                                </a><!-- more inner pages-->
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nav-returnitems"
+                        role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nav-returnitems">
+                        <div class="d-flex align-items-center">
+                            <div class="dropdown-indicator-icon-wrapper"><span
+                                    class="fas fa-caret-right dropdown-indicator-icon"></span></div><span
                                 class="nav-link-icon"><i class="fas fa-undo-alt"></i></span><span
                                 class="nav-link-text">Return Items</span>
                         </div>
                     </a>
                     <div class="parent-wrapper label-1">
-                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-exititems">
+                        <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-returnitems">
                             <li class="collapsed-nav-item-title d-none">Return Items</li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.return-stock.create') }}">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.return-stock.create') ? 'active' : '' }}" href="{{ route('inventory.return-stock.create') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">New Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.return-stock.index') }}">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.return-stock.create') ? 'active' : '' }}" href="{{ route('inventory.return-stock.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -303,7 +303,7 @@
                                     </div>
                                 </a><!-- more inner pages-->
                             </li> --}}
-                            <li class="nav-item"><a class="nav-link" href="{{ route('inventory.stock-opname.index') }}">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock-opname.*') ? 'active' : '' }}" href="{{ route('inventory.stock-opname.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Reports</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -323,12 +323,12 @@
                     <div class="parent-wrapper label-1">
                         <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-reports">
                             <li class="collapsed-nav-item-title d-none">Reports</li>
-                            <li class="nav-item"><a class="nav-link" href="#">
-                                    <div class="d-flex align-items-center"><span class="nav-link-text">Daily</span>
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.report.*') ? 'active' : '' }}" href="{{ route('inventory.report.index') }}">
+                                    <div class="d-flex align-items-center"><span class="nav-link-text">Report</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="#">
+                            {{-- <li class="nav-item"><a class="nav-link" href="#">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Weekly</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -337,7 +337,7 @@
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Monthly</span>
                                     </div>
                                 </a><!-- more inner pages-->
-                            </li>
+                            </li> --}}
                         </ul>
                     </div>
                 </div>
@@ -355,38 +355,38 @@
                 <a class="nav-link label-1" href="{{ route('setting.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
                     <div class="d-flex align-items-center"><span class="nav-link-icon">
                         <i class="fas fa-user-cog"></i>
-                    </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (System Setting)</span></span></div>
+                    </span><span class="nav-link-text-wrapper"><span class="nav-link-text">System Setting</span></span></div>
                 </a>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.company.*') ? 'active' : '' }} label-1" href="{{ route('setting.company.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-store"></i></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Outlets</span></span></div>
+                                    class="nav-link-text">Gerai</span></span></div>
                     </a>
                 </div>
                 <!-- label-->
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.shift.*') ? 'active' : '' }} label-1" href="{{ route('setting.shift.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-clock"></i></span></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Shifts</span></span></div>
+                                    class="nav-link-text">Jam Kerja</span></span></div>
                     </a>
                 </div>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.unit.*') ? 'active' : '' }} label-1" href="{{ route('setting.unit.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-ruler-combined"></i></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Units</span></span></div>
+                                    class="nav-link-text">Satuan</span></span></div>
                     </a>
                 </div>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.role.*') ? 'active' : '' }} label-1" href="{{ route('setting.role.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                     class="fas fa-user-cog"></span></span><span
-                                class="nav-link-text-wrapper"><span class="nav-link-text">Roles</span></span></div>
+                                class="nav-link-text-wrapper"><span class="nav-link-text">Peran dan Izin</span></span></div>
                     </a>
                 </div>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.account.*') ? 'active' : '' }} label-1" href="{{ route('setting.account.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-user-circle"></i></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Accounts</span></span></div>
+                                    class="nav-link-text">Akun</span></span></div>
                     </a>
                 </div>
                 <!-- parent pages-->

@@ -24,7 +24,7 @@ class InventoryReport extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'period_id',
+        'report_period_id',
         'location',
         'reported_by',
         'report_date',
@@ -58,7 +58,7 @@ class InventoryReport extends Model
      */
     public function period(): BelongsTo
     {
-        return $this->belongsTo(ReportPeriod::class);
+        return $this->belongsTo(ReportPeriod::class,'report_period_id');
     }
 
     /**

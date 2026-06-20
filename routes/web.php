@@ -77,13 +77,13 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::prefix('report')->as('report.')->group(function(){
-            Route::get('daily',[\App\Http\Controllers\HomeController::class, 'getDailyReport'])->name('daily');
-            Route::get('weekly',[\App\Http\Controllers\HomeController::class, 'getWeeklyReport'])->name('weekly');
-            Route::get('monthly',[\App\Http\Controllers\HomeController::class, 'getMonthlyReport'])->name('monthly');
-            Route::get('/{id}/preview', [\App\Http\Controllers\HomeController::class, 'getPreview'])->name('getPreview');
-            Route::get('/preview-aggregated', [\App\Http\Controllers\HomeController::class, 'getPreviewAggregated'])->name('getPreviewAggregated');
-            Route::post('/{id}/print', [\App\Http\Controllers\HomeController::class, 'getPrint'])->name('getPrint');
-            Route::post('/print-aggregated', [\App\Http\Controllers\HomeController::class, 'getPrintAggregated'])->name('getPrintAggregated');
+            Route::get('/', [\App\Http\Controllers\HomeController::class, 'indexReport'])->name('index');
+            Route::get('/generate', [\App\Http\Controllers\HomeController::class, 'generateForm'])->name('generate-form');
+            Route::post('/generate', [\App\Http\Controllers\HomeController::class, 'generate'])->name('generate');
+            Route::get('/{id}/preview', [\App\Http\Controllers\HomeController::class, 'preview'])->name('preview');
+            Route::post('/{id}/print', [\App\Http\Controllers\HomeController::class, 'printReport'])->name('print');
+            Route::post('/print-aggregated', [\App\Http\Controllers\HomeController::class, 'printAggregated'])->name('print-aggregated');
+            Route::delete('/{id}', [\App\Http\Controllers\HomeController::class, 'destroyReport'])->name('destroy');
         });
         
         Route::get('stock-log', [StockController::class, 'stockLogs'])->name('stock.logs');

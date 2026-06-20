@@ -190,7 +190,7 @@
             <form method="GET" action="{{ route('inventory.product.index') }}"
                 class="d-flex gap-2 align-items-center flex-wrap">
                 <input type="search" name="search" value="{{ old('search', $search) }}" class="form-control"
-                    placeholder="Cari nama atau kode produk..." style="min-width: 280px;">
+                    placeholder="Cari nama" style="min-width: 280px;">
                 <button class="btn btn-light text-primary" type="submit"><i class="fas fa-search me-1"></i> Cari</button>
                 @if ($search)
                     <a href="{{ route('inventory.product.index') }}" class="btn btn-outline-light">Reset</a>
@@ -230,8 +230,8 @@
                             <th>#</th>
                             <th>Image</th>
                             <th>Product</th>
-                            <th>Code</th>
-                            <th>Category</th>
+                            {{-- <th>Code</th> --}}
+                            {{-- <th>Category</th> --}}
                             <th>Unit</th>
                             <th>Company</th>
                             <th>Status</th>
@@ -249,8 +249,8 @@
                                 <strong>{{ $product->product_name }}</strong>
                                 <div class="small text-muted">{{ Str::limit($product->description, 25) }}</div>
                             </td>
-                            <td><span class="badge bg-light text-dark">{{ $product->product_code }}</span></td>
-                            <td>{{ $product->category->category_name ?? '-' }}</td>
+                            {{-- <td><span class="badge bg-light text-dark">{{ $product->product_code }}</span></td> --}}
+                            {{-- <td>{{ $product->category->category_name ?? '-' }}</td> --}}
                             <td>{{ $product->unit->unit_name ?? '-' }}</td>
                             <td>{{ $product->company->company_name ?? '-' }}</td>
                             <td>
@@ -334,7 +334,7 @@
                             </select>
                             @error('company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <label class="form-label">Category</label>
                             <select name="category_id" class="form-select select2 @error('category_id') is-invalid @enderror" required>
                                 <option value="">Select Category</option>
@@ -345,7 +345,7 @@
                                 @endforeach
                             </select>
                             @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
+                        </div> --}}
                         <div class="col-md-6">
                             <label class="form-label">Unit</label>
                             <select name="unit_id" class="form-select select2 @error('unit_id') is-invalid @enderror" required>
@@ -364,12 +364,12 @@
                                 class="form-control @error('product_name') is-invalid @enderror" required placeholder="Ayam Kecil">
                             @error('product_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <label class="form-label">Product Code</label>
                             <input type="text" name="product_code" value="{{ old('product_code') }}"
                                 class="form-control @error('product_code') is-invalid @enderror" required placeholder="AK-001">
                             @error('product_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
+                        </div> --}}
                         <div class="col-md-6">
                             <label class="form-label">Status</label>
                             <select name="is_active" class="form-select select2 @error('is_active') is-invalid @enderror" required>
@@ -440,7 +440,7 @@
                             </select>
                             @error('company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <label class="form-label">Category</label>
                             <select id="edit_category_id" name="category_id" class="form-select select2 @error('category_id') is-invalid @enderror" required>
                                 <option value="">Select Category</option>
@@ -449,7 +449,7 @@
                                 @endforeach
                             </select>
                             @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
+                        </div> --}}
                         <div class="col-md-6">
                             <label class="form-label">Unit</label>
                             <select id="edit_unit_id" name="unit_id" class="form-select select2 @error('unit_id') is-invalid @enderror" required>
@@ -466,12 +466,12 @@
                                 class="form-control @error('product_name') is-invalid @enderror" required>
                             @error('product_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <label class="form-label">Product Code</label>
                             <input type="text" id="edit_product_code" name="product_code"
                                 class="form-control @error('product_code') is-invalid @enderror" required>
                             @error('product_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
+                        </div> --}}
                         <div class="col-md-6">
                             <label class="form-label">Status</label>
                             <select id="edit_is_active" name="is_active" class="form-select select2 @error('is_active') is-invalid @enderror" required>

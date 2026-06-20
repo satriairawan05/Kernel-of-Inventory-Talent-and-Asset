@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('category_id')->nullable()->constrained()->cascadeOnDelete();
+            // $table->foreignId('category_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('unit_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('product_name')->nullable();
             $table->string('product_code')->unique()->nullable();
@@ -24,8 +24,24 @@ return new class extends Migration
             $table->boolean('is_active')->default(true)->nullable();
             $table->timestamps();
             $table->index('company_id');
-            $table->index('category_id');
+            // $table->index('category_id');
             $table->index('unit_id');
+        });
+
+        Schema::create('product_variants', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('product_id')->nullable()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->string('variant_name')->nullable();
+            $table->string('variant_code')->nullable();
+            $table->string('image')->nullable();
+            $table->decimal('purchase_price', 15, 2)->default(0)->nullable();
+            $table->decimal('selling_price', 15, 2)->default(0)->nullable();
+            $table->boolean('is_active')->default(true)->nullable();
+
+            $table->timestamps();
+
+            $table->index('product_id');
         });
     }
 
@@ -35,5 +51,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('products');
+        Schema::dropIfExists('product_variants');
     }
 };

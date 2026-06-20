@@ -52,7 +52,7 @@ class InventoryReportItem extends Model
      */
     public function report(): BelongsTo
     {
-        return $this->belongsTo(InventoryReport::class);
+        return $this->belongsTo(InventoryReport::class,'inventory_report_id');
     }
 
     /**
@@ -63,6 +63,6 @@ class InventoryReportItem extends Model
      */
     public function productVariant(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class);
+        return $this->belongsTo(ProductVariant::class,'product_variant_id');
     }
 }

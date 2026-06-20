@@ -15,14 +15,14 @@ class ProductService
      */
     public function search(string $keyword = ''): Collection
     {
-        $keyword = trim($keyword);
+        $search = trim($keyword);
 
         $query = Product::query()->with(['variants']);
 
-        if ($keyword !== '') {
-            $query->where(function ($q) use ($keyword) {
-                $q->where('product_name', 'LIKE', '%' . $keyword . '%')
-                    ->orWhere('product_code', 'LIKE', '%' . $keyword . '%');
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('product_code', 'LIKE', '%' . $search . '%');
             });
         }
 
@@ -43,7 +43,7 @@ class ProductService
             
             return Product::create([
                 'company_id'   => $data['company_id'] ?? null,
-                'category_id'  => $data['category_id'] ?? null,
+                // 'category_id'  => $data['category_id'] ?? null,
                 'unit_id'      => $data['unit_id'] ?? null,
                 'product_name' => $data['product_name'] ?? null,
                 'product_code' => $data['product_code'] ?? null,
@@ -81,7 +81,7 @@ class ProductService
             
             $product->update([
                 'company_id'   => $data['company_id'] ?? $product->company_id,
-                'category_id'  => $data['category_id'] ?? $product->category_id,
+                // // 'category_id'  => $data['category_id'] ?? $product->category_id,
                 'unit_id'      => $data['unit_id'] ?? $product->unit_id,
                 'product_name' => $data['product_name'] ?? $product->product_name,
                 'product_code' => $data['product_code'] ?? $product->product_code,
