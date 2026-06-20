@@ -190,7 +190,7 @@
             </div>
             <span class="stat-chip bg-primary-subtle text-primary">
                 <i class="fas fa-boxes me-1"></i>
-                {{ $type == 'daily' ? $reports->count() : count($data) }} record
+                {{ $type == 'daily' ? $reports->count() : count($data) }} record{{ $reports->count() > 1 ? 's' : '' }}
             </span>
         </div>
         <div class="card-body">

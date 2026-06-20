@@ -214,7 +214,8 @@ class HomeController extends Controller
     public function generateForm(): View
     {
         $periods = ReportPeriod::with('shift')->where('is_active', true)->get();
-        return view('admin.inventory.report.generate', ['periods' => $periods]);
+        $users = \App\Models\User::get();
+        return view('admin.inventory.report.generate', ['periods' => $periods,'users' => $users]);
     }
 
     /**
