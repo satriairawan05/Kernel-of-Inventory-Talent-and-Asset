@@ -95,7 +95,7 @@
                 </div>
                 <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
                         data-bs-toggle="" aria-expanded="false">
-                        <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-dollar"></i></span><span class="nav-link-text-wrapper"><span
+                        <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></span><span class="nav-link-text-wrapper"><span
                                     class="nav-link-text">Cash Summary</span></span>
                         </div>
                     </a>
