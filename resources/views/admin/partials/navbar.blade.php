@@ -360,33 +360,33 @@
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.company.*') ? 'active' : '' }} label-1" href="{{ route('setting.company.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-store"></i></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Gerai</span></span></div>
+                                    class="nav-link-text">Outlet</span></span></div>
                     </a>
                 </div>
                 <!-- label-->
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.shift.*') ? 'active' : '' }} label-1" href="{{ route('setting.shift.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-clock"></i></span></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Jam Kerja</span></span></div>
+                                    class="nav-link-text">Shift</span></span></div>
                     </a>
                 </div>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.unit.*') ? 'active' : '' }} label-1" href="{{ route('setting.unit.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-ruler-combined"></i></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Satuan</span></span></div>
+                                    class="nav-link-text">Unit</span></span></div>
                     </a>
                 </div>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.role.*') ? 'active' : '' }} label-1" href="{{ route('setting.role.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                     class="fas fa-user-cog"></span></span><span
-                                class="nav-link-text-wrapper"><span class="nav-link-text">Peran dan Izin</span></span></div>
+                                class="nav-link-text-wrapper"><span class="nav-link-text">Role and Permission</span></span></div>
                     </a>
                 </div>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.account.*') ? 'active' : '' }} label-1" href="{{ route('setting.account.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-user-circle"></i></span><span class="nav-link-text-wrapper"><span
-                                    class="nav-link-text">Akun</span></span></div>
+                                    class="nav-link-text">Accounts</span></span></div>
                     </a>
                 </div>
                 <!-- parent pages-->

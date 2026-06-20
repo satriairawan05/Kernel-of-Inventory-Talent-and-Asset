@@ -94,10 +94,10 @@
                     @csrf
                     <div class="row g-3">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="product_variant_id">Varian Produk</label>
+                            <label class="form-label" for="product_variant_id">Product Variant</label>
                             <select id="product_variant_id" name="product_variant_id"
                                 class="form-select select2 @error('product_variant_id') is-invalid @enderror">
-                                <option value="">Pilih Varian</option>
+                                <option value="">Select Variant</option>
                                 @foreach ($productVariants as $variant)
                                     <option value="{{ $variant->id }}"
                                         {{ old('product_variant_id', $stockIn->product_variant_id) == $variant->id ? 'selected' : '' }}>
@@ -110,7 +110,7 @@
                             @enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="qty">Jumlah Masuk</label>
+                            <label class="form-label" for="qty">Quantity</label>
                             <input type="number" step="0.01" id="qty" name="qty"
                                 value="{{ old('qty', $stockIn->qty) }}"
                                 class="form-control @error('qty') is-invalid @enderror" placeholder="0.00">
@@ -119,7 +119,7 @@
                             @enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="receiver_sender">Penerima</label>
+                            <label class="form-label" for="receiver_sender">Receiver</label>
                             <input type="text" id="receiver_sender" name="receiver_sender"
                                 value="{{ old('receiver_sender', $stockIn->receiver_sender) }}"
                                 class="form-control @error('receiver_sender') is-invalid @enderror"
@@ -131,10 +131,10 @@
                     </div>
                     <!-- Tambahan: Select Movement Type -->
                     <div class="mb-3">
-                        <label class="form-label" for="movement_type">Tipe Transaksi</label>
+                        <label class="form-label" for="movement_type">Transaction Type</label>
                         <select id="movement_type" name="movement_type"
                             class="form-select select2 @error('movement_type') is-invalid @enderror">
-                            <option value="">Pilih Tipe</option>
+                            <option value="">Select Type</option>
                             @foreach ($movementTypes as $key => $label)
                                 <option value="{{ $key }}"
                                     {{ old('movement_type', $stockIn->movement_type) == $key ? 'selected' : '' }}>
@@ -147,7 +147,7 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="notes">Catatan</label>
+                        <label class="form-label" for="notes">Notes</label>
                         <textarea id="notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror"
                             placeholder="Catatan tambahan (opsional)">{{ old('notes', $stockIn->notes) }}</textarea>
                         @error('notes')
@@ -155,9 +155,8 @@
                         @enderror
                     </div>
                     <div class="d-flex justify-content-end gap-2 action-bar">
-                        <a href="{{ route('inventory.stock-in.index') }}" class="btn btn-outline-secondary">Batal</a>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update Barang
-                            Masuk</button>
+                        <a href="{{ route('inventory.stock-in.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update</button>
                     </div>
                 </form>
             </div>

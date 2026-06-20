@@ -20,14 +20,14 @@
     <section class="page-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div>
             <p class="eyebrow mb-2">Inventory</p>
-            <h2 class="mb-1">Tambah Return Barang</h2>
+            <h2 class="mb-1">Add Return Stock</h2>
         </div>
         <span class="badge bg-white text-primary fs-6 px-3 py-2"><i class="fas fa-undo-alt me-1"></i> Return</span>
     </section>
 
     <div class="card soft-card mt-4">
         <div class="card-header">
-            <h4 class="mb-1">Form Return Barang</h4>
+            <h4 class="mb-1">Form Return Stock</h4>
         </div>
         <div class="card-body">
             <form action="{{ route('inventory.return-stock.store') }}" method="POST">
@@ -36,7 +36,7 @@
                     <div class="col-md-6 mb-3">
                         <label class="form-label" for="product_variant_id">Product Variant <span class="text-danger">*</span></label>
                         <select id="product_variant_id" name="product_variant_id" class="form-select select2 @error('product_variant_id') is-invalid @enderror">
-                            <option value="">-- Pilih Varian --</option>
+                            <option value="">-- Select Variant --</option>
                             @foreach ($productVariants as $variant)
                                 <option value="{{ $variant->id }}" {{ old('product_variant_id') == $variant->id ? 'selected' : '' }}>
                                     {{ $variant->product->product_name ?? '-' }} - {{ $variant->variant_name }}
@@ -49,7 +49,7 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="qty">Jumlah Return <span class="text-danger">*</span></label>
+                        <label class="form-label" for="qty">Quantity <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" id="qty" name="qty" value="{{ old('qty', 0) }}" class="form-control @error('qty') is-invalid @enderror" placeholder="0.00">
                         @error('qty')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -57,7 +57,7 @@
                     </div>
 
                     <div class="col-12 mb-3">
-                        <label class="form-label" for="notes">Catatan</label>
+                        <label class="form-label" for="notes">Notes</label>
                         <textarea id="notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror" placeholder="Catatan retur...">{{ old('notes') }}</textarea>
                         @error('notes')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -67,7 +67,7 @@
 
                 <div class="d-flex justify-content-end gap-2 action-bar">
                     <a href="{{ route('inventory.return-stock.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Simpan Retur</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Return Stock</button>
                 </div>
             </form>
         </div>

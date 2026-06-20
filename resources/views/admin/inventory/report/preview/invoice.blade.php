@@ -105,7 +105,7 @@
             <div class="dashed"></div>
 
             <div class="row row-header">
-                <span class="item-name">Product</span>
+                <span class="item-name">Product / Variant</span>
                 <span class="item-qty">First Stock</span>
                 <span class="item-qty">Stock In</span>
                 <span class="item-qty">Selling</span>
@@ -139,7 +139,7 @@
             <div class="dashed"></div>
 
             <div class="row row-header">
-                <span class="item-name">Product</span>
+                <span class="item-name">Product / Variant</span>
                 <span class="item-qty">First Stock</span>
                 <span class="item-qty">Stock In</span>
                 <span class="item-qty">Selling</span>

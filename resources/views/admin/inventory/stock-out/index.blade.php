@@ -84,12 +84,12 @@
     <section class="page-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div>
             <p class="eyebrow mb-2">Inventory</p>
-            <h2 class="mb-1">Barang Keluar</h2>
-            <p class="mb-0">Riwayat pengeluaran / penjualan stok.</p>
+            <h2 class="mb-1">Stock Out</h2>
+            <p class="mb-0">History of stock issuance / sales.</p>
         </div>
         @if ($access['Create'] == 1)
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createModal">
-                <i class="fas fa-plus me-1"></i> Tambah Barang Keluar
+                <i class="fas fa-plus me-1"></i> Add Stock Out
             </button>
         @endif
     </section>
@@ -98,8 +98,8 @@
     <div class="card soft-card mt-4">
         <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div>
-                <h4 class="mb-1">List Stock Out</h4>
-                <p class="text-muted mb-0">Semua transaksi barang keluar.</p>
+                <h4 class="mb-1">Stock Out List</h4>
+                <p class="text-muted mb-0">All outgoing stock transactions.</p>
             </div>
             <span class="stat-chip bg-primary-subtle text-primary"><i class="fas fa-boxes me-1"></i> {{ $movements->total() }} records</span>
         </div>
@@ -122,14 +122,14 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Produk / Varian</th>
-                            <th>Qty Keluar</th>
-                            <th>Stok Sebelum</th>
-                            <th>Stok Sesudah</th>
+                            <th>Product / Variant</th>
+                            <th>Qty Out</th>
+                            <th>Stock Before</th>
+                            <th>Stock After</th>
                             <th>PIC</th>
-                            <th>Catatan</th>
-                            <th>Waktu</th>
-                            <th>Aksi</th>
+                            <th>Notes</th>
+                            <th>Time</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -172,7 +172,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="9" class="text-center py-4 text-muted">Belum ada data barang keluar.</td></tr>
+                        <tr><td colspan="9" class="text-center py-4 text-muted">No stock out data found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -193,7 +193,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Tambah Barang Keluar</h5>
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Stock Out</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ route('inventory.stock-out.store') }}" method="POST">
@@ -204,7 +204,7 @@
                             <label class="form-label" for="create_product_variant_id">Product Variant <span class="text-danger">*</span></label>
                             <select id="create_product_variant_id" name="product_variant_id"
                                 class="form-select select2 @error('product_variant_id') is-invalid @enderror">
-                                <option value="">-- Pilih Varian --</option>
+                                <option value="">-- Select Variant --</option>
                                 @foreach ($productVariants as $variant)
                                     <option value="{{ $variant->id }}" {{ old('product_variant_id') == $variant->id ? 'selected' : '' }}>
                                         {{ $variant->product->product_name ?? '-' }} - {{ $variant->variant_name }}
@@ -217,7 +217,7 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="create_qty">Jumlah Keluar <span class="text-danger">*</span></label>
+                            <label class="form-label" for="create_qty">Quantity Out <span class="text-danger">*</span></label>
                             <input type="number" step="0.01" id="create_qty" name="qty"
                                 value="{{ old('qty', 0) }}"
                                 class="form-control @error('qty') is-invalid @enderror" placeholder="0.00">
@@ -227,23 +227,23 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="create_receiver_sender">Pengirim</label>
+                            <label class="form-label" for="create_receiver_sender">Sender</label>
                             <input type="text" id="create_receiver_sender" name="receiver_sender"
                                 value="{{ old('receiver_sender') }}"
                                 class="form-control @error('receiver_sender') is-invalid @enderror"
-                                placeholder="Nama pengirim">
+                                placeholder="Sender name">
                             @error('receiver_sender')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
 
-                    <!-- Tambahan: Select Movement Type -->
+                    <!-- Select Movement Type -->
                     <div class="mb-3">
-                        <label class="form-label" for="create_movement_type">Tipe Transaksi</label>
+                        <label class="form-label" for="create_movement_type">Transaction Type</label>
                         <select id="create_movement_type" name="movement_type"
                             class="form-select select2 @error('movement_type') is-invalid @enderror">
-                            <option value="">Pilih Tipe</option>
+                            <option value="">Select Type</option>
                             @foreach ($movementTypes as $key => $label)
                                 <option value="{{ $key }}" {{ old('movement_type') == $key ? 'selected' : '' }}>
                                     {{ $label }}
@@ -256,17 +256,17 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="create_notes">Catatan</label>
+                        <label class="form-label" for="create_notes">Notes</label>
                         <textarea id="create_notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror"
-                            placeholder="Catatan tambahan...">{{ old('notes') }}</textarea>
+                            placeholder="Additional notes...">{{ old('notes') }}</textarea>
                         @error('notes')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Simpan Barang Keluar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Stock Out</button>
                 </div>
             </form>
         </div>
@@ -282,7 +282,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Barang Keluar</h5>
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Stock Out</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editForm" method="POST">
@@ -294,7 +294,7 @@
                             <label class="form-label" for="edit_product_variant_id">Product Variant <span class="text-danger">*</span></label>
                             <select id="edit_product_variant_id" name="product_variant_id"
                                 class="form-select select2 @error('product_variant_id') is-invalid @enderror">
-                                <option value="">-- Pilih Varian --</option>
+                                <option value="">-- Select Variant --</option>
                                 @foreach ($productVariants as $variant)
                                     <option value="{{ $variant->id }}">
                                         {{ $variant->product->product_name ?? '-' }} - {{ $variant->variant_name }}
@@ -307,7 +307,7 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="edit_qty">Jumlah Keluar <span class="text-danger">*</span></label>
+                            <label class="form-label" for="edit_qty">Quantity Out <span class="text-danger">*</span></label>
                             <input type="number" step="0.01" id="edit_qty" name="qty"
                                 class="form-control @error('qty') is-invalid @enderror" placeholder="0.00">
                             @error('qty')
@@ -316,22 +316,22 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="edit_receiver_sender">Pengirim</label>
+                            <label class="form-label" for="edit_receiver_sender">Sender</label>
                             <input type="text" id="edit_receiver_sender" name="receiver_sender"
                                 class="form-control @error('receiver_sender') is-invalid @enderror"
-                                placeholder="Nama pengirim">
+                                placeholder="Sender name">
                             @error('receiver_sender')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
 
-                    <!-- Tambahan: Select Movement Type -->
+                    <!-- Select Movement Type -->
                     <div class="mb-3">
-                        <label class="form-label" for="edit_movement_type">Tipe Transaksi</label>
+                        <label class="form-label" for="edit_movement_type">Transaction Type</label>
                         <select id="edit_movement_type" name="movement_type"
                             class="form-select select2 @error('movement_type') is-invalid @enderror">
-                            <option value="">Pilih Tipe</option>
+                            <option value="">Select Type</option>
                             @foreach ($movementTypes as $key => $label)
                                 <option value="{{ $key }}">{{ $label }}</option>
                             @endforeach
@@ -342,28 +342,28 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="edit_notes">Catatan</label>
+                        <label class="form-label" for="edit_notes">Notes</label>
                         <textarea id="edit_notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror"
-                            placeholder="Catatan tambahan..."></textarea>
+                            placeholder="Additional notes..."></textarea>
                         @error('notes')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <!-- Info Tambahan -->
+                    <!-- Additional Info -->
                     <div class="col-12">
                         <div class="alert alert-info">
                             <small>
                                 <i class="fas fa-info-circle me-1"></i>
-                                Transaksi ini dibuat oleh <strong id="edit_created_by"></strong>
-                                pada <span id="edit_created_at"></span>
+                                This transaction was created by <strong id="edit_created_by"></strong>
+                                at <span id="edit_created_at"></span>
                             </small>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-warning text-dark"><i class="fas fa-save me-1"></i> Update Barang Keluar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning text-dark"><i class="fas fa-save me-1"></i> Update Stock Out</button>
                 </div>
             </form>
         </div>
@@ -379,7 +379,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Hapus Barang Keluar</h5>
+                <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Delete Stock Out</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="deleteForm" method="POST">
@@ -387,19 +387,18 @@
                 @method('DELETE')
                 <div class="modal-body text-center py-4">
                     <div class="mb-3"><i class="fas fa-trash-alt text-danger" style="font-size: 4rem;"></i></div>
-                    <h5 class="mb-3">Yakin ingin menghapus?</h5>
-                    <p class="text-muted mb-0">Anda akan menghapus transaksi barang keluar untuk <strong id="delete_stock_out_name"></strong>.</p>
-                    <p class="text-danger small mt-2 mb-0">Tindakan ini tidak dapat dibatalkan.</p>
+                    <h5 class="mb-3">Are you sure?</h5>
+                    <p class="text-muted mb-0">You are about to delete the stock out transaction for <strong id="delete_stock_out_name"></strong>.</p>
+                    <p class="text-danger small mt-2 mb-0">This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i> Hapus</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i> Delete</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 @endif
-
 
 @endsection

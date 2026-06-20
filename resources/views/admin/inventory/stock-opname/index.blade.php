@@ -17,11 +17,11 @@
 <div class="container-fluid py-4 page-shell">
     <section class="page-hero d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="mb-1">Laporan Periode Stok Opname</h2>
-            <p class="mb-0">Daftar periode opname dan statusnya.</p>
+            <h2 class="mb-1">Stock Opname Period Report</h2>
+            <p class="mb-0">List of opname periods and their status.</p>
         </div>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createModal">
-            <i class="fas fa-plus me-1"></i> Buat Periode
+            <i class="fas fa-plus me-1"></i> Create Period
         </button>
     </section>
 
@@ -34,25 +34,25 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Periode</th>
-                            <th>Jumlah Barang</th>
-                            <th>Jumlah Sesuai</th>
-                            <th>Jumlah Selisih</th>
+                            <th>Period</th>
+                            <th>Total Items</th>
+                            <th>Matched Items</th>
+                            <th>Difference Items</th>
                             <th>Status</th>
-                            <th>Opsi</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($periods as $period)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ \Carbon\Carbon::parse($period->period_start)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($period->period_end)->format('d M Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($period->period_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($period->period_end)->format('d M Y') }}</td>
                                 <td>{{ $period->total_products }}</td>
                                 <td>{{ $period->matched_products }}</td>
                                 <td>{{ $period->difference_products }}</td>
                                 <td>
                                     <span class="badge {{ $period->status == 'active' ? 'badge-active' : 'badge-closed' }}">
-                                        {{ $period->status == 'active' ? 'Aktif' : 'Berakhir' }}
+                                        {{ $period->status == 'active' ? 'Active' : 'Closed' }}
                                     </span>
                                 </td>
                                 <td>
@@ -61,13 +61,13 @@
                                         <form action="{{ route('inventory.stock-opname.close', $period) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('PUT')
-                                            <button type="submit" class="btn btn-sm btn-warning">Tutup Periode</button>
+                                            <button type="submit" class="btn btn-sm btn-warning">Close Period</button>
                                         </form>
                                     @endif
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="text-center">Belum ada periode opname.</td></tr>
+                            <tr><td colspan="7" class="text-center">No opname periods found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -82,7 +82,7 @@
     <div class="modal-dialog modal-lg modal-lg-custom">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Buat Periode Opname</h5>
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Create Opname Period</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ route('inventory.stock-opname.store') }}" method="POST">
@@ -90,21 +90,21 @@
                 <div class="modal-body">
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Tanggal Mulai</label>
+                            <label class="form-label">Start Date</label>
                             <input type="date" value="{{ \Carbon\Carbon::now()->startOfMonth()->toDateString() }}" name="period_start" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Tanggal Akhir</label>
+                            <label class="form-label">End Date</label>
                             <input type="date" value="{{ \Carbon\Carbon::now()->endOfMonth()->toDateString() }}" name="period_end" class="form-control" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Catatan Periode</label>
-                            <input type="text" name="notes" class="form-control" placeholder="Catatan (opsional)">
+                            <label class="form-label">Period Notes</label>
+                            <input type="text" name="notes" class="form-control" placeholder="Optional notes">
                         </div>
                     </div>
 
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-1"></i> Isi stok fisik untuk setiap produk.
+                        <i class="fas fa-info-circle me-1"></i> Fill in the physical stock for each product.
                     </div>
 
                     <div class="product-list-scroll">
@@ -112,10 +112,10 @@
                             <thead>
                                 <tr>
                                     <th style="width:5%">#</th>
-                                    <th style="width:35%">Produk / Varian</th>
-                                    <th style="width:15%">Stok Sistem</th>
-                                    <th style="width:25%">Stok Fisik</th>
-                                    <th style="width:20%">Catatan</th>
+                                    <th style="width:35%">Product / Variant</th>
+                                    <th style="width:15%">System Stock</th>
+                                    <th style="width:25%">Physical Stock</th>
+                                    <th style="width:20%">Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -126,12 +126,12 @@
                                         <td>{{ number_format($variant->stock->current_stock ?? 0, 2, ',', '.') }}</td>
                                         <td>
                                             <input type="number" step="0.01" name="details[{{ $variant->id }}]"
-                                                class="form-control" placeholder="Stok fisik"
+                                                class="form-control" placeholder="Physical stock"
                                                 value="{{ old('details.' . $variant->id) }}">
                                         </td>
                                         <td>
                                             <input type="text" name="detail_notes[{{ $variant->id }}]"
-                                                class="form-control" placeholder="Catatan per produk">
+                                                class="form-control" placeholder="Notes per product">
                                         </td>
                                     </tr>
                                 @endforeach
@@ -140,8 +140,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Simpan Periode</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Period</button>
                 </div>
             </form>
         </div>

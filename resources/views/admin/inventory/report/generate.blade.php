@@ -48,7 +48,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Report by <span class="text-danger">*</span></label>
-                            <select name="reported_by" class="form-select @error('reported_by') is-invalid @enderror"
+                            <select name="reported_by" class="form-select select2 @error('reported_by') is-invalid @enderror"
                                 required>
                                 <option value="">Select User</option>
                                 @foreach ($users as $user)
@@ -63,7 +63,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Cashier Name <span class="text-danger">*</span></label>
-                            <select name="cashier_name" class="form-select @error('cashier_name') is-invalid @enderror"
+                            <select name="cashier_name" class="form-select select2 @error('cashier_name') is-invalid @enderror"
                                 required>
                                 <option value="">Select User</option>
                                 @foreach ($users as $user)

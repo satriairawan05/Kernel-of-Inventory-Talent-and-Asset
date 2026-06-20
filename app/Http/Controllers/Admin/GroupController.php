@@ -131,12 +131,13 @@ class GroupController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
+                $role = $group->find(request()->segment(3));
                 return view('admin.setting.role.edit', [
                     'page_distincts' => $roleService->getPageDistincts(),
                     'pages'          => \App\Models\GroupPage::leftJoin('pages', 'pages.id', '=', 'group_pages.page_id')
-                                            ->where('group_id', '=', $group->id)
+                                            ->where('group_id', '=', $role->id)
                                             ->get(),
-                    'group'          => $group,
+                    'group'          => $role,
                 ]);
             } catch (\Illuminate\Database\QueryException $e) {
                 Log::error($e->getMessage());
@@ -162,7 +163,7 @@ class GroupController extends Controller
             ]);
     
             try {
-                $roleService->update($group, $request->all());
+                $roleService->update($group->find(request()->segment(3)), $request->all());
     
                 return redirect()->route('setting.role.index')->with('success', 'Role berhasil diperbarui!');
             } catch (\Exception $e) {
@@ -183,7 +184,8 @@ class GroupController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $roleService->destroy($group);
+                $role = $group->find(request()->segment(3));
+                $roleService->destroy($role);
     
                 return redirect()->route('setting.role.index')->with('success', 'Role berhasil dihapus!');
             } catch (\Exception $e) {

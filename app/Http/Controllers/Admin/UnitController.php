@@ -127,7 +127,7 @@ class UnitController extends Controller
         } else {
             try {
                 return view('admin.setting.unit.edit',[
-                    'unit' => $unit
+                    'unit' => $unit->find(request()->segment(3))
                 ]);
             } catch(\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
@@ -148,7 +148,7 @@ class UnitController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-            $unitService->update($unit,$request->validated());
+            $unitService->update($unit->find(request()->segment(3)),$request->validated());
             
             return redirect()->route('setting.unit.index')->with('success','Unit updated successfully.');
     
@@ -171,7 +171,7 @@ class UnitController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-            $unitService->destroy($unit);
+            $unitService->destroy($unit->find(request()->segment(3)));
     
             return redirect()->route('setting.unit.index')->with('success','Unit deleted successfully.');
             

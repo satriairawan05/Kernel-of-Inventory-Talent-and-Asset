@@ -19,15 +19,15 @@
 <div class="container-fluid py-4 page-shell">
     <section class="page-hero d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="mb-1">Detail Periode Opname</h2>
+            <h2 class="mb-1">Opname Period Detail</h2>
             <p class="mb-0">
-                {{ \Carbon\Carbon::parse($period->period_start)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($period->period_end)->format('d M Y') }}
+                {{ \Carbon\Carbon::parse($period->period_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($period->period_end)->format('d M Y') }}
                 <span class="badge {{ $period->status == 'active' ? 'badge-active' : 'badge-closed' }} ms-2">
-                    {{ $period->status == 'active' ? 'Aktif' : 'Tidak Aktif' }}
+                    {{ $period->status == 'active' ? 'Active' : 'Closed' }}
                 </span>
             </p>
         </div>
-        <a href="{{ route('inventory.stock-opname.index') }}" class="btn btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Kembali</a>
+        <a href="{{ route('inventory.stock-opname.index') }}" class="btn btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Back</a>
     </section>
 
     <div class="card soft-card mt-4">
@@ -39,13 +39,13 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Produk / Varian</th>
-                            <th>Stok Sistem</th>
-                            <th>Stok Fisik</th>
-                            <th>Selisih</th>
+                            <th>Product / Variant</th>
+                            <th>System Stock</th>
+                            <th>Physical Stock</th>
+                            <th>Difference</th>
                             <th>Status</th>
-                            <th>Catatan</th>
-                            <th>Aksi</th>
+                            <th>Notes</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,7 +58,7 @@
                                     @if($detail->physical_stock !== null)
                                         {{ number_format($detail->physical_stock, 2, ',', '.') }}
                                     @else
-                                        <span class="text-muted">Belum dilaporkan</span>
+                                        <span class="text-muted">Not reported</span>
                                     @endif
                                 </td>
                                 <td>
@@ -74,19 +74,19 @@
                                 </td>
                                 <td>
                                     @if($detail->physical_stock !== null)
-                                        <span class="badge bg-success">Sudah</span>
+                                        <span class="badge bg-success">Reported</span>
                                     @else
-                                        <span class="badge bg-warning text-dark">Belum</span>
+                                        <span class="badge bg-warning text-dark">Not Reported</span>
                                     @endif
                                 </td>
                                 <td>{{ $detail->notes ?? '-' }}</td>
                                 <td>
                                     @if($period->status == 'active')
                                         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updateModal{{ $detail->id }}">
-                                            <i class="fas fa-edit"></i> Laporkan
+                                            <i class="fas fa-edit"></i> Report
                                         </button>
                                     @else
-                                        <span class="text-muted">Terkunci</span>
+                                        <span class="text-muted">Locked</span>
                                     @endif
                                 </td>
                             </tr>
@@ -98,34 +98,34 @@
     </div>
 </div>
 
-<!-- ========== MODAL UPDATE PER DETAIL ========== -->
+<!-- ========== UPDATE MODAL PER DETAIL ========== -->
 @foreach($period->details as $detail)
 <div class="modal fade" id="updateModal{{ $detail->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title">Laporkan Stok Fisik</h5>
+                <h5 class="modal-title">Report Physical Stock</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ route('inventory.stock-opname.update-detail', $detail) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
-                    <p><strong>Produk:</strong> {{ $detail->productVariant->product->product_name ?? '-' }} - {{ $detail->productVariant->variant_name ?? '-' }}</p>
-                    <p><strong>Stok Sistem:</strong> {{ number_format($detail->system_stock, 2, ',', '.') }}</p>
+                    <p><strong>Product:</strong> {{ $detail->productVariant->product->product_name ?? '-' }} - {{ $detail->productVariant->variant_name ?? '-' }}</p>
+                    <p><strong>System Stock:</strong> {{ number_format($detail->system_stock, 2, ',', '.') }}</p>
                     <div class="mb-3">
-                        <label class="form-label">Stok Fisik</label>
+                        <label class="form-label">Physical Stock</label>
                         <input type="number" step="0.01" name="physical_stock" class="form-control" 
                                value="{{ old('physical_stock', $detail->physical_stock ?? '') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Catatan</label>
-                        <input type="text" name="notes" class="form-control" value="{{ old('notes', $detail->notes) }}" placeholder="Catatan (opsional)">
+                        <label class="form-label">Notes</label>
+                        <input type="text" name="notes" class="form-control" value="{{ old('notes', $detail->notes) }}" placeholder="Optional notes">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>

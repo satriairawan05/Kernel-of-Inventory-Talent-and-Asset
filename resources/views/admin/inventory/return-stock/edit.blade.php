@@ -37,7 +37,7 @@
                     <div class="col-md-6 mb-3">
                         <label class="form-label" for="product_variant_id">Product Variant <span class="text-danger">*</span></label>
                         <select id="product_variant_id" name="product_variant_id" class="form-select select2 @error('product_variant_id') is-invalid @enderror">
-                            <option value="">-- Pilih Varian --</option>
+                            <option value="">-- Select Variant --</option>
                             @foreach ($productVariants as $variant)
                                 <option value="{{ $variant->id }}" {{ old('product_variant_id', $return->product_variant_id) == $variant->id ? 'selected' : '' }}>
                                     {{ $variant->product->product_name ?? '-' }} - {{ $variant->variant_name }}
@@ -50,7 +50,7 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="qty">Jumlah Return <span class="text-danger">*</span></label>
+                        <label class="form-label" for="qty">Quantity <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" id="qty" name="qty" value="{{ old('qty', $return->qty) }}" class="form-control @error('qty') is-invalid @enderror" placeholder="0.00">
                         <small class="text-muted">Stok saat ini: {{ number_format($return->productVariant->stock->current_stock ?? 0, 2, ',', '.') }}</small>
                         @error('qty')
@@ -59,7 +59,7 @@
                     </div>
 
                     <div class="col-12 mb-3">
-                        <label class="form-label" for="notes">Catatan</label>
+                        <label class="form-label" for="notes">Notes</label>
                         <textarea id="notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror" placeholder="Catatan retur...">{{ old('notes', $return->notes) }}</textarea>
                         @error('notes')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -70,8 +70,8 @@
                         <div class="alert alert-info">
                             <small>
                                 <i class="fas fa-info-circle me-1"></i>
-                                Transaksi ini dibuat oleh <strong>{{ $return->user->name ?? '-' }}</strong>
-                                pada {{ $return->created_at->format('d/m/Y H:i') }}
+                                This Transaction created by <strong>{{ $return->user->name ?? '-' }}</strong>
+                                at {{ $return->created_at->format('d/m/Y H:i') }}
                             </small>
                         </div>
                     </div>
@@ -79,7 +79,7 @@
 
                 <div class="d-flex justify-content-end gap-2 action-bar">
                     <a href="{{ route('inventory.return-stock.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update Retur</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update Return</button>
                 </div>
             </form>
         </div>

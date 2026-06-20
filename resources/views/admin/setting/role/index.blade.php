@@ -103,7 +103,7 @@
                         <h4 class="mb-1">List Roles</h4>
                     </div>
                     <span class="stat-chip bg-primary-subtle text-primary"><i class="fas fa-user-shield me-1"></i>
-                        {{ $roles->count() }} roles</span>
+                        {{ $roles->count() }} role{{ $roles->count() > 1 ? 's' : '' }}</span>
                 </div>
 
                 <div class="card-body">
