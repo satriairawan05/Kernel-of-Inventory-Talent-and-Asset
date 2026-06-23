@@ -169,8 +169,8 @@
                     </div>
                     @php
                         $businessTypes = [
-                            'Rumah Makan' => '🍽️ Rumah Makan',
-                            'Counter HP' => '📱 Counter HP',
+                            'Restaurant' => 'Restaurant',
+                            'Phone Counter' => 'Phone Counter',
                         ];
                     @endphp
 

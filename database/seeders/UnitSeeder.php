@@ -167,5 +167,7 @@ class UnitSeeder extends Seeder
         ];
 
         \Illuminate\Support\Facades\DB::table('units')->insert($units);
+
+        $this->command->info("All Unit Generated!");
     }
 }

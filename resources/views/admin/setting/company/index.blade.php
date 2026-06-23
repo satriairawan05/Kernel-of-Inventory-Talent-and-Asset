@@ -197,7 +197,7 @@
                             <td>{{ $company->company_name }}</td>
                             <td>{{ $company->company_email }}</td>
                             <td>{{ $company->company_phone }}</td>
-                            <td>{{ Str::limit($company->company_address, 30) ?? '-' }}</td>
+                            <td>{{ Str::limit($company->company_address, 50) ?? '-' }}</td>
                             <td>{{ $company->bussiness_type }}</td>
                             <td><img src="{{ $company->logo_url }}" alt="{{ $company->company_name }}"
                                     class="company-logo rounded"></td>

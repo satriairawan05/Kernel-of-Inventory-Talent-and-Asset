@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\PageSeeder::class,
             \Database\Seeders\GroupPageSeeder::class,
             \Database\Seeders\UserSeeder::class,
+            \Database\Seeders\CompanySeeder::class,
+            \Database\Seeders\SystemSettingSeeder::class,
         ]);
     }
 }

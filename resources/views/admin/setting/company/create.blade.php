@@ -169,15 +169,15 @@
                     </div>
                     @php
                         $businessTypes = [
-                            'Rumah Makan' => 'Rumah Makan',
-                            'Counter HP' => 'Counter HP',
+                            'Restaurant' => 'Restaurant',
+                            'Phone Counter' => 'Phone Counter',
                         ];
                     @endphp
 
                     <div class="mb-3">
                         <label class="form-label" for="bussiness_type">Type</label>
-                        <select class="form-select select2 @error('bussiness_type') is-invalid @enderror" id="bussiness_type"
-                            name="bussiness_type">
+                        <select class="form-select select2 @error('bussiness_type') is-invalid @enderror"
+                            id="bussiness_type" name="bussiness_type">
                             <option value="">Select Business Type</option>
                             @foreach ($businessTypes as $value => $label)
                                 <option value="{{ $value }}"

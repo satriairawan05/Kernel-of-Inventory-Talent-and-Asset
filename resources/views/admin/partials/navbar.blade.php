@@ -354,8 +354,8 @@
                 <hr class="navbar-vertical-line" />
                 <a class="nav-link label-1" href="{{ route('setting.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
                     <div class="d-flex align-items-center"><span class="nav-link-icon">
-                        <i class="fas fa-user-cog"></i>
-                    </span><span class="nav-link-text-wrapper"><span class="nav-link-text">System Setting</span></span></div>
+                        <i class="fas fa-cogs"></i>
+                    </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (System Setting)</span></span></div>
                 </a>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.company.*') ? 'active' : '' }} label-1" href="{{ route('setting.company.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
@@ -387,6 +387,12 @@
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-user-circle"></i></span><span class="nav-link-text-wrapper"><span
                                     class="nav-link-text">Accounts</span></span></div>
+                    </a>
+                </div>
+                <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
+                        data-bs-toggle="" aria-expanded="false">
+                        <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-cog"></i></span><span class="nav-link-text-wrapper"><span
+                                    class="nav-link-text">System Setting</span></span></div>
                     </a>
                 </div>
                 <!-- parent pages-->

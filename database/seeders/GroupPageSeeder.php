@@ -12,7 +12,7 @@ class GroupPageSeeder extends Seeder
      */
     public function run(): void
     {
-         for ($i = 1; $i <= 99; $i++) {
+         for ($i = 1; $i <= 103; $i++) {
             \App\Models\GroupPage::create([
                 'id' => $i,
                 'group_id' => 1,
@@ -20,5 +20,7 @@ class GroupPageSeeder extends Seeder
                 'access' => 1,
             ]);
         }
+
+        $this->command->info('All Group Page Generated!');
     }
 }

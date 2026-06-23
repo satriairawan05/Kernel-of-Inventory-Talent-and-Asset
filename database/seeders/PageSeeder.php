@@ -19,6 +19,7 @@ class PageSeeder extends Seeder
                 'Unit' => ['Create', 'Read', 'Update', 'Delete'],
                 'Roles'  => ['Create', 'Read', 'Update', 'Delete'],
                 'Account'   => ['Create', 'Read', 'Update', 'Delete'],
+                'System Setting'   => ['Create', 'Read', 'Update', 'Delete'],
             ],
             'Personal' => [
                 'Profile'  => ['Read', 'Update'],
@@ -65,8 +66,11 @@ class PageSeeder extends Seeder
                         'page_name' => $pageName,
                         'action'    => $action,
                     ]);
+                    $this->command->info('Page : '. $pageName . ' & Action : '. $action . ' Generated!');
                 }
+                $this->command->info('Page : '. $pageName . ' Generated!');
             }
+            $this->command->info('Module : ' . $moduleName . ' Generated!');
         }
     }
 }

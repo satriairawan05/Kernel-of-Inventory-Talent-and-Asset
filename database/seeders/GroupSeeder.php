@@ -16,5 +16,7 @@ class GroupSeeder extends Seeder
             'id' => 1,
             'group_name' => 'Admin',
         ]);
+
+        $this->command->info('Admin Generated!');
     }
 }

@@ -19,5 +19,7 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
             'group_id' => 1,
         ]);
+
+        $this->command->info('User Admin Generated!');
     }
 }
