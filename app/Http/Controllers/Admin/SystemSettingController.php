@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SystemSettingStoreRequest;
+use App\Http\Requests\SystemSettingUpdateRequest;
+use App\Models\Company;
 use App\Models\SystemSetting;
+use App\Services\SystemSettingService;
 use Illuminate\Http\Request;
 
 class SystemSettingController extends Controller
@@ -39,13 +43,21 @@ class SystemSettingController extends Controller
 
         if (!isset($access['Read']) || $access['Read'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            try {
-                //
-            } catch (\Illuminate\Database\QueryException $e) {
-                \Illuminate\Support\Facades\Log::error($e->getMessage());
-                return redirect()->back()->with('failed', $e->getMessage());
-            }
+        }
+
+        try {
+            $settings = SystemSetting::with('company')
+                ->paginate(25);
+            $companies = Company::all();
+
+            return view('admin.setting.setting.index', [
+                'settings' => $settings,
+                'access'   => $access,
+                'companies' => $companies
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
         }
     }
 
@@ -56,110 +68,96 @@ class SystemSettingController extends Controller
     {
         $access = $this->get_access();
 
-        if (!isset($access['Read']) || $access['Read'] != 1) {
+        if (!isset($access['Create']) || $access['Create'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            try {
-                //
-            } catch (\Illuminate\Database\QueryException $e) {
-                \Illuminate\Support\Facades\Log::error($e->getMessage());
-                return redirect()->back()->with('failed', $e->getMessage());
-            }
+        }
+
+        try {
+            $companies = Company::pluck('company_name', 'id');
+            return view('admin.setting.setting.create', compact('companies'));
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
         }
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(SystemSettingStoreRequest $request, SystemSettingService $systemSettingService)
     {
         $access = $this->get_access();
 
-        if (!isset($access['Read']) || $access['Read'] != 1) {
+        if (!isset($access['Create']) || $access['Create'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            try {
-                //
-            } catch (\Illuminate\Database\QueryException $e) {
-                \Illuminate\Support\Facades\Log::error($e->getMessage());
-                return redirect()->back()->with('failed', $e->getMessage());
-            }
         }
-    }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(SystemSetting $systemSetting)
-    {
-        $access = $this->get_access();
-
-        if (!isset($access['Read']) || $access['Read'] != 1) {
-            return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            try {
-                //
-            } catch (\Illuminate\Database\QueryException $e) {
-                \Illuminate\Support\Facades\Log::error($e->getMessage());
-                return redirect()->back()->with('failed', $e->getMessage());
-            }
+        try {
+            $systemSettingService->store($request->validated());
+            return redirect()->route('setting.system_setting.index')->with('success', 'Setting created successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
         }
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(SystemSetting $systemSetting)
+    public function edit(Setting $setting)
     {
         $access = $this->get_access();
 
-        if (!isset($access['Read']) || $access['Read'] != 1) {
+        if (!isset($access['Update']) || $access['Update'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            try {
-                //
-            } catch (\Illuminate\Database\QueryException $e) {
-                \Illuminate\Support\Facades\Log::error($e->getMessage());
-                return redirect()->back()->with('failed', $e->getMessage());
-            }
+        }
+
+        try {
+            $companies = Company::pluck('company_name', 'id');
+            return view('admin.setting.setting.edit', compact('setting', 'companies'));
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
         }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, SystemSetting $systemSetting)
+    public function update(SystemSettingUpdateRequest $request, SystemSetting $systemSetting, SystemSettingService $systemSettingService)
     {
         $access = $this->get_access();
 
-        if (!isset($access['Read']) || $access['Read'] != 1) {
+        if (!isset($access['Update']) || $access['Update'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            try {
-                //
-            } catch (\Illuminate\Database\QueryException $e) {
-                \Illuminate\Support\Facades\Log::error($e->getMessage());
-                return redirect()->back()->with('failed', $e->getMessage());
-            }
+        }
+
+        try {
+            $systemSettingService->update($systemSetting, $request->validated());
+            return redirect()->route('setting.system_setting.index')->with('success', 'Setting updated successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SystemSetting $systemSetting)
+    public function destroy(SystemSetting $systemSetting, SystemSettingService $systemSettingService)
     {
         $access = $this->get_access();
 
-        if (!isset($access['Read']) || $access['Read'] != 1) {
+        if (!isset($access['Delete']) || $access['Delete'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            try {
-                //
-            } catch (\Illuminate\Database\QueryException $e) {
-                \Illuminate\Support\Facades\Log::error($e->getMessage());
-                return redirect()->back()->with('failed', $e->getMessage());
-            }
+        }
+
+        try {
+            $systemSettingService->destroy($systemSetting);
+            return redirect()->route('setting.system_setting.index')->with('success', 'Setting deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
         }
     }
 }

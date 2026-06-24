@@ -86,7 +86,7 @@
                         <i class="fas fa-dollar-sign"></i>
                     </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (POS)</span></span></div>
                 </a>
-                <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
+                <div class="nav-item-wrapper"><a class="nav-link label-1" href="{{ route('pos.point-of-sales') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-cash-register"></i></span><span class="nav-link-text-wrapper"><span
                                     class="nav-link-text">Point of Sales</span></span>
@@ -354,7 +354,7 @@
                 <hr class="navbar-vertical-line" />
                 <a class="nav-link label-1" href="{{ route('setting.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
                     <div class="d-flex align-items-center"><span class="nav-link-icon">
-                        <i class="fas fa-cogs"></i>
+                        <i class="fas fa-sliders"></i>
                     </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (System Setting)</span></span></div>
                 </a>
                 <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.company.*') ? 'active' : '' }} label-1" href="{{ route('setting.company.index') }}" role="button"
@@ -389,7 +389,7 @@
                                     class="nav-link-text">Accounts</span></span></div>
                     </a>
                 </div>
-                <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
+                <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('setting.system_setting.*') ? 'active' : '' }} label-1" href="{{ route('setting.system_setting.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-cog"></i></span><span class="nav-link-text-wrapper"><span
                                     class="nav-link-text">System Setting</span></span></div>

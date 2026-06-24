@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\GroupController;
+use App\Http\Controllers\Admin\PointOfSalesController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReturnStockController;
 use App\Http\Controllers\Admin\SalesReportController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\StockInController;
 use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\StockOutController;
+use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\HomeController;
 use App\Services\ModuleService;
@@ -39,6 +41,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('unit', UnitController::class);
         Route::resource('account', AccountController::class);
         Route::resource('role', GroupController::class);
+        Route::resource('system_setting', SystemSettingController::class);
 
         Route::prefix('profile')->group(function () {
             Route::get('/', [HomeController::class, 'profile'])->name('profile');
@@ -95,6 +98,8 @@ Route::middleware(['auth'])->group(function () {
                 'access' => $moduleService->getAccessByModule('Point Of Sales', auth()->user()->group_id),
             ]);
         })->name('home');
+
+        Route::get('point-of-sales',[PointOfSalesController::class, 'posView'])->name('point-of-sales');
 
         Route::get('report/daily', [SalesReportController::class, 'dailyIndex'])->name('report.daily');
         Route::get('report/weekly', [SalesReportController::class, 'weeklyIndex'])->name('report.weekly');

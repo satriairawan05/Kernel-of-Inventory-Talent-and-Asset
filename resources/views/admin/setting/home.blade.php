@@ -205,6 +205,25 @@
                     </div>
                 </div>
             @endif
+            @if ($access['System Setting']['Read'] == 1)
+                <!-- System Setting -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card setting-card p-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div class="card-icon"><i class="fas fa-cogs"></i></div>
+                                <span class="badge-subtle">System Setting</span>
+                            </div>
+                            <h5 class="fw-bold mt-3 mb-2">System Setting</h5>
+                            <p class="small text-secondary">Manage Opening Balance & Print Paper</p>
+                            <div class="info-row d-flex justify-content-between">
+                                <span><i class="fas fa-cog me-1"></i> All System Setting</span>
+                                <a href="#" class="text-primary fw-semibold small">Manage <i class="fas fa-arrow-right ms-1"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- KITA Motivation -->

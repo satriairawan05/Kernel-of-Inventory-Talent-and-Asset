@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SystemSetting extends Model
 {
@@ -21,5 +22,13 @@ class SystemSetting extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['key','value'];
+    protected $fillable = ['company_id','key','value'];
+
+    /**
+     * Get the company that owns the system setting.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
 }
