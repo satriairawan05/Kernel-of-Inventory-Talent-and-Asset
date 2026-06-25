@@ -87,8 +87,11 @@ class SystemSettingService
      */
     public function getOpeningBalance(int $companyId): ?int
     {
-        $value = $this->getSetting($companyId, 'opening_balance');
-        return $value !== null ? (int) $value : null;
+        $setting = SystemSetting::where('company_id', $companyId)
+            ->where('key', 'opening_balance')
+            ->first();
+
+        return $setting ? (int) $setting->value : 0;
     }
 
     /**

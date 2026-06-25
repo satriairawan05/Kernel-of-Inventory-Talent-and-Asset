@@ -1,8 +1,7 @@
-<!-- ===== CHECKOUT MODAL ===== -->
 <div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true" x-data="checkoutComponent">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-full-screen">
         <div class="modal-content">
-            <div class="modal-header" style="background:#28a745;color:#fff;">
+            <div class="modal-header" style="background:#28a745;color:#fff;border-radius:0;">
                 <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Confirm Checkout</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                     style="filter:brightness(0) invert(1);"></button>
@@ -12,7 +11,7 @@
                     <p class="fw-600 mb-2">Ordered items:</p>
                     <template x-for="item in $store.pos.cart" :key="item.id">
                         <div class="item-row">
-                            <span x-text="item.name + ' × ' + item.qty"></span>
+                            <span x-text="(item.icon || '🍽️') + ' ' + item.name + ' × ' + item.qty"></span>
                             <span x-text="'Rp ' + $store.pos.formatRupiah(item.price * item.qty)"></span>
                         </div>
                     </template>
@@ -26,30 +25,33 @@
                             <span class="fw-600">Discount</span>
                         </div>
                         <div class="col-8 d-flex align-items-center gap-1">
-                            <input type="text" class="form-control form-control-sm" :value="$store.pos.discountDisplay"
-                                @input="$store.pos.updateDiscount($event)" placeholder="0"
-                                style="min-width: 80px; text-align: right;" />
-                            <select class="form-select form-select-sm" style="width: auto;" x-model="$store.pos.discountType"
-                                @change="$store.pos.reformatDiscountDisplay()">
+                            <input type="text" class="form-control form-control-sm"
+                                :value="$store.pos.discountDisplay" @input="$store.pos.updateDiscount($event)"
+                                placeholder="0" style="min-width: 80px; text-align: right;" />
+                            <select class="form-select form-select-sm" style="width: auto;"
+                                x-model="$store.pos.discountType" @change="$store.pos.reformatDiscountDisplay()">
                                 <option value="rp">Rp</option>
                                 <option value="percent">%</option>
                             </select>
                         </div>
                     </div>
-                    <div x-show="$store.pos.discountAmount > 0" class="d-flex justify-content-between text-danger fw-600 mt-1">
+                    <div x-show="$store.pos.discountAmount > 0"
+                        class="d-flex justify-content-between text-danger fw-600 mt-1">
                         <span>Discount Amount</span>
                         <span x-text="'- Rp ' + $store.pos.formatRupiah($store.pos.discountAmount)"></span>
                     </div>
                     <div class="total-row"
                         style="border-top: 2px solid var(--pos-accent); margin-top: 6px; padding-top: 8px; font-size: 1.1rem;">
                         <span class="fw-700">Total</span>
-                        <span class="fw-700 text-accent" x-text="'Rp ' + $store.pos.formatRupiah($store.pos.discountedTotal)"></span>
+                        <span class="fw-700 text-accent"
+                            x-text="'Rp ' + $store.pos.formatRupiah($store.pos.discountedTotal)"></span>
                     </div>
                 </div>
                 <hr />
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="fw-700 fs-5">Grand Total</span>
-                    <span class="fw-700 fs-4 text-accent" x-text="'Rp ' + $store.pos.formatRupiah($store.pos.discountedTotal)"></span>
+                    <span class="fw-700 fs-4 text-accent"
+                        x-text="'Rp ' + $store.pos.formatRupiah($store.pos.discountedTotal)"></span>
                 </div>
                 <div class="mt-3">
                     <label class="form-label fw-600">Payment Method</label>
@@ -64,15 +66,16 @@
                     <label class="form-label fw-600">Pay (Rp)</label>
                     <div class="input-group">
                         <span class="input-group-text">Rp</span>
-                        <input type="text" class="form-control" placeholder="Enter amount" x-model="$store.pos.paymentAmount"
-                            @input="$store.pos.updateChange()" />
+                        <input type="text" class="form-control" placeholder="Enter amount"
+                            x-model="$store.pos.paymentAmount" @input="$store.pos.updateChange()" />
                     </div>
                     <div class="mt-2">
                         <template x-for="(val, idx) in $store.pos.quickPayOptions" :key="idx">
                             <button class="quick-pay-btn"
                                 :class="{'btn-exact': val === $store.pos.discountedTotal, 'active-btn': parseInt($store.pos.paymentAmountRaw) === val}"
                                 @click="$store.pos.setQuickPay(val)">
-                                <span x-text="val === $store.pos.discountedTotal ? 'Exact' : 'Rp ' + $store.pos.formatRupiah(val)"></span>
+                                <span
+                                    x-text="val === $store.pos.discountedTotal ? 'Exact' : 'Rp ' + $store.pos.formatRupiah(val)"></span>
                             </button>
                         </template>
                     </div>
@@ -89,14 +92,16 @@
                     </div>
                 </div>
 
-                <div class="mt-2" x-show="$store.pos.paymentMethod === 'cash' && $store.pos.paymentAmountRaw < $store.pos.discountedTotal">
+                <div class="mt-2"
+                    x-show="$store.pos.paymentMethod === 'cash' && $store.pos.paymentAmountRaw < $store.pos.discountedTotal">
                     <div class="text-danger small">
-                        <i class="bi bi-exclamation-circle"></i> 
-                        <span x-text="'Payment amount (Rp ' + $store.pos.formatRupiah($store.pos.paymentAmountRaw) + ') is less than total (Rp ' + $store.pos.formatRupiah($store.pos.discountedTotal) + ')'"></span>
+                        <i class="bi bi-exclamation-circle"></i>
+                        <span
+                            x-text="'Payment amount (Rp ' + $store.pos.formatRupiah($store.pos.paymentAmountRaw) + ') is less than total (Rp ' + $store.pos.formatRupiah($store.pos.discountedTotal) + ')'"></span>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="border-radius:0;">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-success" @click="$store.pos.confirmCheckout()"
                     :disabled="$store.pos.paymentMethod === 'cash' && $store.pos.paymentAmountRaw < $store.pos.discountedTotal">

@@ -22,27 +22,30 @@
 <body x-data="posApp">
     <!-- ===== Inject User Data ===== -->
     <script type="text/javascript">
-        window.KitaPOS = window.KitaPOS || {};
-
         window.KitaPOS = {
             user: {
-                name: '{{ auth()->user()->name ?? 'Guest' }}',
+                name: '{!! auth()->check() ? addslashes(auth()->user()->name) : 'Guest' !!}',
                 isOnline: {{ auth()->check() ? 'true' : 'false' }}
             },
+            outlet: { 
+                // name: "My Fried Chicken",
+                // address: "Pusat",
+                openingBalance: "{{ $openingBalance ?? '150000' }}",
+            },
             routes: {
-                home: "{{ route('pos.home') }}"
+                home: "{{ route('pos.home') }}",
             }
-        }
+        };
     </script>
 
-    <!-- ===== NAVBAR COMPONENT ===== -->
+    <!-- ===== NAVBAR ===== -->
     @include('admin.pos.point-of-sales.components.navbar')
 
     <!-- ===== MAIN CONTENT ===== -->
-    <div class="container-fluid px-2 px-sm-3 px-lg-4 py-3" id="mainContent">
+    <div class="container-fluid px-2 px-sm-3 px-lg-4 py-3 pb-5" id="mainContent">
         <div class="row g-3">
             <div class="col-lg-8">
-                <!-- ===== CATEGORY FILTER ===== -->
+                <!-- CATEGORY FILTER -->
                 <div class="cat-filter" id="categoryFilter">
                     <template x-for="cat in ['all', 'food', 'drink', 'snack', 'additional']" :key="cat">
                         <button class="btn-cat" :class="{ 'active': $store.pos.currentCategory === cat }"
@@ -53,22 +56,37 @@
                     </template>
                 </div>
 
-                <!-- ===== MENU GRID COMPONENT ===== -->
+                <!-- MENU GRID -->
                 @include('admin.pos.point-of-sales.components.menu-grid')
             </div>
 
-            <!-- ===== CART SIDEBAR COMPONENT (Desktop) ===== -->
-            @include('admin.pos.point-of-sales.components.cart-sidebar')
+            <!-- ===== SIDEBAR (Desktop) ===== -->
+            <div class="col-lg-4 d-none d-lg-block" x-data="cartSidebarComponent">
+                <!-- DRAFT SESSIONS PANEL (Desktop) -->
+                @include('admin.pos.point-of-sales.components.draft-sessions-panel', [
+                    'variant' => 'desktop',
+                ])
+
+                <!-- CART SIDEBAR -->
+                @include('admin.pos.point-of-sales.components.cart-sidebar')
+            </div>
         </div>
     </div>
 
-    <!-- ===== MOBILE CART COMPONENT ===== -->
+    <!-- ===== MOBILE BOTTOM BAR ===== -->
+    @include('admin.pos.point-of-sales.components.mobile-bottom-bar')
+
+    <!-- ===== MOBILE DRAWER ===== -->
     @include('admin.pos.point-of-sales.components.mobile-cart')
 
     <!-- ===== FLOATING BUTTONS ===== -->
     @include('admin.pos.point-of-sales.components.floating-buttons')
 
-    <!-- ===== MODALS ===== -->
+    <!-- ================================================================ -->
+    <!-- MODALS                                                          -->
+    <!-- ================================================================ -->
+    @include('admin.pos.point-of-sales.components.modals.new-session')
+    @include('admin.pos.point-of-sales.components.modals.session-detail')
     @include('admin.pos.point-of-sales.components.modals.calculator')
     @include('admin.pos.point-of-sales.components.modals.add-menu')
     @include('admin.pos.point-of-sales.components.modals.edit-menu')

@@ -1,4 +1,3 @@
-<!-- ===== EDIT OPENING BALANCE MODAL ===== -->
 <div class="modal fade" id="editOpeningBalanceModal" tabindex="-1" aria-hidden="true" x-data="{}">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

@@ -1,8 +1,7 @@
-<!-- ===== CALCULATOR MODAL ===== -->
 <div class="modal fade calc-modal" id="calcModal" tabindex="-1" aria-hidden="true" x-data="calculatorComponent">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header text-white">
                 <h5 class="modal-title"><i class="bi bi-calculator me-2"></i>Calculator</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>

@@ -1,4 +1,3 @@
-<!-- ===== EDIT MENU MODAL ===== -->
 <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true" x-data="addEditMenuComponent">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -21,7 +20,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-600">Category</label>
-                        <select class="form-select select2-custom" id="editCategory" x-model="$store.pos.editItem.category">
+                        <select class="form-select select2-custom" id="editCategory"
+                            x-model="$store.pos.editItem.category">
                             <option value="food">🍔 Food</option>
                             <option value="drink">🥤 Drinks</option>
                             <option value="snack">🍿 Snacks</option>
@@ -30,7 +30,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-600">Stock Status</label>
-                        <select class="form-select select2-custom" id="editStatus" x-model="$store.pos.editItem.status">
+                        <select class="form-select select2-custom" id="editStatus"
+                            x-model="$store.pos.editItem.status">
                             <option value="available">✅ Available</option>
                             <option value="low">⚠️ Low Stock</option>
                             <option value="out">❌ Out of Stock</option>

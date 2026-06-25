@@ -1,10 +1,10 @@
-<!-- ===== HISTORY MODAL ===== -->
-<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true" x-data="historyComponent">
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true"
+    x-data="historyComponent">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="border-radius: var(--pos-radius);">
             <div class="modal-header bg-dark">
-                <h5 class="modal-title fw-bold" id="historyModalLabel">
-                    <i class="bi bi-clock-history me-2 text-danger"></i>History Transaction
+                <h5 class="modal-title fw-bold text-danger" id="historyModalLabel">
+                    <i class="bi bi-clock-history me-2"></i>History Transaction
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -41,19 +41,22 @@
                     <div class="history-opening-balance">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="label"><i class="bi bi-wallet2 me-2"></i>Opening Balance</span>
-                            <span class="total" x-text="'Rp ' + $store.pos.formatRupiah($store.pos.openingBalance)"></span>
+                            <span class="total"
+                                x-text="'Rp ' + $store.pos.formatRupiah($store.pos.openingBalance)"></span>
                         </div>
                     </div>
                     <div class="history-total-transactions">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="label"><i class="bi bi-receipt me-2"></i>Total Transactions</span>
-                            <span class="total" x-text="'Rp ' + $store.pos.formatRupiah($store.pos.totalTransactions)"></span>
+                            <span class="total"
+                                x-text="'Rp ' + $store.pos.formatRupiah($store.pos.totalTransactions)"></span>
                         </div>
                     </div>
                     <div class="history-grand-total">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="label"><i class="bi bi-cash-stack me-2"></i>Grand Total</span>
-                            <span class="total" x-text="'Rp ' + $store.pos.formatRupiah($store.pos.grandTotal)"></span>
+                            <span class="total"
+                                x-text="'Rp ' + $store.pos.formatRupiah($store.pos.grandTotal)"></span>
                         </div>
                     </div>
                     <hr />
@@ -68,15 +71,16 @@
                             <div class="header">
                                 <span x-text="'#' + trx.id + ' - ' + trx.timestamp"></span>
                                 <div class="history-actions">
-                                    <span class="text-accent" x-text="'Rp ' + $store.pos.formatRupiah(trx.total)"></span>
+                                    <span class="text-accent"
+                                        x-text="'Rp ' + $store.pos.formatRupiah(trx.total)"></span>
                                     <button class="print-history-btn" @click="$store.pos.printStrukMobile(trx)"
                                         title="Print receipt">
                                         <i class="bi bi-printer"></i>
                                     </button>
-                                    <button class="delete-history-btn" @click="$store.pos.deleteTransaction(trx.id)"
+                                    {{-- <button class="delete-history-btn" @click="$store.pos.deleteTransaction(trx.id)"
                                         title="Delete transaction">
                                         <i class="bi bi-trash"></i>
-                                    </button>
+                                    </button> --}}
                                 </div>
                             </div>
                             <div class="detail">

@@ -1,5 +1,5 @@
 // ================================================================
-// assets/js/script.js - KitaPOS with Alpine.js (Refactored)
+// assets/js/kita-pos.js - KitaPOS with Alpine.js (Refactored + Sessions)
 // All logic in store, components are minimal
 // ================================================================
 
@@ -24,6 +24,17 @@ document.addEventListener('alpine:init', () => {
         cashierName: 'Guest',
         isCashierOnline: false,
 
+        // Outlet
+        outletName: 'My Fried Chicken',
+        outletAddress: 'Pusat',
+
+        // ===== SESSIONS (DRAFT) =====
+        sessions: [],
+        activeSessionId: null,
+        selectedSession: null,
+        newSessionType: 'dinein',
+        newSessionTable: '',
+
         // Calculator
         calcExpression: '',
         calcDisplay: '0',
@@ -47,7 +58,7 @@ document.addEventListener('alpine:init', () => {
 
         // Printer & Cashier
         defaultPrinterSize: '58mm',
-        cashierNamePrint: 'May', // Keep for receipt if needed
+        cashierNamePrint: 'May',
         strukData: { id: '', timestamp: '', items: [], total: 0, totalQty: 0, paid: 0, change: 0, method: 'Cash', discount: 0, subtotal: 0 },
 
         toast: null,
@@ -131,6 +142,29 @@ document.addEventListener('alpine:init', () => {
             return window.innerWidth < 992 && this.cartCount > 0;
         },
 
+        // ===== SESSIONS COMPUTED =====
+        getTotalSessionsCount() {
+            return this.sessions.reduce((sum, s) => sum + s.items.reduce((acc, i) => acc + i.qty, 0), 0);
+        },
+        getTotalSessionsTotal() {
+            return this.sessions.reduce((sum, s) => sum + this.getSessionTotal(s.id), 0);
+        },
+        getSessionTotal(sessionId) {
+            const session = this.sessions.find(s => s.id === sessionId);
+            if (!session) return 0;
+            return session.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        },
+        getDraftQty(id) {
+            const session = this.sessions.find(s => s.id === this.activeSessionId);
+            if (!session) return 0;
+            const item = session.items.find(i => i.id === id);
+            return item ? item.qty : 0;
+        },
+        getDisplayDraftQty(id) {
+            const qty = this.getDraftQty(id);
+            return qty > 0 ? qty : 1;
+        },
+
         // ---- HELPERS ----
         formatRupiah(angka) {
             if (!angka && angka !== 0) return '';
@@ -186,16 +220,44 @@ document.addEventListener('alpine:init', () => {
             if (online !== null) this.isCashierOnline = JSON.parse(online);
         },
 
+        // ---- OUTLET ----
+        setOutlet(name, address) {
+            this.outletName = name || 'My Fried Chicken';
+            this.outletAddress = address || 'Pusat';
+        },
+
+        // ---- SET OPENING BALANCE ----
+        setOpeningBalance(balance) {
+            const val = parseInt(balance, 10) || 0;
+            this.openingBalance = val;
+            localStorage.setItem('openingBalance', val.toString());
+        },
+
         // ---- INIT ----
         init() {
             try {
                 // Load cashier from localStorage
                 this.loadCashier();
 
-                const storedOB = localStorage.getItem('openingBalance');
-                this.openingBalance = storedOB !== null ? parseInt(storedOB, 10) || 0 : 150000;
-                localStorage.setItem('openingBalance', this.openingBalance.toString());
+                // ===== OPENING BALANCE: PRIORITAS DARI BACKEND (window.KitaPOS) =====
+                let obFromBackend = null;
+                if (window.KitaPOS && window.KitaPOS.outlet && window.KitaPOS.outlet.openingBalance) {
+                    const raw = window.KitaPOS.outlet.openingBalance.toString().replace(/\D/g, '');
+                    obFromBackend = parseInt(raw, 10) || 0;
+                }
 
+                if (obFromBackend && obFromBackend > 0) {
+                    // Utamakan dari backend
+                    this.openingBalance = obFromBackend;
+                    localStorage.setItem('openingBalance', obFromBackend.toString());
+                } else {
+                    // Fallback ke localStorage
+                    const storedOB = localStorage.getItem('openingBalance');
+                    this.openingBalance = storedOB !== null ? parseInt(storedOB, 10) || 0 : 150000;
+                    localStorage.setItem('openingBalance', this.openingBalance.toString());
+                }
+
+                // ===== LOAD MENU ITEMS =====
                 this.menuItems = [
                     { id: 1, name: 'Ayam Geprek', price: 12000, category: 'food', status: 'available', icon: '🍗', image: null },
                     { id: 2, name: 'Ayam Geprek Keju', price: 15000, category: 'food', status: 'available', icon: '🧀', image: null },
@@ -220,25 +282,21 @@ document.addEventListener('alpine:init', () => {
                 ];
                 this.nextId = 21;
 
+                // ===== LOAD TRANSACTION HISTORY =====
                 const storedHistory = localStorage.getItem('transactionHistory');
                 if (storedHistory) {
                     this.transactionHistory = JSON.parse(storedHistory);
                 }
 
+                // ===== LOAD PRINTER SIZE =====
                 const savedSize = localStorage.getItem('defaultPrinterSize');
-                if (savedSize) {
-                    this.defaultPrinterSize = savedSize;
-                } else {
-                    this.defaultPrinterSize = '58mm';
-                    localStorage.setItem('defaultPrinterSize', '58mm');
-                }
+                this.defaultPrinterSize = savedSize || '58mm';
+                localStorage.setItem('defaultPrinterSize', this.defaultPrinterSize);
 
+                // ===== TOAST =====
                 this.toast = new bootstrap.Toast(document.getElementById('liveToast'), { delay: 2500 });
 
-                console.log('✅ KitaPOS Store ready!');
-                console.log('👤 Cashier:', this.cashierName, '| Online:', this.isCashierOnline);
             } catch (error) {
-                console.error('❌ Error during initialization:', error);
                 if (this.menuItems.length === 0) {
                     this.menuItems = [{ id: 1, name: 'Ayam Geprek', price: 12000, category: 'food', status: 'available', icon: '🍗', image: null }];
                     this.nextId = 2;
@@ -280,16 +338,18 @@ document.addEventListener('alpine:init', () => {
         },
 
         // ============================================================
-        // UI METHODS (called from templates via $store.pos.xxx)
+        // UI METHODS
         // ============================================================
 
         // ---- NAVIGATION ----
         goHome() {
             this.currentCategory = 'all';
             this.searchQuery = '';
-            // document.getElementById('mainContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            window.location.href = window.KitaPOS.routes.home;
-            // this.showToast('🏠 Returned to main menu');
+            if (window.KitaPOS && window.KitaPOS.routes && window.KitaPOS.routes.home) {
+                window.location.href = window.KitaPOS.routes.home;
+            } else {
+                document.getElementById('mainContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         },
         openCalculator() {
             new bootstrap.Modal(document.getElementById('calcModal')).show();
@@ -302,6 +362,173 @@ document.addEventListener('alpine:init', () => {
         },
         closeMobileCart() {
             this.mobileCartOpen = false;
+        },
+
+        // ===== SESSIONS MANAGEMENT =====
+        openNewSessionModal() {
+            this.newSessionType = 'dinein';
+            this.newSessionTable = '';
+            new bootstrap.Modal(document.getElementById('newSessionModal')).show();
+        },
+        createNewSession() {
+            const type = this.newSessionType;
+            const table = this.newSessionTable ? parseInt(this.newSessionTable, 10) : null;
+            let name = '';
+            if (type === 'dinein') {
+                if (!table || table < 1) {
+                    this.showToast('❌ Masukkan nomor meja yang valid');
+                    return;
+                }
+                name = 'Meja ' + table;
+            } else {
+                name = 'Take Away';
+            }
+            const session = {
+                id: Date.now(),
+                name: name,
+                type: type,
+                table: table,
+                typeLabel: type === 'dinein' ? '🍽️ Dine In' : '🛍️ Take Away',
+                items: [],
+                createdAt: new Date().toISOString()
+            };
+            this.sessions.push(session);
+            this.activeSessionId = session.id;
+            bootstrap.Modal.getInstance(document.getElementById('newSessionModal')).hide();
+            this.showToast('✅ Pesanan baru dibuat: ' + name);
+        },
+        setActiveSession(id) {
+            this.activeSessionId = id;
+            const session = this.sessions.find(s => s.id === id);
+            this.showToast('🔁 Session aktif: ' + (session ? session.name : 'unknown'));
+        },
+        removeSession(id) {
+            if (confirm('Hapus session ini?')) {
+                this.sessions = this.sessions.filter(s => s.id !== id);
+                if (this.activeSessionId === id) {
+                    this.activeSessionId = this.sessions.length > 0 ? this.sessions[0].id : null;
+                }
+                this.showToast('🗑️ Session dihapus');
+            }
+        },
+        openSessionDetailModal(sessionId) {
+            const session = this.sessions.find(s => s.id === sessionId);
+            if (!session) {
+                this.showToast('❌ Session tidak ditemukan');
+                return;
+            }
+            this.selectedSession = session;
+            const modalElement = document.getElementById('sessionDetailModal');
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                this.showToast('❌ Modal tidak ditemukan');
+            }
+        },
+        confirmSessionToCart(sessionId) {
+            const session = this.sessions.find(s => s.id === sessionId);
+            if (!session || session.items.length === 0) {
+                this.showToast('❌ Session kosong!');
+                return;
+            }
+            // Merge items into cart
+            session.items.forEach(item => {
+                const existing = this.cart.find(c => c.id === item.id);
+                if (existing) {
+                    existing.qty += item.qty;
+                } else {
+                    this.cart.push({ ...item });
+                }
+            });
+            // Remove session
+            this.sessions = this.sessions.filter(s => s.id !== sessionId);
+            if (this.activeSessionId === sessionId) {
+                this.activeSessionId = this.sessions.length > 0 ? this.sessions[0].id : null;
+            }
+            // Close modal if open
+            const detailModal = bootstrap.Modal.getInstance(document.getElementById('sessionDetailModal'));
+            if (detailModal) detailModal.hide();
+            this.showToast('🛒 ' + session.name + ' dilanjutkan ke Keranjang!');
+        },
+
+        // ===== DRAFT (SESSION) ITEMS =====
+        incrementDraftQty(id) {
+            if (!this.activeSessionId) {
+                this.showToast('❌ Buat pesanan baru terlebih dahulu!');
+                this.openNewSessionModal();
+                return;
+            }
+            const session = this.sessions.find(s => s.id === this.activeSessionId);
+            if (!session) {
+                this.showToast('❌ Session tidak ditemukan');
+                return;
+            }
+            const menuItem = this.menuItems.find(i => i.id === id);
+            if (!menuItem) {
+                this.showToast('❌ Menu tidak ditemukan');
+                return;
+            }
+            if (menuItem.status === 'out') {
+                this.showToast('❌ ' + menuItem.name + ' habis!');
+                return;
+            }
+            const existing = session.items.find(i => i.id === id);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                session.items.push({ ...menuItem, qty: 1 });
+            }
+            this.showToast('📝 ' + menuItem.name + ' ditambahkan ke ' + session.name);
+        },
+        decrementDraftQty(id) {
+            const session = this.sessions.find(s => s.id === this.activeSessionId);
+            if (!session) return;
+            const idx = session.items.findIndex(i => i.id === id);
+            if (idx === -1) return;
+            if (session.items[idx].qty > 1) {
+                session.items[idx].qty -= 1;
+            } else {
+                session.items.splice(idx, 1);
+            }
+        },
+        updateDraftQtyFromInput(id, event) {
+            const val = parseInt(event.target.value, 10);
+            if (isNaN(val) || val < 0) {
+                event.target.value = this.getDisplayDraftQty(id);
+                return;
+            }
+            const session = this.sessions.find(s => s.id === this.activeSessionId);
+            if (!session) {
+                event.target.value = 1;
+                return;
+            }
+            const idx = session.items.findIndex(i => i.id === id);
+            if (idx === -1) {
+                if (val > 0) {
+                    const menuItem = this.menuItems.find(i => i.id === id);
+                    if (menuItem && menuItem.status !== 'out') {
+                        session.items.push({ ...menuItem, qty: val });
+                    } else {
+                        this.showToast('❌ Item tidak tersedia');
+                        event.target.value = this.getDisplayDraftQty(id);
+                    }
+                } else {
+                    event.target.value = this.getDisplayDraftQty(id);
+                }
+                return;
+            }
+            if (val === 0) {
+                session.items.splice(idx, 1);
+            } else {
+                const menuItem = this.menuItems.find(i => i.id === id);
+                if (menuItem && menuItem.status === 'out') {
+                    this.showToast('❌ ' + menuItem.name + ' habis!');
+                    event.target.value = this.getDisplayDraftQty(id);
+                    return;
+                }
+                session.items[idx].qty = val;
+            }
         },
 
         // ---- MENU MANAGEMENT ----
@@ -434,12 +661,22 @@ document.addEventListener('alpine:init', () => {
                 image: this.editItem.imageData || this.menuItems[index].image
             };
 
+            // Update cart and sessions
             this.cart.forEach(cartItem => {
                 if (cartItem.id === id) {
                     cartItem.name = name;
                     cartItem.price = price;
                     cartItem.icon = this.editItem.icon || '🍽️';
                 }
+            });
+            this.sessions.forEach(session => {
+                session.items.forEach(item => {
+                    if (item.id === id) {
+                        item.name = name;
+                        item.price = price;
+                        item.icon = this.editItem.icon || '🍽️';
+                    }
+                });
             });
 
             bootstrap.Modal.getInstance(document.getElementById('editItemModal')).hide();
@@ -542,6 +779,11 @@ document.addEventListener('alpine:init', () => {
                 if (this.paymentMethod === 'cash') {
                     const raw = this.parseRupiah(this.paymentAmount);
                     this.paymentAmountRaw = raw;
+                    if (raw > 0) {
+                        this.paymentAmount = this.formatRupiah(raw);
+                    } else {
+                        this.paymentAmount = '';
+                    }
                     const total = this.discountedTotal;
                     this.changeAmount = raw - total;
                 } else {
@@ -551,7 +793,7 @@ document.addEventListener('alpine:init', () => {
                     this.changeAmount = 0;
                 }
             } catch (error) {
-                console.error('Error in updateChange:', error);
+                // ignore
             }
         },
         handlePaymentMethodChange() {
@@ -567,7 +809,7 @@ document.addEventListener('alpine:init', () => {
                     this.changeAmount = 0;
                 }
             } catch (error) {
-                console.error('Error in handlePaymentMethodChange:', error);
+                // ignore
             }
         },
         confirmCheckout() {
@@ -608,7 +850,6 @@ document.addEventListener('alpine:init', () => {
                 this.mobileCartOpen = false;
                 bootstrap.Modal.getInstance(document.getElementById('checkoutModal')).hide();
             } catch (error) {
-                console.error('Error in confirmCheckout:', error);
                 this.showToast('❌ Checkout failed!');
             }
         },
@@ -678,33 +919,63 @@ document.addEventListener('alpine:init', () => {
         printStrukRawBT(transaction) {
             try {
                 const is80mm = this.defaultPrinterSize === '80mm';
+                const maxWidth = is80mm ? 48 : 32;
                 const encoder = new EscPosEncoder();
                 let receipt = encoder.initialize();
+
                 receipt.align('center')
-                    .bold(true).text('KITA POS - PUSAT').newline().bold(false)
-                    .text('Jl. Raya Sukses No. 123').newline()
-                    .line('-'.repeat(is80mm ? 48 : 32))
-                    .align('left')
+                    .bold(true).text(this.outletName).newline().bold(false)
+                    .text(this.outletAddress).newline()
+                    .line('-'.repeat(maxWidth));
+
+                receipt.align('left')
                     .text(`Kasir : ${this.cashierName}`).newline()
-                    .text(`No    : #${transaction.id}`).newline()
-                    .line('-'.repeat(is80mm ? 48 : 32));
+                    .text(`Waktu : ${this.formatTanggalIndonesia(transaction.timestamp)}`).newline()
+                    .text(`No. Struk : #${transaction.id}`).newline()
+                    .text(`Bayar : ${transaction.method === 'Cash' ? 'Tunai' : 'QRIS'}`).newline()
+                    .line('-'.repeat(maxWidth));
+
+                receipt.align('center')
+                    .bold(true).text('LUNAS').newline().bold(false)
+                    .line('-'.repeat(maxWidth));
+
+                receipt.align('left')
+                    .text('Item'.padEnd(20) + 'Qty'.padStart(6) + 'Total'.padStart(14)).newline()
+                    .line('-'.repeat(maxWidth));
 
                 transaction.items.forEach(item => {
-                    const leftStr = `  ${item.qty} x ${this.formatRupiah(item.price)}`;
-                    const rightStr = this.formatRupiah(item.subtotal);
-                    receipt.text(item.name).newline();
-                    receipt.text(this.formatReceiptLine(leftStr, rightStr, is80mm)).newline();
+                    const name = item.name.substring(0, 20);
+                    const qtyStr = item.qty.toString();
+                    const subtotalStr = 'Rp' + this.formatRupiah(item.subtotal);
+                    const line = name.padEnd(20) + qtyStr.padStart(6) + subtotalStr.padStart(14);
+                    receipt.text(line).newline();
                 });
 
+                receipt.line('-'.repeat(maxWidth));
+
+                const subtotalStr = 'Rp' + this.formatRupiah(transaction.subtotal);
+                receipt.align('right')
+                    .text(`Subtotal : ${subtotalStr}`).newline();
+
                 if (transaction.discount && transaction.discount > 0) {
-                    receipt.line('-'.repeat(is80mm ? 48 : 32))
-                        .text(this.formatReceiptLine('Diskon', '-Rp ' + this.formatRupiah(transaction.discount), is80mm)).newline();
+                    const diskonStr = '-Rp' + this.formatRupiah(transaction.discount);
+                    receipt.text(`Diskon : ${diskonStr}`).newline();
                 }
 
-                receipt.line('-'.repeat(is80mm ? 48 : 32))
-                    .text(this.formatReceiptLine('TOTAL', 'Rp ' + this.formatRupiah(transaction.total), is80mm)).newline()
-                    .line('-'.repeat(is80mm ? 48 : 32))
-                    .align('center').text('Terima kasih').newline()
+                const totalQty = transaction.items.reduce((sum, item) => sum + item.qty, 0);
+                const totalStr = 'Rp' + this.formatRupiah(transaction.total);
+                receipt.bold(true)
+                    .text(`Total (${totalQty}) : ${totalStr}`).newline()
+                    .bold(false)
+                    .line('-'.repeat(maxWidth));
+
+                receipt.text(`Bayar : Rp${this.formatRupiah(transaction.paid)}`).newline()
+                    .text(`Kembali : Rp${this.formatRupiah(transaction.change)}`).newline()
+                    .line('-'.repeat(maxWidth));
+
+                receipt.align('center')
+                    .text('Powered by KitaPOS').newline()
+                    .text('Terima kasih').newline()
                     .newline().newline().newline();
 
                 const resultData = receipt.encode();
@@ -856,13 +1127,11 @@ document.addEventListener('alpine:init', () => {
     });
 
     // ================================================================
-    // 2. UI COMPONENTS (minimal – just for scoping if needed)
+    // 2. UI COMPONENTS (minimal – just for scoping)
     // ================================================================
     Alpine.data('navbarComponent', () => ({}));
     Alpine.data('menuGridComponent', () => ({
-        // Tidak perlu menyimpan items karena sudah ada di store.pos
         init() {
-            // Ambil semua item dari store dan fetch gambarnya
             this.$nextTick(() => {
                 const items = this.$store.pos.menuItems;
                 items.forEach(item => {
@@ -874,33 +1143,23 @@ document.addEventListener('alpine:init', () => {
         },
         async fetchPexelsImage(item) {
             if (item.image) return;
-
-            const apiKey = window._env.PEXELS_API_KEY;;
+            const apiKey = window._env?.PEXELS_API_KEY;
             if (!apiKey) {
-                console.warn('Pexels API key not found, using fallback.');
                 return;
             }
-
             const query = encodeURIComponent(item.name);
             const url = `https://api.pexels.com/v1/search?query=${query}`;
-
             try {
                 const response = await fetch(url, {
-                    headers: {
-                        'Authorization': apiKey
-                    }
+                    headers: { 'Authorization': apiKey }
                 });
                 const data = await response.json();
-
                 if (data.photos && data.photos.length > 0) {
-                    // Set image ke item (reaktif karena item adalah object)
                     item.image = data.photos[0].src.medium;
                 } else {
-                    // Tidak ada hasil, biarkan null (fallback di src)
                     item.image = null;
                 }
             } catch (error) {
-                console.error('Pexels fetch error:', error);
                 item.image = null;
             }
         }
@@ -911,6 +1170,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('historyComponent', () => ({}));
     Alpine.data('calculatorComponent', () => ({}));
     Alpine.data('addEditMenuComponent', () => ({}));
+    Alpine.data('draftSessionsComponent', () => ({}));
 
     // ================================================================
     // 3. ROOT COMPONENT
@@ -919,46 +1179,47 @@ document.addEventListener('alpine:init', () => {
         init() {
             const store = Alpine.store('pos');
 
-            // Check Windows User
+            // === CASHIER ===
             if (window.KitaPOS && window.KitaPOS.user) {
                 store.setCashier(
                     window.KitaPOS.user.name,
                     window.KitaPOS.user.isOnline
                 );
             } else {
-                // fallback to storage
                 store.loadCashier();
             }
 
-            // to load data
+            // === OUTLET ===
+            if (window.KitaPOS && window.KitaPOS.outlet) {
+                store.setOutlet(window.KitaPOS.outlet.name, window.KitaPOS.outlet.address);
+            }
+
+            // === INIT STORE ===
             store.init();
-z
-            // Select2 init
+
+            // === SELECT2 ===
             setTimeout(() => {
                 $('.select2-custom').select2({ theme: 'default', width: '100%', dropdownAutoWidth: true });
 
-                // Bridge jQuery -> Alpine for payment method
                 $('#paymentMethod').on('change', (e) => {
-                    const store = Alpine.store('pos');
-                    store.paymentMethod = e.target.value;
-                    store.handlePaymentMethodChange();
+                    const s = Alpine.store('pos');
+                    s.paymentMethod = e.target.value;
+                    s.handlePaymentMethodChange();
                 });
 
                 $('#manualCategory').on('change', (e) => {
-                    const store = Alpine.store('pos');
-                    store.newItem.category = e.target.value;
-                    store.onCategoryChange();
+                    const s = Alpine.store('pos');
+                    s.newItem.category = e.target.value;
+                    s.onCategoryChange();
                 });
 
                 $('#manualStatus').on('change', (e) => {
-                    const store = Alpine.store('pos');
-                    store.newItem.status = e.target.value;
+                    const s = Alpine.store('pos');
+                    s.newItem.status = e.target.value;
                 });
             }, 100);
 
             window.addEventListener('resize', () => { });
         }
     }));
-
-    console.log('✅ KitaPOS with Alpine.js ready!');
 });

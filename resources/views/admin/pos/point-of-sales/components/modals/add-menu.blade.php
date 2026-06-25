@@ -1,11 +1,11 @@
-<!-- ===== ADD MENU MODAL ===== -->
 <div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true" x-data="addEditMenuComponent">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="bi bi-plus-circle me-2"></i>
-                    <span x-text="$store.pos.newItem.category === 'additional' ? 'Add Additional Menu' : 'Add Menu'"></span>
+                    <span
+                        x-text="$store.pos.newItem.category === 'additional' ? 'Add Additional Menu' : 'Add Menu'"></span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -23,8 +23,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-600">Category</label>
-                        <select class="form-select select2-custom" id="manualCategory" x-model="$store.pos.newItem.category"
-                            @change="$store.pos.onCategoryChange()">
+                        <select class="form-select select2-custom" id="manualCategory"
+                            x-model="$store.pos.newItem.category" @change="$store.pos.onCategoryChange()">
                             <option value="food">🍔 Food</option>
                             <option value="drink">🥤 Drinks</option>
                             <option value="snack">🍿 Snacks</option>

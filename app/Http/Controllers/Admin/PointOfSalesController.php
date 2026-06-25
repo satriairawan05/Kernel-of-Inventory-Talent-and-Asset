@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\SystemSettingService;
 use Illuminate\Http\Request;
 
 class PointOfSalesController extends Controller
@@ -32,7 +33,7 @@ class PointOfSalesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function posView()
+    public function posView(SystemSettingService $systemSettingService)
     {
         $access = $this->get_access();
 
@@ -40,7 +41,9 @@ class PointOfSalesController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                return view('admin.pos.point-of-sales.home');
+                return view('admin.pos.point-of-sales.home',[
+                    'openingBalance' => $systemSettingService->getOpeningBalanceForUser(auth()->user())
+                ]);
             } catch (\Illuminate\Database\QueryException $e) {
                 \Illuminate\Support\Facades\Log::error($e->getMessage());
                 return redirect()->back()->with('failed', $e->getMessage());
