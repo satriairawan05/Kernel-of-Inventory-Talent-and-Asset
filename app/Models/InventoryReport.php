@@ -30,7 +30,7 @@ class InventoryReport extends Model
         'report_date',
         'opened_at',
         'closed_at',
-        'cashier_name',
+        // 'cashier_name',
         'total_products_sold',
         'notes',
         'created_by',

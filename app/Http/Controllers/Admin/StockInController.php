@@ -47,7 +47,7 @@ class StockInController extends Controller
         } else {
             try {
                 $stockIns = StockMovement::with(['productVariant.product', 'user'])
-                    ->whereIn('movement_type', ['purchase', 'opening'])
+                    ->whereIn('movement_type', ['purchase', 'opening','transfer'])
                     ->orderBy('created_at', 'desc')
                     ->paginate(15);
                 $productVariants = ProductVariant::with('product')->get();

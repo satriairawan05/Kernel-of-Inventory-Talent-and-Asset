@@ -41,7 +41,6 @@ class GroupController extends Controller
 
         if (!isset($access['Read']) || $access['Read'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
             try {
                 return view('admin.setting.role.index', [
                     'roles' => Group::paginate(15),
@@ -51,6 +50,7 @@ class GroupController extends Controller
                 Log::error($e->getMessage());
                 return redirect()->back()->with('failed', 'Gagal memuat data role.');
             }
+        } else {
         }
     }
 

@@ -12,6 +12,7 @@ use App\Services\InventoryPreviewService;
 use App\Services\InventoryPrintService;
 use App\Services\InventoryReportService;
 use App\Services\ModuleService;
+use App\Services\SystemSettingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -215,6 +216,7 @@ class HomeController extends Controller
     {
         $periods = ReportPeriod::with('shift')->where('is_active', true)->get();
         $users = \App\Models\User::get();
+        
         return view('admin.inventory.report.generate', ['periods' => $periods,'users' => $users]);
     }
 
@@ -233,18 +235,18 @@ class HomeController extends Controller
                 'period_id'    => 'required|exists:report_periods,id',
                 'location'     => 'required|string|max:255',
                 'reported_by'  => 'required|string|max:255',
-                'cashier_name' => 'required|string|max:255',
+                // 'cashier_name' => 'required|string|max:255',
                 'opened_at'    => 'nullable|date',
                 'closed_at'    => 'nullable|date|after:opened_at',
             ]);
     
             try {
-                $report = $inventoryReportService->generateDailyReport(
+                $inventoryReportService->generateDailyReport(
                     $request->date,
                     $request->period_id,
                     $request->location,
                     $request->reported_by,
-                    $request->cashier_name,
+                    // $request->cashier_name,
                     $request->opened_at,
                     $request->closed_at
                 );

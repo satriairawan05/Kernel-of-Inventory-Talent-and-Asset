@@ -1199,7 +1199,7 @@ document.addEventListener('alpine:init', () => {
 
             // === SELECT2 ===
             setTimeout(() => {
-                $('.select2-custom').select2({ theme: 'default', width: '100%', dropdownAutoWidth: true });
+                $('.select2-custom').select2({ theme: 'bootstrap-5', width: '100%', dropdownAutoWidth: true });
 
                 $('#paymentMethod').on('change', (e) => {
                     const s = Alpine.store('pos');

@@ -1,20 +1,19 @@
-@props(['variant' => 'desktop'])
-
-@php
-    $cardClass = ($variant === 'desktop') ? 'draft-panel card shadow-sm mb-3' : 'card border-danger mx-3 mt-4 mb-3';
-    $headerClass = ($variant === 'desktop') ? 'card-header d-flex justify-content-between align-items-center py-2' : 'card-header bg-danger text-white fw-bold py-2 d-flex justify-content-between';
-    $headerBg = ($variant === 'desktop') ? '' : 'bg-danger text-white';
-@endphp
-
 <div x-data="draftSessionsComponent">
-    <div class="{{ $cardClass }}">
-        <div class="{{ $headerClass }}">
-            <span class="fw-bold"><i class="bi bi-file-earmark-text"></i> Draft Sessions</span>
+    <div class="card shadow-sm mb-3 border-2 
+                border-danger border-lg-2 border-warning 
+                bg-white bg-lg-transparent">
+        <div class="card-header d-flex justify-content-between align-items-center py-2 
+                    bg-danger bg-lg-transparent text-white text-lg-dark">
+            <span class="fw-bold">
+                <i class="bi bi-file-earmark-text"></i> Draft Sessions
+            </span>
             <button class="btn btn-sm btn-light" @click="$store.pos.openNewSessionModal()"
                 title="Create New Order">
                 <i class="bi bi-plus-circle"></i> New
             </button>
         </div>
+        
+        {{-- Body --}}
         <div class="card-body p-2 style-scrollbar" style="max-height: 320px; overflow-y: auto;">
             <template x-if="!$store.pos.sessions || $store.pos.sessions.length === 0">
                 <div class="text-center text-muted py-3" style="font-size: 13px;">

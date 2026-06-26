@@ -28,8 +28,8 @@
                 isOnline: {{ auth()->check() ? 'true' : 'false' }}
             },
             outlet: { 
-                // name: "My Fried Chicken",
-                // address: "Pusat",
+                name: "My Fried Chicken",
+                address: "Pusat",
                 openingBalance: "{{ $openingBalance ?? '150000' }}",
             },
             routes: {
@@ -63,9 +63,7 @@
             <!-- ===== SIDEBAR (Desktop) ===== -->
             <div class="col-lg-4 d-none d-lg-block" x-data="cartSidebarComponent">
                 <!-- DRAFT SESSIONS PANEL (Desktop) -->
-                @include('admin.pos.point-of-sales.components.draft-sessions-panel', [
-                    'variant' => 'desktop',
-                ])
+                @include('admin.pos.point-of-sales.components.draft-sessions-panel')
 
                 <!-- CART SIDEBAR -->
                 @include('admin.pos.point-of-sales.components.cart-sidebar')

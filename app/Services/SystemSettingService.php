@@ -108,6 +108,33 @@ class SystemSettingService
     }
 
     /**
+     * Get printer size for a specific company.
+     * @param int $companyId
+     * @return int|null
+     */
+    public function getPrinterSize(int $companyId): ?int
+    {
+        $setting = SystemSetting::where('company_id',$companyId)
+            ->where('key','print_size')
+            ->first();
+        
+        return $setting ? (int) $setting->value : 0;
+    }
+
+    /**
+     * Get printer size for the company of the given user.
+     * @param \App\Models\User $user
+     * @return int|null
+     */
+    public function getPrinterSizeForUser(\App\Models\User $user): ?int
+    {
+        if (!$user->company_id) {
+            return null;
+        }
+        return $this->getPrinterSize($user->company_id);
+    }
+
+    /**
      * Get opening balance with caching (optional).
      * @param int $companyId
      * @param int $ttl (minutes)

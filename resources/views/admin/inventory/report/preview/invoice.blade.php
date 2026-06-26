@@ -99,7 +99,6 @@
             <div class="row"><span>Location</span><span>{{ $report->location }}</span></div>
             <div class="row"><span>Date</span><span>{{ $report->report_date }}</span></div>
             <div class="row"><span>Shift</span><span>{{ $report->period->shift->name ?? '-' }}</span></div>
-            <div class="row"><span>Cashier</span><span>{{ $report->cashier_name }}</span></div>
             <div class="row"><span>Report By</span><span>{{ $report->reported_by }}</span></div>
             <div class="row"><span>Total Product Sold</span><span>{{ number_format($report->total_products_sold, 0) }}</span></div>
             <div class="dashed"></div>

@@ -175,7 +175,7 @@
 
         <!-- Menu Groups -->
         <div class="row g-4">
-            @if ($access['Category']['Read'] == 1 || $access['Product']['Read'] == 1 || $access['Stock']['Read'] == 1)
+            @if ($access['Product']['Read'] == 1 || $access['Stock']['Read'] == 1)
             <!-- Master Data -->
             <div class="col-xl-4 col-md-6">
                 <div class="card inventory-card">

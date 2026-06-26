@@ -13,7 +13,7 @@
             </div>
             <div class="col-12 col-sm-auto text-center text-sm-end">
                 <p class="mb-0 text-body-tertiary text-opacity-85">
-                    KitaPOS v1.0.0-alpha1 | <span x-text="$store.pos.footerYear"></span>
+                    KitaPOS {{ config('app.version') }} | <span x-text="$store.pos.footerYear"></span>
                 </p>
             </div>
         </div>

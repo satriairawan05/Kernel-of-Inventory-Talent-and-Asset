@@ -26,7 +26,7 @@
     <section class="page-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div>
             <h2 class="mb-1">Stock Movement Log</h2>
-            <p class="mb-0">Riwayat perubahan stok barang secara lengkap</p>
+            <p class="mb-0">Complete history of stock changes</p>
         </div>
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <a href="{{ route('inventory.home') }}" class="btn btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Kembali</a>
@@ -38,7 +38,7 @@
         <div class="card-header bg-white border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div>
                 <h4 class="mb-1">Stock Movements</h4>
-                <p class="text-muted mb-0">Semua transaksi masuk, keluar, penyesuaian, opname, dll.</p>
+                <p class="text-muted mb-0">All transactions inbound, outbound, adjustments, stocktakes, etc.</p>
             </div>
             <span class="pill-chip bg-primary-subtle text-primary"><i class="fas fa-history"></i> {{ $movements->count() }} records</span>
         </div>
@@ -51,12 +51,12 @@
                             <th>#</th>
                             <th>Produk / Varian</th>
                             <th>PIC</th>
-                            <th>Tipe</th>
+                            <th>Type</th>
                             <th>Qty</th>
-                            <th>Stok Sebelum</th>
-                            <th>Stok Sesudah</th>
-                            <th>Catatan</th>
-                            <th>Waktu</th>
+                            <th>Stok Before</th>
+                            <th>Stok After</th>
+                            <th>Notes</th>
+                            <th>Time</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,7 +96,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-5">Belum ada data pergerakan stok.</td>
+                            <td colspan="9" class="text-center text-muted py-5">There is no stock movement data yet.</td>
                         </tr>
                     @endforelse
                     </tbody>

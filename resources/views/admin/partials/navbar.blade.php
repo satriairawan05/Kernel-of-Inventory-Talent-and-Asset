@@ -86,6 +86,13 @@
                         <i class="fas fa-dollar-sign"></i>
                     </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (POS)</span></span></div>
                 </a>
+                <div class="nav-item-wrapper"><a class="nav-link {{ Request::routeIs('pos.menu.*') ? 'active' : '' }} label-1" href="{{ route('pos.menu.index') }}" role="button"
+                        data-bs-toggle="" aria-expanded="false">
+                        <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-file-alt"></i></span><span class="nav-link-text-wrapper"><span
+                                    class="nav-link-text">Menu</span></span>
+                        </div>
+                    </a>
+                </div>
                 <div class="nav-item-wrapper"><a class="nav-link label-1" href="{{ route('pos.point-of-sales') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-cash-register"></i></span><span class="nav-link-text-wrapper"><span
@@ -223,12 +230,12 @@
                     <div class="parent-wrapper label-1">
                         <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nav-ingoods">
                             <li class="collapsed-nav-item-title d-none">Incoming Good</li>
-                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock.create') ? 'active' : '' }}" href="{{ route('inventory.stock-in.create') }}">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock-in.create') ? 'active' : '' }}" href="{{ route('inventory.stock-in.create') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">New Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock.*') ? 'active' : '' }}" href="{{ route('inventory.stock-in.index') }}">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock-in.*') && !Request::routeIs('inventory.stock-in.create') ? 'active' : '' }}" href="{{ route('inventory.stock-in.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->
@@ -253,7 +260,7 @@
                                     </div>
                                 </a><!-- more inner pages-->
                             </li>
-                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock-out.*') ? 'active' : '' }}" href="{{ route('inventory.stock-out.index') }}">
+                            <li class="nav-item"><a class="nav-link {{ Request::routeIs('inventory.stock-out.*') && !Request::routeIs('inventory.stock-out.create') ? 'active' : '' }}" href="{{ route('inventory.stock-out.index') }}">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Transaction</span>
                                     </div>
                                 </a><!-- more inner pages-->

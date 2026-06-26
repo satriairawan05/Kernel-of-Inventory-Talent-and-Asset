@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\GroupController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\PointOfSalesController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReturnStockController;
@@ -56,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', function (ModuleService $moduleService) {
             return view('admin.inventory.home', [
                 'stats' => $moduleService->getInventoryStats(),
-                'access' => $moduleService->getAccessByModule('Inventory', auth()->user()->id),
+                'access' => $moduleService->getAccessByModule('Inventory', auth()->user()->group_id),
             ]);
         })->name('home');
 
@@ -101,6 +102,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('point-of-sales',[PointOfSalesController::class, 'posView'])->name('point-of-sales');
 
+        Route::resource('menu', MenuController::class)->except(['create','edit']);
         Route::get('report/daily', [SalesReportController::class, 'dailyIndex'])->name('report.daily');
         Route::get('report/weekly', [SalesReportController::class, 'weeklyIndex'])->name('report.weekly');
         Route::get('report/weekly/detail/{start_date}/{end_date}/{company_id}', [SalesReportController::class, 'showWeekly'])->name('report.weekly.detail');

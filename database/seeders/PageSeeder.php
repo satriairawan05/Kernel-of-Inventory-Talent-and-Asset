@@ -37,6 +37,7 @@ class PageSeeder extends Seeder
             ],
             'Point Of Sales' => [
                 'POS'  => ['Create', 'Read', 'Update', 'Delete'],
+                'Menu'  => ['Create', 'Read', 'Update', 'Delete'],
                 'Cash Summary'  => ['Create', 'Read', 'Update', 'Delete'],
                 'Sale Reports (POS)'  => ['Create', 'Read', 'Update', 'Delete'],
                 'Sale Reports'  => ['Create', 'Read', 'Update', 'Delete'],

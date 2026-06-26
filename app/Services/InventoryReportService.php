@@ -38,7 +38,6 @@ class InventoryReportService
         int $periodId,
         string $location,
         string $reportedBy,
-        string $cashierName,
         ?string $openedAt = null,
         ?string $closedAt = null
     ): InventoryReport {
@@ -68,7 +67,7 @@ class InventoryReportService
                 'report_date'        => $date,
                 'opened_at'          => $start,
                 'closed_at'          => $end,
-                'cashier_name'       => $cashierName,
+                // 'cashier_name'       => $cashierName,
                 'total_products_sold'=> 0,
                 'created_by'         => auth()->id(),
                 'notes'              => null,

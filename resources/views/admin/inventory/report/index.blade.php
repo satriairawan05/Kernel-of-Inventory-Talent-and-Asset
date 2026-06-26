@@ -217,7 +217,7 @@
                                 <th>Date</th>
                                 <th>Shift</th>
                                 <th>Location</th>
-                                <th>Cashier</th>
+                                <th>Report</th>
                                 <th>Total Sold</th>
                                 <th>Handle</th>
                             </tr>
@@ -229,7 +229,7 @@
                                     <td>{{ \Carbon\Carbon::parse($report->report_date)->translatedFormat('d/m/Y') }}</td>
                                     <td>{{ $report->period->shift->name ?? '-' }}</td>
                                     <td>{{ $report->location }}</td>
-                                    <td>{{ $report->cashier_name }}</td>
+                                    <td>{{ $report->reported_by }}</td>
                                     <td class="fw-bold">{{ number_format($report->total_products_sold, 0) }}</td>
                                     <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
                                         <a href="{{ route('inventory.report.preview', $report->id) }}" target="_blank" class="btn btn-sm btn-primary">

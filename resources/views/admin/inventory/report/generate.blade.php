@@ -46,14 +46,14 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">Report by <span class="text-danger">*</span></label>
                             <select name="reported_by" class="form-select select2 @error('reported_by') is-invalid @enderror"
                                 required>
                                 <option value="">Select User</option>
                                 @foreach ($users as $user)
                                     <option value="{{ $user->name }}"
-                                        {{ old('reported_by') == $user->name ? 'selected' : '' }}>{{ $user->name }}
+                                        {{ old('reported_by',auth()->user()->name) == $user->name ? 'selected' : '' }}>{{ $user->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -61,7 +61,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-4">
+                        {{-- <div class="col-md-4">
                             <label class="form-label">Cashier Name <span class="text-danger">*</span></label>
                             <select name="cashier_name" class="form-select select2 @error('cashier_name') is-invalid @enderror"
                                 required>
@@ -76,8 +76,8 @@
                             @error('cashier_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                        </div>
-                        <div class="col-md-2">
+                        </div> --}}
+                        <div class="col-md-3">
                             <label class="form-label">Open at</label>
                             <input type="datetime-local" name="opened_at"
                                 class="form-control @error('opened_at') is-invalid @enderror"
@@ -86,7 +86,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label class="form-label">Close at</label>
                             <input type="datetime-local" name="closed_at"
                                 class="form-control @error('closed_at') is-invalid @enderror"

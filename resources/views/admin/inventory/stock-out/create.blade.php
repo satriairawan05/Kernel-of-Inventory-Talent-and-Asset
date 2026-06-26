@@ -78,26 +78,25 @@
         <section class="page-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div>
                 <p class="eyebrow mb-2">Inventory</p>
-                <h2 class="mb-1">Buat Barang Keluar</h2>
+                <h2 class="mb-1">Create Stock Out</h2>
             </div>
-            <span class="badge bg-white text-primary fs-6 px-3 py-2"><i class="fas fa-edit me-1"></i> Edit Stock Out</span>
+            <span class="badge bg-white text-primary fs-6 px-3 py-2"><i class="fas fa-plus-circle me-1"></i> New Stock Out</span>
         </section>
 
         <div class="card soft-card mt-4">
             <div class="card-header">
-                <h4 class="mb-1">Form Tambah Barang Keluar</h4>
+                <h4 class="mb-1">Stock Out Form</h4>
             </div>
             <div class="card-body">
                 <form action="{{ route('inventory.stock-out.store') }}" method="POST">
                     @csrf
-                    @method('PUT')
                     <div class="row g-3">
                         <div class="col-md-4 mb-3">
                             <label class="form-label" for="product_variant_id">Product Variant <span
                                     class="text-danger">*</span></label>
                             <select id="product_variant_id" name="product_variant_id"
                                 class="form-select select2 @error('product_variant_id') is-invalid @enderror">
-                                <option value="">-- Pilih Varian --</option>
+                                <option value="">-- Select Variant --</option>
                                 @foreach ($productVariants as $variant)
                                     <option value="{{ $variant->id }}"
                                         {{ old('product_variant_id') == $variant->id ? 'selected' : '' }}>
@@ -111,39 +110,39 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="qty">Jumlah Keluar <span
+                            <label class="form-label" for="qty">Quantity Out <span
                                     class="text-danger">*</span></label>
                             <input type="number" step="1" id="qty" name="qty"
                                 value="{{ old('qty') }}"
-                                class="form-control @error('qty') is-invalid @enderror" placeholder="0.00">
-                            <small class="text-muted">Stok saat ini:
-                                {{ number_format($stockOut->productVariant->stock->current_stock ?? 0, 2, ',', '.') }}</small>
+                                class="form-control @error('qty') is-invalid @enderror" placeholder="0">
+                            <small class="text-muted" id="current-stock-info">
+                                Current stock: <span id="current-stock-value">-</span>
+                            </small>
                             @error('qty')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="receiver_sender">Pengirim</label>
+                            <label class="form-label" for="receiver_sender">Sender</label>
                             <input type="text" id="receiver_sender" name="receiver_sender"
                                 value="{{ old('receiver_sender') }}"
                                 class="form-control @error('receiver_sender') is-invalid @enderror"
-                                placeholder="Nama pengirim">
+                                placeholder="Sender name">
                             @error('receiver_sender')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
 
-                    <!-- Tambahan: Select Movement Type -->
+                    <!-- Additional: Movement Type -->
                     <div class="mb-3">
-                        <label class="form-label" for="movement_type">Tipe Transaksi</label>
+                        <label class="form-label" for="movement_type">Transaction Type</label>
                         <select id="movement_type" name="movement_type"
                             class="form-select select2 @error('movement_type') is-invalid @enderror">
-                            <option value="">Pilih Tipe</option>
+                            <option value="">Select Type</option>
                             @foreach ($movementTypes as $key => $label)
-                                <option value="{{ $key }}"
-                                    {{ old('movement_type') == $key ? 'selected' : '' }}>
+                                <option value="{{ $key }}" {{ old('movement_type') == $key ? 'selected' : '' }}>
                                     {{ $label }}
                                 </option>
                             @endforeach
@@ -154,9 +153,9 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="notes">Catatan</label>
+                        <label class="form-label" for="notes">Notes</label>
                         <textarea id="notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror"
-                            placeholder="Catatan tambahan...">{{ old('notes') }}</textarea>
+                            placeholder="Additional notes...">{{ old('notes') }}</textarea>
                         @error('notes')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -164,8 +163,7 @@
 
                     <div class="d-flex justify-content-end gap-2 action-bar">
                         <a href="{{ route('inventory.stock-out.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update Barang
-                            Keluar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Create Stock Out</button>
                     </div>
                 </form>
             </div>

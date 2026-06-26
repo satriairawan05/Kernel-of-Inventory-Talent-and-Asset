@@ -78,15 +78,14 @@
         <section class="page-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div>
                 <p class="eyebrow mb-2">Inventory</p>
-                <h2 class="mb-1">Tambah Barang Masuk</h2>
+                <h2 class="mb-1">Add Stock In</h2>
             </div>
-            <span class="badge bg-white text-primary fs-6 px-3 py-2"><i class="fas fa-plus-circle me-1"></i> Barang
-                masuk</span>
+            <span class="badge bg-white text-primary fs-6 px-3 py-2"><i class="fas fa-plus-circle me-1"></i> Stock In</span>
         </section>
 
         <div class="card soft-card mt-4">
             <div class="card-header">
-                <h4 class="mb-1">Form Barang Masuk</h4>
+                <h4 class="mb-1">Stock In Form</h4>
             </div>
             <div class="card-body">
                 <form action="{{ route('inventory.stock-in.store') }}" method="POST">
@@ -117,17 +116,17 @@
                             @enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="receiver_sender">Receiver</label>
+                            <label class="form-label" for="receiver_sender">Receiver / Sender</label>
                             <input type="text" id="receiver_sender" name="receiver_sender"
                                 value="{{ old('receiver_sender') }}"
                                 class="form-control @error('receiver_sender') is-invalid @enderror"
-                                placeholder="Nama penerima / pengirim">
+                                placeholder="Receiver / Sender name">
                             @error('receiver_sender')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
-                    <!-- Tambahan: Select Movement Type -->
+                    <!-- Additional: Movement Type -->
                     <div class="mb-3">
                         <label class="form-label" for="movement_type">Transaction Type</label>
                         <select id="movement_type" name="movement_type"
@@ -146,14 +145,14 @@
                     <div class="mb-3">
                         <label class="form-label" for="notes">Notes</label>
                         <textarea id="notes" name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror"
-                            placeholder="Catatan tambahan (opsional)">{{ old('notes') }}</textarea>
+                            placeholder="Additional notes (optional)">{{ old('notes') }}</textarea>
                         @error('notes')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="d-flex justify-content-end gap-2 action-bar">
                         <a href="{{ route('inventory.stock-in.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save</button>
                     </div>
                 </form>
             </div>

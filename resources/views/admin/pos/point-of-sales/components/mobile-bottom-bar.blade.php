@@ -8,7 +8,7 @@
                 <span class="badge bg-danger text-white" x-show="$store.pos.getTotalSessionsCount() > 0"
                     x-text="'Draft: ' + $store.pos.getTotalSessionsCount()"></span>
                 <span class="badge bg-primary text-white" x-show="$store.pos.cartCount > 0"
-                    x-text="'Keranjang: ' + $store.pos.cartCount"></span>
+                    x-text="'Cart: ' + $store.pos.cartCount"></span>
             </div>
             <div class="fw-bold text-dark" style="font-size: 16px;"
                 x-text="'Total: Rp ' + $store.pos.formatRupiah($store.pos.cartTotal + $store.pos.getTotalSessionsTotal())">
