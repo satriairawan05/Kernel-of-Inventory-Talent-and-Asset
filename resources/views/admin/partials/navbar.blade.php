@@ -15,7 +15,7 @@
                 <!-- label-->
                 <p class="navbar-vertical-label">Human Resources</p>
                 <hr class="navbar-vertical-line" /><!-- parent pages-->
-                <a class="nav-link label-1" href="{{ route('hr.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
+                <a class="nav-link {{ Request::routeIs('hr.home') ? 'active' : '' }} label-1" href="{{ route('hr.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
                     <div class="d-flex align-items-center"><span class="nav-link-icon">
                         <i class="fas fa-users"></i>
                     </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (HR)</span></span></div>
@@ -81,7 +81,7 @@
                 <!-- label-->
                 <p class="navbar-vertical-label">Sales</p>
                 <hr class="navbar-vertical-line" /><!-- parent pages-->
-                <a class="nav-link label-1" href="{{ route('pos.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
+                <a class="nav-link {{ Request::routeIs('pos.home') ? 'active' : '' }} label-1" href="{{ route('pos.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
                     <div class="d-flex align-items-center"><span class="nav-link-icon">
                         <i class="fas fa-dollar-sign"></i>
                     </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (POS)</span></span></div>
@@ -183,7 +183,7 @@
                 <!-- label-->
                 <p class="navbar-vertical-label">Inventories</p>
                 <hr class="navbar-vertical-line" />
-                <a class="nav-link label-1" href="{{ route('inventory.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
+                <a class="nav-link {{ Request::routeIs('inventory.home') ? 'active' : '' }} label-1" href="{{ route('inventory.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
                     <div class="d-flex align-items-center"><span class="nav-link-icon">
                         <i class="fas fa-archive"></i>
                     </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (Inventory)</span></span></div>
@@ -359,7 +359,7 @@
             <li class="nav-item"><!-- parent pages-->
                 <p class="navbar-vertical-label">System Settings</p>
                 <hr class="navbar-vertical-line" />
-                <a class="nav-link label-1" href="{{ route('setting.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
+                <a class="nav-link {{ Request::routeIs('setting.home') ? 'active' : '' }} label-1" href="{{ route('setting.home') }}" role="button" data-bs-toggle="" aria-expanded="false">
                     <div class="d-flex align-items-center"><span class="nav-link-icon">
                         <i class="fas fa-sliders"></i>
                     </span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home (System Setting)</span></span></div>
