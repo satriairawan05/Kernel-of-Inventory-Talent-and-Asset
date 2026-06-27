@@ -100,7 +100,7 @@
                         </div>
                     </a>
                 </div>
-                <div class="nav-item-wrapper"><a class="nav-link label-1" href="#" role="button"
+                <div class="nav-item-wrapper"><a class="nav-link {{ Request::route('pos.cash_summary.*') ? 'active' : '' }} label-1" href="{{ route('pos.cash_summary.index') }}" role="button"
                         data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></span><span class="nav-link-text-wrapper"><span
                                     class="nav-link-text">Cash Summary</span></span>
