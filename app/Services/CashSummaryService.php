@@ -29,6 +29,7 @@ class CashSummaryService
 
     /**
      * Get all cash summaries with optional filters.
+     * Default: today's data if no date filters provided.
      *
      * @param int|null $companyId
      * @param array $filters
@@ -42,12 +43,15 @@ class CashSummaryService
             $query->byCompany($companyId);
         }
 
-        if (!empty($filters['type'])) {
-            $query->where('type', $filters['type']);
-        }
-
+        // Apply date filter: default to today if not specified
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $query->betweenDates($filters['start_date'], $filters['end_date']);
+        } else {
+            $query->whereDate('transaction_date', now()->toDateString());
+        }
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
         }
 
         if (!empty($filters['search'])) {
@@ -59,6 +63,7 @@ class CashSummaryService
 
     /**
      * Get paginated cash summaries.
+     * Default: today's data if no date filters provided.
      *
      * @param int|null $companyId
      * @param int $perPage
@@ -73,12 +78,15 @@ class CashSummaryService
             $query->byCompany($companyId);
         }
 
-        if (!empty($filters['type'])) {
-            $query->where('type', $filters['type']);
-        }
-
+        // Apply date filter: default to today if not specified
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $query->betweenDates($filters['start_date'], $filters['end_date']);
+        } else {
+            $query->whereDate('transaction_date', now()->toDateString());
+        }
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
         }
 
         if (!empty($filters['search'])) {
@@ -183,7 +191,26 @@ class CashSummaryService
     }
 
     /**
+     * Delete all cash summary records.
+     * Use with caution – only for admin.
+     *
+     * @return void
+     */
+    public function deleteAll(): void
+    {
+        try {
+            DB::transaction(function () {
+                $this->model->query()->delete();
+            });
+        } catch (\Exception $e) {
+            Log::error('Failed to delete all cash summaries: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
      * Get total cash in for a company within optional date range.
+     * Default: today if no date range provided.
      *
      * @param int $companyId
      * @param string|null $start
@@ -196,6 +223,8 @@ class CashSummaryService
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
+        } else {
+            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return (int) $query->sum('amount');
@@ -203,6 +232,7 @@ class CashSummaryService
 
     /**
      * Get total cash out for a company within optional date range.
+     * Default: today if no date range provided.
      *
      * @param int $companyId
      * @param string|null $start
@@ -215,6 +245,8 @@ class CashSummaryService
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
+        } else {
+            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return (int) $query->sum('amount');
@@ -222,6 +254,7 @@ class CashSummaryService
 
     /**
      * Get net balance for a company within optional date range.
+     * Default: today if no date range provided.
      *
      * @param int $companyId
      * @param string|null $start
@@ -238,6 +271,7 @@ class CashSummaryService
 
     /**
      * Get cash summary statistics for a company.
+     * Default: today if no date range provided.
      *
      * @param int $companyId
      * @param string|null $start
@@ -250,6 +284,8 @@ class CashSummaryService
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
+        } else {
+            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         $totalIn = (clone $query)->cashIn()->sum('amount');
@@ -269,6 +305,7 @@ class CashSummaryService
 
     /**
      * Get all cash in records for a company.
+     * Default: today if no date range provided.
      *
      * @param int $companyId
      * @param string|null $start
@@ -281,6 +318,8 @@ class CashSummaryService
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
+        } else {
+            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return $query->orderBy('transaction_date', 'desc')->get();
@@ -288,6 +327,7 @@ class CashSummaryService
 
     /**
      * Get all cash out records for a company.
+     * Default: today if no date range provided.
      *
      * @param int $companyId
      * @param string|null $start
@@ -300,6 +340,8 @@ class CashSummaryService
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
+        } else {
+            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return $query->orderBy('transaction_date', 'desc')->get();
@@ -307,6 +349,7 @@ class CashSummaryService
 
     /**
      * Get total count of records for a company.
+     * Default: today if no date range provided.
      *
      * @param int $companyId
      * @param string|null $start
@@ -319,6 +362,8 @@ class CashSummaryService
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
+        } else {
+            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return $query->count();
@@ -333,6 +378,7 @@ class CashSummaryService
     public function getLatest(int $companyId): ?CashSummary
     {
         return $this->model->byCompany($companyId)
+            ->whereDate('transaction_date', now()->toDateString())
             ->orderBy('transaction_date', 'desc')
             ->first();
     }

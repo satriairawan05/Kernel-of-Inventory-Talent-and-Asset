@@ -47,19 +47,37 @@ class CashSummaryController extends Controller
         }
 
         try {
-            $companyId = auth()->user()->company_id;
+            // Determine company ID based on user role
+            $user = auth()->user();
+            if ($user->group_id == 1) {
+                // Admin / Super Admin: can see all companies
+                $companyId = 1;
+            } else {
+                $companyId = $user->company_id;
+            }
+
             $filters = $request->only(['type', 'start_date', 'end_date', 'search']);
 
             $cashSummaryService = new CashSummaryService(new CashSummary());
+
+            // Get paginated records
             $cashSummaries = $cashSummaryService->getPaginated($companyId, 15, $filters);
-            $summary = $cashSummaryService->getSummary($companyId);
+
+            // Get summary statistics with filters
+            $summary = $cashSummaryService->getSummary(
+                $companyId,
+                $filters['start_date'] ?? null,
+                $filters['end_date'] ?? null
+            );
+
             $types = \App\Enums\CashSummaryTypeEnum::options();
 
             return view('admin.pos.cash_summary.index', compact(
                 'cashSummaries',
                 'access',
                 'summary',
-                'types'
+                'types',
+                'filters' // Pass filters to view for form
             ));
         } catch (QueryException $e) {
             Log::error($e->getMessage());
@@ -88,7 +106,10 @@ class CashSummaryController extends Controller
 
         try {
             $data = $request->validated();
-            $data['company_id'] = auth()->user()->company_id;
+
+            // Set company_id: use user's company, or default to 1 if admin without company
+            $user = auth()->user();
+            $data['company_id'] = $user->company_id ?? 1;
 
             $service->store($data);
 
@@ -127,8 +148,10 @@ class CashSummaryController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         }
 
-        // Verify ownership
-        if ($cashSummary->company_id !== auth()->user()->company_id) {
+        $user = auth()->user();
+
+        // Verify ownership: admin can edit any, others only own company
+        if ($user->group_id != 1 && $cashSummary->company_id !== $user->company_id) {
             return redirect()->back()->with('failed', "You don't have authority for this record.");
         }
 
@@ -154,8 +177,10 @@ class CashSummaryController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         }
 
-        // Verify ownership
-        if ($cashSummary->company_id !== auth()->user()->company_id) {
+        $user = auth()->user();
+
+        // Verify ownership: admin can delete any, others only own company
+        if ($user->group_id != 1 && $cashSummary->company_id !== $user->company_id) {
             return redirect()->back()->with('failed', "You don't have authority for this record.");
         }
 
@@ -169,4 +194,35 @@ class CashSummaryController extends Controller
             return redirect()->back()->with('failed', $e->getMessage());
         }
     }
+
+    /**
+ * Remove all cash summaries.
+ * Only accessible by admin (group_id == 1).
+ */
+public function destroyAll(CashSummaryService $service)
+{
+    $access = $this->get_access();
+
+    if (! isset($access['Delete']) || $access['Delete'] != 1) {
+        return redirect()->back()->with('failed', "You don't have authority");
+    }
+
+    $user = auth()->user();
+
+    // Only admin can delete all
+    if ($user->group_id != 1) {
+        return redirect()->back()->with('failed', "You don't have authority to delete all records.");
+    }
+
+    try {
+        // Admin can delete all records (all companies)
+        $service->deleteAll();
+
+        return redirect()->route('pos.cash_summary.index')
+            ->with('success', 'All cash records deleted successfully.');
+    } catch (QueryException $e) {
+        Log::error($e->getMessage());
+        return redirect()->back()->with('failed', $e->getMessage());
+    }
+}
 }
