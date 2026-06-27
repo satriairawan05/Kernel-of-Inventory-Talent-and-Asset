@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\CashSummaryController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\GroupController;
@@ -103,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('point-of-sales',[PointOfSalesController::class, 'posView'])->name('point-of-sales');
 
         Route::resource('menu', MenuController::class)->except(['create','edit']);
+        Route::resource('cash_summary',CashSummaryController::class)->except(['create','edit']);
         Route::get('report/daily', [SalesReportController::class, 'dailyIndex'])->name('report.daily');
         Route::get('report/weekly', [SalesReportController::class, 'weeklyIndex'])->name('report.weekly');
         Route::get('report/weekly/detail/{start_date}/{end_date}/{company_id}', [SalesReportController::class, 'showWeekly'])->name('report.weekly.detail');

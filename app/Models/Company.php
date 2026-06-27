@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Shift;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Company extends Model
 {
     use HasFactory;
-    
+
     /**
      * The table associated with the model.
      *
@@ -32,48 +31,48 @@ class Company extends Model
         'bussiness_type',
         'use_menu',
         'use_service',
-        'use_inventory'
+        'use_inventory',
     ];
+
+    /**
+     * Get all cash summaries for this company.
+     */
+    public function cashSummaries(): HasMany
+    {
+        return $this->hasMany(CashSummary::class);
+    }
 
     /**
      * Get all shifts belonging to this company.
      */
     public function shifts(): HasMany
     {
-        return $this->hasMany(
-            Shift::class,
-            'company_id',
-            'id'
-        );
+        return $this->hasMany(Shift::class);
     }
 
     /**
      * Get the categories for the company.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function categories(): HasMany
     {
-        return $this->hasMany(
-            Category::class,
-            'category_id',
-            'id'
-        );
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * Get all menu items for this company.
+     */
+    public function menuItems(): HasMany
+    {
+        return $this->hasMany(MenuItem::class);
     }
 
     /**
      * Get the company logo URL attribute.
-     *
-     * @return string
      */
     public function getLogoUrlAttribute(): string
     {
         return $this->company_logo
-            ? asset(
-                'storage/' . $this->company_logo
-            )
-            : asset(
-                'assets/img/icons/av color.png'
-            );
+            ? asset('storage/' . $this->company_logo)
+            : asset('assets/img/icons/av color.png');
     }
 }

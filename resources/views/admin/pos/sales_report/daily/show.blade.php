@@ -2,76 +2,204 @@
 
 @push('css')
     <style>
+        /* ===== HERO CARD ===== */
         .page-shell { padding: 8px 0 24px; }
+
         .hero-card {
             border: none;
-            border-radius: 18px;
+            border-radius: 2rem;
             overflow: hidden;
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            background: linear-gradient(135deg, #ccf0f2 0%, #a7f3d0 100%) !important;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
-        .hero-card .card-body { padding: 24px; }
+
+        .hero-card .card-body {
+            padding: 1.5rem;
+        }
+
+        /* ===== CHIP ===== */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-radius: 999px;
+            padding: 0.25rem 0.9rem;
+            background: #ecfdf5 !important;
+            color: #065f46 !important;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid #d1fae5;
+        }
+
+        .chip i {
+            color: #10b981;
+        }
+
+        /* ===== HERO TEXT ===== */
+        .hero-card h3 {
+            color: #065f46 !important;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .hero-card .text-white-50 {
+            color: #047857 !important;
+        }
+
+        /* ===== KPI CARDS ===== */
         .kpi-card {
-            background: rgba(255,255,255,0.16);
-            border: 1px solid rgba(255,255,255,0.18);
-            border-radius: 14px;
-            padding: 14px;
+            background: #ffffff;
+            border: 1px solid #d1fae5;
+            border-radius: 1.5rem;
+            padding: 1.25rem 1rem;
             height: 100%;
+            transition: 0.2s;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         }
-        .kpi-card small { color: rgba(255,255,255,0.82); }
-        .kpi-card h3 { font-size: 1.35rem; font-weight: 700; color: #fff; margin-top: 6px; margin-bottom: 0; }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            border-color: #6ee7b7;
+        }
+
+        .kpi-card small {
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .kpi-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #065f46;
+            margin-top: 0.25rem;
+            margin-bottom: 0;
+        }
+
+        /* ===== BUTTON BACK ===== */
+        .btn-light {
+            background: #ffffff !important;
+            border: 1px solid #d1fae5 !important;
+            border-radius: 30px !important;
+            color: #065f46 !important;
+            font-weight: 600 !important;
+            padding: 0.5rem 1.5rem !important;
+            transition: 0.2s;
+        }
+
+        .btn-light:hover {
+            background: #ecfdf5 !important;
+            border-color: #6ee7b7 !important;
+            color: #047857 !important;
+        }
+
+        /* ===== REPORT CARD ===== */
         .report-card {
             border: none;
-            border-radius: 18px;
+            border-radius: 1.5rem;
             overflow: hidden;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid #d1fae5;
         }
-        .report-card .card-header { background: #fff; border-bottom: 1px solid #edf2f7; }
-        .table-report th { background: #f8fafc; color: #475569; }
-        .amount-text { font-family: monospace; font-weight: 700; }
-        .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 10px; background: #eef2ff; color: #4338ca; font-size: 0.85rem; }
 
+        .report-card .card-header {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-bottom: 1px solid #d1fae5;
+            padding: 1rem 1.5rem;
+        }
+
+        .report-card .card-header h5 {
+            color: #065f46;
+            font-weight: 700;
+        }
+
+        .report-card .card-header .badge {
+            background: #065f46 !important;
+            color: #fff;
+        }
+
+        .report-card .card-body {
+            padding: 0;
+        }
+
+        /* ===== TABLE ===== */
+        .table-report thead th {
+            background: #ecfdf5;
+            color: #065f46;
+            font-weight: 600;
+            border-bottom: 2px solid #d1fae5;
+            padding: 0.9rem 1rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .table-report tbody td {
+            padding: 0.9rem 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .table-report tbody tr:hover {
+            background: #f0fdf4;
+        }
+
+        .table-report tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .amount-text {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+        }
+
+        .amount-text.text-success { color: #059669; }
+        .amount-text.text-info { color: #0ea5e9; }
+        .amount-text.text-warning { color: #d97706; }
+        .amount-text.text-primary { color: #065f46; }
+
+        /* ===== BADGE ===== */
+        .badge.bg-secondary {
+            background: #d1d5db !important;
+            color: #1e293b;
+        }
+
+        .badge.bg-primary {
+            background: #065f46 !important;
+            color: #fff;
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-
-            .card-header h4 {
-                font-size: 1rem;
-                margin-bottom: 0;
-            }
-
-            .card-body {
+            .hero-card .card-body {
                 padding: 1rem;
             }
 
-            .btn-add-company {
-                width: 100%;
-                margin-bottom: 1rem;
+            .kpi-card h3 {
+                font-size: 1.2rem;
             }
 
-            .action-buttons {
-                display: flex;
-                flex-direction: column;
-                gap: .5rem;
-                min-width: 100px;
+            .table-report thead th,
+            .table-report tbody td {
+                padding: 0.5rem;
+                font-size: 0.75rem;
             }
 
-            .action-buttons .btn {
-                width: 100%;
+            .amount-text {
+                font-size: 0.75rem;
             }
 
-            .company-logo {
-                max-width: 50px;
-                max-height: 50px;
+            .chip {
+                font-size: 0.7rem;
+                padding: 0.15rem 0.6rem;
             }
 
-            .pagination-wrapper {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .pagination-wrapper>div {
-                width: 100%;
+            .btn-light {
+                padding: 0.4rem 1rem;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -79,6 +207,7 @@
 
 @section('content')
     <div class="page-shell">
+        <!-- ===== HERO CARD ===== -->
         <div class="card hero-card mb-4">
             <div class="card-body">
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
@@ -92,28 +221,29 @@
                     </a>
                 </div>
 
-                <div class="row g-3 mt-2">
+                <!-- KPI Cards -->
+                <div class="row g-3 mt-3">
                     <div class="col-md-3 col-sm-6">
                         <div class="kpi-card">
-                            <small>Outets</small>
+                            <small><i class="fas fa-store me-1"></i> Outlets</small>
                             <h3>{{ $salesReport['summary']['total_companies'] ?? 0 }}</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="kpi-card">
-                            <small>Accessories</small>
+                            <small><i class="fas fa-headphones me-1"></i> Accessories</small>
                             <h3>{{ \Carbon\Carbon::rupiah($salesReport['summary']['total_accessories'] ?? 0, 0, ',', '.') }}</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="kpi-card">
-                            <small>Service</small>
+                            <small><i class="fas fa-tools me-1"></i> Service</small>
                             <h3>{{ \Carbon\Carbon::rupiah($salesReport['summary']['total_service'] ?? 0, 0, ',', '.') }}</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="kpi-card">
-                            <small>Grand Total</small>
+                            <small><i class="fas fa-cash-stack me-1"></i> Grand Total</small>
                             <h3>{{ \Carbon\Carbon::rupiah($salesReport['summary']['grand_total'] ?? 0, 0, ',', '.') }}</h3>
                         </div>
                     </div>
@@ -121,11 +251,12 @@
             </div>
         </div>
 
+        <!-- ===== TABLE CARD ===== -->
         <div class="card report-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0"><i class="fas fa-table me-2"></i> Company Breakdown</h5>
-                    <small class="text-muted">Transaction details for the selected daily report.</small>
+                    <small class="text-muted" style="color: #047857 !important;">Transaction details for the selected daily report.</small>
                 </div>
                 <span class="badge bg-primary rounded-pill">{{ count($salesReport['data'] ?? []) }} record</span>
             </div>
