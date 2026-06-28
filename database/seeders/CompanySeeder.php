@@ -13,6 +13,7 @@ class CompanySeeder extends Seeder
      */
     public function run(): void
     {
+         // 1. My Fried Chicken
         Company::updateOrCreate(
             ['company_name' => 'My Fried Chicken'],
             [
@@ -27,7 +28,7 @@ class CompanySeeder extends Seeder
             ]
         );
 
-        // Bisa tambahkan company lain jika perlu
+        // 2. Raja Kepiting
         Company::updateOrCreate(
             ['company_name' => 'Raja Kepiting'],
             [
@@ -42,6 +43,21 @@ class CompanySeeder extends Seeder
             ]
         );
 
-        $this->command->info('Companies seeded successfully!');
+        // 3. Ayam Bebek Ganza (id 3)
+        Company::updateOrCreate(
+            ['company_name' => 'Ayam Bebek Ganza'],
+            [
+                'company_email'    => 'ayambebekganza@gmail.com',
+                'company_phone'    => '089527658250', // same phone
+                'company_address'  => 'Jl. Contoh No. 123, Kota Samarinda, Kalimantan Timur',
+                'company_logo'     => null,
+                'bussiness_type'   => 'Restaurant', // same type
+                'use_menu'         => true,
+                'use_service'      => false,
+                'use_inventory'    => true,
+            ]
+        );
+
+        $this->command->info('✅ Companies seeded successfully!');
     }
 }

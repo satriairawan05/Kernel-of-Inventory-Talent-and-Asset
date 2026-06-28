@@ -137,9 +137,9 @@
                                 <td>{{ $stock->productVariant->product->product_name ?? '-' }}</td>
                                 <td>{{ $stock->productVariant->variant_name ?? '-' }}</td>
                                 <td class="fw-bold {{ $stock->current_stock <= 0 ? 'text-danger' : 'text-success' }}">
-                                    {{ number_format($stock->current_stock, 2, ',', '.') }}
+                                    {{ number_format($stock->current_stock) }}
                                 </td>
-                                <td class="text-nowrap">{{ $stock->updated_at->format('d/m/Y H:i') }}</td>
+                                <td class="text-nowrap">{{ $stock->updated_at->format('l, d F Y') }}</td>
                                 <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
                                     @if ($access['Update'] == 1)
                                         <button type="button" class="btn btn-sm btn-warning btn-edit"

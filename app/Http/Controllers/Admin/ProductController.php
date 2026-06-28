@@ -131,7 +131,7 @@ class ProductController extends Controller
             return redirect()->back()->with('failed', "You don't have authority");
         } else {
             try {
-                $product->load(['company', 'category', 'unit', 'variants' => function ($query) {
+                $product->load(['company', 'unit', 'variants' => function ($query) {
                     $query->latest();
                 }]);
     

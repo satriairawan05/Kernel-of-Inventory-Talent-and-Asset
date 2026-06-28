@@ -109,7 +109,7 @@
 
             <!-- Presence -->
             <div class="col-12 col-md-6 col-xl-4">
-                <a href="#" class="text-decoration-none">
+                <a href="{{ route('presence.home') }}" class="text-decoration-none">
                     <div class="card dashboard-card presence-card">
                         <div class="card-body">
                             <i class="fa-solid fa-user-check"></i>

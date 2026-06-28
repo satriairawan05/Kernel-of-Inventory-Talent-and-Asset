@@ -230,8 +230,6 @@
                             <th>#</th>
                             <th>Image</th>
                             <th>Product</th>
-                            {{-- <th>Code</th> --}}
-                            {{-- <th>Category</th> --}}
                             <th>Unit</th>
                             <th>Company</th>
                             <th>Status</th>
@@ -246,11 +244,11 @@
                                 <img src="{{ $product->image_url }}" alt="{{ $product->product_name }}" class="product-thumb">
                             </td>
                             <td>
-                                <strong>{{ $product->product_name }}</strong>
+                                <a href="{{ route('inventory.product.show', $product) }}" class="text-decoration-none text-dark">
+                                    <strong>{{ $product->product_name }}</strong>
+                                </a>
                                 <div class="small text-muted">{{ Str::limit($product->description, 25) }}</div>
                             </td>
-                            {{-- <td><span class="badge bg-light text-dark">{{ $product->product_code }}</span></td> --}}
-                            {{-- <td>{{ $product->category->category_name ?? '-' }}</td> --}}
                             <td>{{ $product->unit->unit_name ?? '-' }}</td>
                             <td>{{ $product->company->company_name ?? '-' }}</td>
                             <td>
@@ -262,6 +260,10 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
+                                    {{-- Tombol Detail --}}
+                                    <a href="{{ route('inventory.product.show', $product) }}" class="btn btn-sm btn-info text-white">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                     @if ($access['Update'] == 1)
                                         <button type="button" class="btn btn-sm btn-warning btn-edit"
                                             data-bs-toggle="modal"
@@ -293,7 +295,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-5">No products found.</td>
+                            <td colspan="7" class="text-center text-muted py-5">No products found.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -334,18 +336,6 @@
                             </select>
                             @error('company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        {{-- <div class="col-md-6">
-                            <label class="form-label">Category</label>
-                            <select name="category_id" class="form-select select2 @error('category_id') is-invalid @enderror" required>
-                                <option value="">Select Category</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->category_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div> --}}
                         <div class="col-md-6">
                             <label class="form-label">Unit</label>
                             <select name="unit_id" class="form-select select2 @error('unit_id') is-invalid @enderror" required>
@@ -364,12 +354,6 @@
                                 class="form-control @error('product_name') is-invalid @enderror" required placeholder="Ayam Kecil">
                             @error('product_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        {{-- <div class="col-md-6">
-                            <label class="form-label">Product Code</label>
-                            <input type="text" name="product_code" value="{{ old('product_code') }}"
-                                class="form-control @error('product_code') is-invalid @enderror" required placeholder="AK-001">
-                            @error('product_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div> --}}
                         <div class="col-md-6">
                             <label class="form-label">Status</label>
                             <select name="is_active" class="form-select select2 @error('is_active') is-invalid @enderror" required>
@@ -414,6 +398,7 @@
     </div>
 </div>
 @endif
+
 @if ($access['Update'] == 1)
 <!-- ============================================================== -->
 <!-- MODAL EDIT -->
@@ -440,16 +425,6 @@
                             </select>
                             @error('company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        {{-- <div class="col-md-6">
-                            <label class="form-label">Category</label>
-                            <select id="edit_category_id" name="category_id" class="form-select select2 @error('category_id') is-invalid @enderror" required>
-                                <option value="">Select Category</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->category_name }}</option>
-                                @endforeach
-                            </select>
-                            @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div> --}}
                         <div class="col-md-6">
                             <label class="form-label">Unit</label>
                             <select id="edit_unit_id" name="unit_id" class="form-select select2 @error('unit_id') is-invalid @enderror" required>
@@ -466,12 +441,6 @@
                                 class="form-control @error('product_name') is-invalid @enderror" required>
                             @error('product_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        {{-- <div class="col-md-6">
-                            <label class="form-label">Product Code</label>
-                            <input type="text" id="edit_product_code" name="product_code"
-                                class="form-control @error('product_code') is-invalid @enderror" required>
-                            @error('product_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div> --}}
                         <div class="col-md-6">
                             <label class="form-label">Status</label>
                             <select id="edit_is_active" name="is_active" class="form-select select2 @error('is_active') is-invalid @enderror" required>
@@ -516,6 +485,7 @@
     </div>
 </div>
 @endif
+
 @if ($access['Delete'] == 1)
 <!-- ============================================================== -->
 <!-- MODAL DELETE -->

@@ -24,11 +24,11 @@ class MenuItemStoreRequest extends FormRequest
     {
         return [
             'name'     => 'required|string|max:255',
-            'price'    => 'required|integer|min:0',
-            'category' => 'required',
-            'status'   => 'required',
-            'stock'    => 'required|integer|min:0',
-            'image'    => 'required|image|max:5120',
+            'price'    => 'required|min:0',
+            'category' => 'nullable',
+            'status'   => 'nullable',
+            'stock'    => 'nullable|min:0',
+            'image'    => 'nullable|image|max:5120',
         ];
     }
 }

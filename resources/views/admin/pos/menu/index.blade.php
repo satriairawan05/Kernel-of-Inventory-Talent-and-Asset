@@ -68,7 +68,6 @@
             text-align: center;
             cursor: pointer;
         }
-        /* Styling untuk input price dengan prefix Rp */
         .input-group-rupiah .input-group-text {
             background: #eef2f6;
             font-weight: 600;
@@ -92,7 +91,6 @@
 @endpush
 
 @push('js')
-    <!-- ====== PASTIKAN JQUERY & SELECT2 TERSEDIA ====== -->
     @if(!isset($jquery_loaded))
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -102,13 +100,10 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // ==================== FUNGSI FORMAT RUPIAH ====================
             function formatRupiah(angka) {
                 if (!angka) return '';
-                // Hapus semua non-digit
                 var clean = angka.replace(/\D/g, '');
                 if (clean === '') return '';
-                // Konversi ke number dan format dengan titik ribuan
                 var number = parseInt(clean, 10);
                 if (isNaN(number)) return '';
                 return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -120,35 +115,12 @@
                 return parseInt(clean, 10) || 0;
             }
 
-            // Terapkan format rupiah pada input price saat mengetik
             $(document).on('input', '.price-rupiah', function() {
                 var val = $(this).val();
                 var formatted = formatRupiah(val);
                 $(this).val(formatted);
             });
 
-            // ==================== TOGGLE STOCK ====================
-            function toggleStock(checkboxId, stockInputId) {
-                var isChecked = $('#' + checkboxId).is(':checked');
-                if (isChecked) {
-                    $('#' + stockInputId).closest('.stock-wrapper').show();
-                } else {
-                    $('#' + stockInputId).closest('.stock-wrapper').hide();
-                    $('#' + stockInputId).val(''); // kosongkan stock
-                }
-            }
-
-            // Event untuk checkbox stock di create
-            $('#create_has_stock').on('change', function() {
-                toggleStock('create_has_stock', 'create_stock');
-            });
-
-            // Event untuk checkbox stock di edit
-            $('#edit_has_stock').on('change', function() {
-                toggleStock('edit_has_stock', 'edit_stock');
-            });
-
-            // ==================== SELECT2 INIT ====================
             function initSelect2(modalId) {
                 $(modalId + ' .select2').select2({
                     theme: 'default',
@@ -161,27 +133,9 @@
 
             $('#createModal').on('shown.bs.modal', function() {
                 initSelect2('#createModal');
-                // Reset stock toggle
-                $('#create_has_stock').prop('checked', false);
-                $('#create_stock').closest('.stock-wrapper').hide();
-                $('#create_stock').val('');
             });
 
-            $('#editModal').on('shown.bs.modal', function() {
-                initSelect2('#editModal');
-                // Set state checkbox berdasarkan nilai stock
-                var stockVal = $('#edit_stock').val();
-                if (stockVal && parseInt(stockVal) > 0) {
-                    $('#edit_has_stock').prop('checked', true);
-                    $('#edit_stock').closest('.stock-wrapper').show();
-                } else {
-                    $('#edit_has_stock').prop('checked', false);
-                    $('#edit_stock').closest('.stock-wrapper').hide();
-                }
-            });
-
-            // ==================== CREATE MODAL ====================
-            // Image preview on file select
+            // CREATE modal - image preview
             $('#create_image').on('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -195,7 +149,7 @@
                 }
             });
 
-            // ==================== EDIT MODAL ====================
+            // EDIT modal
             $('#editModal').on('show.bs.modal', function(event) {
                 const button = $(event.relatedTarget);
                 const id = button.data('id');
@@ -203,45 +157,39 @@
                 const price = button.data('price');
                 const category = button.data('category');
                 const status = button.data('status');
-                const stock = button.data('stock');
                 const image = button.data('image');
+                const variantId = button.data('product-variant-id') || '';
 
-                // Set form action
                 const url = "{{ route('pos.menu.update', ':id') }}".replace(':id', id);
                 $('#editForm').attr('action', url);
 
-                // Set values
                 $('#edit_id').val(id);
                 $('#edit_name').val(name);
-                // Format price rupiah
                 $('#edit_price').val(formatRupiah(price.toString()));
-                $('#edit_category').val(category || 'food');
-                $('#edit_status').val(status || 'available');
-                $('#edit_stock').val(stock || 0);
+                $('#edit_category').val(category || 'food').trigger('change');
+                $('#edit_status').val(status || 'available').trigger('change');
 
-                // Toggle stock
-                if (stock && parseInt(stock) > 0) {
-                    $('#edit_has_stock').prop('checked', true);
-                    $('#edit_stock').closest('.stock-wrapper').show();
+                // Set selected variant
+                if (variantId) {
+                    $('#edit_product_variant_id').val(variantId).trigger('change');
                 } else {
-                    $('#edit_has_stock').prop('checked', false);
-                    $('#edit_stock').closest('.stock-wrapper').hide();
-                    $('#edit_stock').val('');
+                    $('#edit_product_variant_id').val('').trigger('change');
                 }
 
-                // Set current image
                 if (image) {
                     $('#edit_current_image').attr('src', image).show();
                 } else {
                     $('#edit_current_image').hide();
                 }
 
-                // Reset preview and file input
                 $('#edit_image_preview').hide();
                 $('#edit_image').val('');
             });
 
-            // Image preview on edit modal
+            $('#editModal').on('shown.bs.modal', function() {
+                initSelect2('#editModal');
+            });
+
             $('#edit_image').on('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -257,7 +205,7 @@
                 }
             });
 
-            // ==================== DELETE MODAL ====================
+            // DELETE modal
             $('#deleteModal').on('show.bs.modal', function(event) {
                 const button = $(event.relatedTarget);
                 const id = button.data('id');
@@ -268,7 +216,23 @@
                 $('#delete_menu_name').text(name);
             });
 
-            // ==================== CEK JQUERY ====================
+            // Submit - bersihkan format rupiah
+            $('#createForm').on('submit', function(e) {
+                var priceVal = $('#create_price').val();
+                if (priceVal) {
+                    var cleanPrice = priceVal.replace(/\D/g, '');
+                    $('#create_price').val(cleanPrice);
+                }
+            });
+
+            $('#editForm').on('submit', function(e) {
+                var priceVal = $('#edit_price').val();
+                if (priceVal) {
+                    var cleanPrice = priceVal.replace(/\D/g, '');
+                    $('#edit_price').val(cleanPrice);
+                }
+            });
+
             console.log('✅ jQuery & Select2 siap digunakan!');
         });
     </script>
@@ -320,6 +284,7 @@
                             <th scope="col">#</th>
                             <th scope="col">Image</th>
                             <th scope="col">Name</th>
+                            <th scope="col">Variant</th>
                             <th scope="col">Price</th>
                             <th scope="col">Category</th>
                             <th scope="col">Status</th>
@@ -339,6 +304,13 @@
                                     @endif
                                 </td>
                                 <td class="fw-semibold">{{ $item->name }}</td>
+                                <td>
+                                    @if($item->productVariant)
+                                        <span class="badge bg-info">{{ $item->productVariant->variant_name }}</span>
+                                    @else
+                                        <span class="badge bg-secondary">No variant</span>
+                                    @endif
+                                </td>
                                 <td>Rp {{ number_format($item->price, 0, ',', '.') }}</td>
                                 <td><span class="badge bg-secondary">{{ $item->category_label }}</span></td>
                                 <td>
@@ -353,8 +325,8 @@
                                         {{ $item->status_label }}
                                     </span>
                                 </td>
-                                <td class="{{ $item->stock <= 0 ? 'text-danger fw-bold' : ($item->stock <= 5 ? 'text-warning fw-bold' : '') }}">
-                                    {{ number_format($item->stock, 0, ',', '.') }}
+                                <td class="{{ $item->current_stock <= 0 ? 'text-danger fw-bold' : ($item->current_stock <= 5 ? 'text-warning fw-bold' : '') }}">
+                                    {{ number_format($item->current_stock, 0, ',', '.') }}
                                 </td>
                                 <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
                                     @if ($access['Update'] == 1)
@@ -366,8 +338,8 @@
                                             data-price="{{ $item->price }}"
                                             data-category="{{ $item->category }}"
                                             data-status="{{ $item->status }}"
-                                            data-stock="{{ $item->stock }}"
-                                            data-image="{{ $item->image_url }}">
+                                            data-image="{{ $item->image_url }}"
+                                            data-product-variant-id="{{ $item->product_variant_id }}">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
                                     @endif
@@ -384,7 +356,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">No menu items found.</td>
+                                <td colspan="9" class="text-center py-4 text-muted">No menu items found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -400,9 +372,7 @@
 </div>
 
 @if ($access['Create'] == 1)
-<!-- ============================================================== -->
 <!-- MODAL CREATE -->
-<!-- ============================================================== -->
 <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -470,20 +440,19 @@
                             @enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label d-block">Stock</label>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="create_has_stock">
-                                <label class="form-check-label" for="create_has_stock">Set Stock</label>
-                            </div>
-                            <div class="stock-wrapper mt-2" style="display: none;">
-                                <input type="number" id="create_stock" name="stock"
-                                    value="{{ old('stock', 0) }}"
-                                    class="form-control @error('stock') is-invalid @enderror"
-                                    placeholder="Jumlah stok (contoh: 10)" min="0">
-                                @error('stock')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <label class="form-label" for="create_product_variant_id">Product Variant (Stok)</label>
+                            <select id="create_product_variant_id" name="product_variant_id"
+                                class="form-select select2 @error('product_variant_id') is-invalid @enderror">
+                                <option value="">No variant (no stock)</option>
+                                @foreach($productVariants as $variant)
+                                    <option value="{{ $variant['id'] }}" {{ old('product_variant_id') == $variant['id'] ? 'selected' : '' }}>
+                                        {{ $variant['name'] }} (Stok: {{ number_format($variant['stock'], 0, ',', '.') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('product_variant_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="mb-3">
@@ -510,9 +479,7 @@
 @endif
 
 @if ($access['Update'] == 1)
-<!-- ============================================================== -->
 <!-- MODAL EDIT -->
-<!-- ============================================================== -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -576,19 +543,19 @@
                             @enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label d-block">Stock</label>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="edit_has_stock">
-                                <label class="form-check-label" for="edit_has_stock">Set Stock</label>
-                            </div>
-                            <div class="stock-wrapper mt-2" style="display: none;">
-                                <input type="number" id="edit_stock" name="stock"
-                                    class="form-control @error('stock') is-invalid @enderror"
-                                    placeholder="Jumlah stok (contoh: 10)" min="0">
-                                @error('stock')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <label class="form-label" for="edit_product_variant_id">Product Variant (Stok)</label>
+                            <select id="edit_product_variant_id" name="product_variant_id"
+                                class="form-select select2 @error('product_variant_id') is-invalid @enderror">
+                                <option value="">No variant (no stock)</option>
+                                @foreach($productVariants as $variant)
+                                    <option value="{{ $variant['id'] }}">
+                                        {{ $variant['name'] }} (Stok: {{ number_format($variant['stock'], 0, ',', '.') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('product_variant_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="mb-3">
@@ -616,9 +583,7 @@
 @endif
 
 @if ($access['Delete'] == 1)
-<!-- ============================================================== -->
 <!-- MODAL DELETE -->
-<!-- ============================================================== -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">

@@ -23,6 +23,10 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\GroupPageSeeder::class,
             \Database\Seeders\UserSeeder::class,
             \Database\Seeders\CompanySeeder::class,
+            \Database\Seeders\ShiftSeeder::class,
+            \Database\Seeders\ProductSeeder::class,
+            \Database\Seeders\ProductVariantSeeder::class,
+            \Database\Seeders\MenuItemSeeder::class,
             \Database\Seeders\SystemSettingSeeder::class,
         ]);
     }

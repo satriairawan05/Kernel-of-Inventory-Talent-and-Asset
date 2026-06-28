@@ -420,13 +420,13 @@
             </div>
             <div class="col-md-3 col-6">
                 <div class="summary-stats">
-                    <p><i class="fas fa-calculator text-primary"></i> Net Balance</p>
+                    <p><i class="fas fa-calculator text-primary"></i> Net Balance{{ $summary['formatted_balance'] > 0 ? 's' : '' }}</p>
                     <h3 class="text-primary">{{ $summary['formatted_balance'] ?? 'Rp 0' }}</h3>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="summary-stats">
-                    <p><i class="fas fa-receipt"></i> Total Records</p>
+                    <p><i class="fas fa-receipt"></i> Total Record{{ $summary['count'] > 0 ? 's' : '' }}</p>
                     <h3>{{ $summary['count'] ?? 0 }}</h3>
                 </div>
             </div>
@@ -441,7 +441,7 @@
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <span class="stat-chip"><i class="fas fa-cash-register me-1"></i>
-                            {{ $cashSummaries->total() }} total records
+                            {{ $cashSummaries->total() }} total record{{ $cashSummaries->total() > 1 ? 's' : '' }}
                         </span>
                         @if (auth()->user()->group_id == 1)
                             <form action="{{ route('pos.cash_summary.destroyAll') }}" method="POST" class="d-inline"
