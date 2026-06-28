@@ -25,6 +25,11 @@ class SystemSettingSeeder extends Seeder
                 'print_size'      => '58mm',
                 'print_connection' => 'Bluetooth',
             ],
+            'Ayam Bebek Ganza' => [
+                'opening_balance' => '400000',
+                'print_size'      => '58mm',
+                'print_connection' => 'Bluetooth',
+            ],
         ];
 
         foreach ($companies as $companyName => $settingsData) {
