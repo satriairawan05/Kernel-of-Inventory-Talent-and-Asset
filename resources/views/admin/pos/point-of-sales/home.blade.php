@@ -27,7 +27,8 @@
                 name: '{!! auth()->check() ? addslashes(auth()->user()->name) : 'Guest' !!}',
                 isOnline: {{ auth()->check() ? 'true' : 'false' }}
             },
-            outlet: { 
+            outlet: {
+                id: 1, 
                 name: "My Fried Chicken",
                 address: "Pusat",
                 openingBalance: "{{ $openingBalance ?? '150000' }}",

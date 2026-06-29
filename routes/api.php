@@ -8,5 +8,6 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('company',[API\CompanyController::class, 'index'])->name('company.index');
-Route::get('shift',[API\ShiftController::class, 'index'])->name('shift.index');
+Route::get('company',[API\APIController::class, 'getCompanies'])->name('company.index');
+Route::get('shift',[API\APIController::class, 'getShifts'])->name('shift.index');
+Route::get('menu', [API\APIController::class, 'getMenu'])->name('menu.index');

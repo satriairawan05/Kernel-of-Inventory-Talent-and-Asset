@@ -1,16 +1,9 @@
 /**
  * KitaABSENSI - Main Application Script
- * Dependencies: Alpine.js 3.x, Bootstrap 5.x
- * Compatible with: Chrome 60+, Firefox 55+, Safari 12+, Edge 79+
+ * Dependencies: Alpine.js 3.x, Bootstrap 5.x, jQuery 3.x
  */
 
-// ─── Konfigurasi ──────────────────────────────────────────────
-var USE_API = true; // Ubah ke false jika ingin menggunakan dummy saja
 var API_BASE_URL = '/api';
-var API_TOKEN = localStorage.getItem('api_token') || null;
-
-// ─── Role Simulation (untuk dummy data) ──────────────────────
-var currentUserRole = 'admin'; // 'admin', 'hr', 'owner', 'user'
 
 // ─── Helper Functions ──────────────────────────────────────────
 function formatDate(dateStr) {
@@ -28,92 +21,94 @@ function addMinutes(timeStr, minutes) {
     return newH + ':' + newM;
 }
 
-// ─── DUMMY DATA (fallback) ────────────────────────────────────
-function generateHistoryForEmployeeId(employeeId) {
+// ─── API Helper (jQuery AJAX) ──────────────────────────────────
+function apiAjax(url, method, data) {
+    method = method || 'GET';
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            url: API_BASE_URL + url,
+            type: method,
+            data: data || null,
+            dataType: 'json',
+            contentType: 'application/json',
+            headers: { 'Accept': 'application/json' },
+            success: function (response) {
+                if (response && typeof response.success !== 'undefined') {
+                    if (response.success) {
+                        resolve(response.data);
+                    } else {
+                        reject(new Error(response.message || 'API Error'));
+                    }
+                } else {
+                    resolve(response);
+                }
+            },
+            error: function (xhr, status, error) {
+                reject(new Error(error || 'Network error'));
+            }
+        });
+    });
+}
+
+// ─── DUMMY DATA ─────────────────────────────────────────────────
+function generateDummyHistory(lateMin) {
     var history = [];
     var today = new Date();
-    today.setHours(0, 0, 0, 0);
     var start = new Date(2026, 4, 20);
     var end = new Date(2026, 5, 27);
     if (end > today) end = today;
     var current = new Date(start);
     while (current <= end) {
         var dateStr = current.toISOString().split('T')[0];
-        var skip = (employeeId === 1 && dateStr === '2026-06-20') ||
-            (employeeId === 2 && (dateStr === '2026-06-15' || dateStr === '2026-06-22')) ||
-            (employeeId === 3 && dateStr === '2026-06-10');
-        if (!skip) {
-            var lateMin = Math.floor(Math.random() * 45);
-            var status = 'on-time';
-            if (lateMin > 15 && lateMin <= 30) status = 'late-5-15';
-            else if (lateMin > 30) status = 'late-30-60';
-            history.push({
-                date: dateStr,
-                date_formatted: formatDate(dateStr),
-                shift: 'Sore',
-                shift_start: '15:00',
-                shift_end: '23:00',
-                check_in: addMinutes('15:00', lateMin),
-                check_out: addMinutes('23:00', lateMin),
-                status: status
-            });
-        }
+        var status = 'on-time';
+        if (lateMin > 15 && lateMin <= 30) status = 'late-5-15';
+        else if (lateMin > 30) status = 'late-30-60';
+        history.push({
+            date: dateStr,
+            date_formatted: formatDate(dateStr),
+            shift: 'Sore',
+            shift_start: '15:00',
+            shift_end: '23:00',
+            check_in: addMinutes('15:00', lateMin || 0),
+            check_out: addMinutes('23:00', lateMin || 0),
+            status: status
+        });
         current.setDate(current.getDate() + 1);
     }
     history.sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
     return history;
 }
 
-function getAllEmployeesDummy() {
+function getDummyEmployees() {
     return [
-        { id: 1, nama: 'Deuwi Satriya Irawan', outlet_id: 1, shift_id: 2, total_absen: 0, status: 'on-time', history: generateHistoryForEmployeeId(1) },
-        { id: 2, nama: 'Budi Santoso', outlet_id: 2, shift_id: 1, total_absen: 0, status: 'late-5-15', history: generateHistoryForEmployeeId(2) },
-        { id: 3, nama: 'Siti Rahayu', outlet_id: 3, shift_id: 2, total_absen: 0, status: 'late-30-60', history: generateHistoryForEmployeeId(3) },
-        { id: 4, nama: 'Agus Wijaya', outlet_id: 1, shift_id: 1, total_absen: 0, status: 'on-time', history: generateHistoryForEmployeeId(4) }
+        { id: 1, nama: 'Deuwi Satriya Irawan', outlet_id: 1, shift_id: 2, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) },
+        { id: 2, nama: 'Budi Santoso', outlet_id: 2, shift_id: 1, total_absen: 0, status: 'late-5-15', history: generateDummyHistory(15) },
+        { id: 3, nama: 'Siti Rahayu', outlet_id: 3, shift_id: 2, total_absen: 0, status: 'late-30-60', history: generateDummyHistory(35) },
+        { id: 4, nama: 'Agus Wijaya', outlet_id: 1, shift_id: 1, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) }
     ];
 }
 
-function refreshAllEmployeesDummy() {
-    var employees = getAllEmployeesDummy();
-    employees.forEach(function (emp) {
-        emp.total_absen = emp.history.length;
-        if (emp.history.length > 0) {
-            emp.status = emp.history[emp.history.length - 1].status;
-        }
-    });
-    return employees;
+function getDummyEmployeeById(id) {
+    var all = getDummyEmployees();
+    return all.find(function (e) { return e.id === id; }) || null;
 }
 
-function getDummyEmployee() {
-    var all = refreshAllEmployeesDummy();
-    var user = all.find(function (e) { return e.id === 1; });
-    if (!user) {
-        return { id: 1, nama: 'Deuwi Satriya Irawan', outlet_id: 1, shift_id: 2, total_absen: 0, status: 'on-time', history: [] };
-    }
-    return user;
-}
-
-function getEmployeeByIdDummy(id) {
-    var all = refreshAllEmployeesDummy();
-    var found = all.find(function (e) { return e.id === id; });
-    if (found) return found;
-    return getDummyEmployee();
-}
-
-// ─── ALPINE COMPONENTS ────────────────────────────────────────
+// ─── ALPINE COMPONENTS ─────────────────────────────────────────
 
 document.addEventListener('alpine:init', function () {
 
-    // ─── COMPONENT: PRESENCE APP ──────────────────────────────
+    // ================================================================
+    // 1. PRESENCE APP
+    // ================================================================
     Alpine.data('presenceApp', function () {
         return {
-            // ── State ──
-            outletList: [],
-            shiftList: [],
+            // State
+            outlets: [],
+            shifts: [],
             selectedOutletId: null,
             selectedShiftId: null,
             presenceType: 'masuk',
-            name: 'Deuwi Satriya Irawan',
+            name: window.KitaPOS?.user?.name || 'Guest',
             isSelf: true,
             isSubmitting: false,
             modalIcon: '✅',
@@ -129,16 +124,19 @@ document.addEventListener('alpine:init', function () {
             photoPreview: null,
             loading: false,
 
-            // ── Computed ──
-            get shifts() {
-                return this.shiftList;
+            // Computed: shift yang muncul di dropdown (hanya berdasarkan outlet yang dipilih)
+            get shiftsForOutlet() {
+                if (!this.selectedOutletId) return [];
+                return this.shifts.filter(function (s) {
+                    return s.company_id === this.selectedOutletId;
+                }.bind(this));
             },
 
             get isFormValid() {
                 return this.selectedOutletId && this.selectedShiftId !== null && this.name.trim().length > 0;
             },
 
-            // ── Lifecycle ──
+            // Lifecycle
             init: function () {
                 this.updateClock();
                 var self = this;
@@ -146,7 +144,6 @@ document.addEventListener('alpine:init', function () {
                 this.loadOutlets();
             },
 
-            // ── Clock ──
             updateClock: function () {
                 var now = new Date();
                 this.currentTime = String(now.getHours()).padStart(2, '0') + ':' +
@@ -154,111 +151,95 @@ document.addEventListener('alpine:init', function () {
                     String(now.getSeconds()).padStart(2, '0');
             },
 
-            // ── API Calls ──
+            // API Calls
             loadOutlets: function () {
                 var self = this;
                 this.loading = true;
-                var url = API_BASE_URL + '/companies';
-
-                fetch(url, {
-                    headers: this._getHeaders()
-                })
-                .then(function (response) {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(function (data) {
-                    self.outletList = data;
-                    if (data.length > 0) {
-                        self.selectedOutletId = data[0].id;
-                        self.loadShifts(data[0].id);
-                    }
-                    self.loading = false;
-                })
-                .catch(function (error) {
-                    console.warn('API failed, using dummy outlets', error);
-                    self._useDummyOutlets();
-                    self.loading = false;
-                });
+                apiAjax('/companies')
+                    .then(function (data) {
+                        self.outlets = data.map(function (item) {
+                            return { id: item.id, name: item.name };
+                        });
+                        if (self.outlets.length > 0) {
+                            self.selectedOutletId = self.outlets[0].id;
+                            self.loadShifts(self.outlets[0].id);
+                        }
+                        self.loading = false;
+                    })
+                    .catch(function (error) {
+                        console.warn('Failed to load outlets:', error);
+                        self._fallbackOutlets();
+                        self.loading = false;
+                    });
             },
 
             loadShifts: function (companyId) {
                 var self = this;
                 if (!companyId) return;
                 this.loading = true;
-                var url = API_BASE_URL + '/shifts?company_id=' + companyId;
-
-                fetch(url, {
-                    headers: this._getHeaders()
-                })
-                .then(function (response) {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(function (data) {
-                    self.shiftList = data;
-                    self.selectedShiftId = null;
-                    if (data.length > 0) {
-                        self.selectedShiftId = data[0].id;
-                    }
-                    self.loading = false;
-                })
-                .catch(function (error) {
-                    console.warn('API failed, using dummy shifts', error);
-                    self._useDummyShifts(companyId);
-                    self.loading = false;
-                });
+                var url = '/shifts?company_id=' + companyId;
+                apiAjax(url)
+                    .then(function (data) {
+                        self.shifts = data.map(function (item) {
+                            return {
+                                id: item.id,
+                                company_id: item.company_id,
+                                name: item.name,
+                                start: item.start,
+                                end: item.end,
+                                code: item.code
+                            };
+                        });
+                        self.selectedShiftId = null;
+                        if (self.shifts.length > 0) {
+                            self.selectedShiftId = self.shifts[0].id;
+                        }
+                        self.loading = false;
+                    })
+                    .catch(function (error) {
+                        console.warn('Failed to load shifts:', error);
+                        self._fallbackShifts(companyId);
+                        self.loading = false;
+                    });
             },
 
-            // ── Dummy Fallback ──
-            _useDummyOutlets: function () {
-                this.outletList = [
+            _fallbackOutlets: function () {
+                this.outlets = [
                     { id: 1, name: 'My Fried Chicken' },
                     { id: 2, name: 'Raja Kepiting' },
                     { id: 3, name: 'Ayam Bebek Ganza' }
                 ];
-                if (!this.selectedOutletId && this.outletList.length > 0) {
-                    this.selectedOutletId = this.outletList[0].id;
-                    this._useDummyShifts(this.selectedOutletId);
+                if (!this.selectedOutletId && this.outlets.length > 0) {
+                    this.selectedOutletId = this.outlets[0].id;
+                    this._fallbackShifts(this.selectedOutletId);
                 }
             },
 
-            _useDummyShifts: function (companyId) {
+            _fallbackShifts: function (companyId) {
                 var dummyMap = {
                     1: [
-                        { id: 1, name: 'Shift Pagi', start: '07:00', end: '15:00', code: 'PG' },
-                        { id: 2, name: 'Shift Sore', start: '15:00', end: '23:00', code: 'SR' }
+                        { id: 1, company_id: 1, name: 'Shift Pagi', start: '07:00', end: '15:00', code: 'PG' },
+                        { id: 2, company_id: 1, name: 'Shift Sore', start: '15:00', end: '23:00', code: 'SR' }
                     ],
                     2: [
-                        { id: 1, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
-                        { id: 2, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
-                        { id: 3, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
+                        { id: 1, company_id: 2, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
+                        { id: 2, company_id: 2, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
+                        { id: 3, company_id: 2, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
                     ],
                     3: [
-                        { id: 1, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
-                        { id: 2, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
-                        { id: 3, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
+                        { id: 1, company_id: 3, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
+                        { id: 2, company_id: 3, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
+                        { id: 3, company_id: 3, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
                     ]
                 };
-                this.shiftList = dummyMap[companyId] || [];
+                this.shifts = dummyMap[companyId] || [];
                 this.selectedShiftId = null;
-                if (this.shiftList.length > 0) {
-                    this.selectedShiftId = this.shiftList[0].id;
+                if (this.shifts.length > 0) {
+                    this.selectedShiftId = this.shifts[0].id;
                 }
             },
 
-            _getHeaders: function () {
-                var headers = {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                };
-                if (API_TOKEN) {
-                    headers['Authorization'] = 'Bearer ' + API_TOKEN;
-                }
-                return headers;
-            },
-
-            // ── Event Handlers ──
+            // Event Handlers
             onOutletChange: function () {
                 this.selectedShiftId = null;
                 if (this.selectedOutletId) {
@@ -271,7 +252,6 @@ document.addEventListener('alpine:init', function () {
                 return parts[0] * 60 + parts[1];
             },
 
-            // ── Photo ──
             handlePhoto: function (event) {
                 var file = event.target.files[0];
                 if (!file) return;
@@ -283,7 +263,7 @@ document.addEventListener('alpine:init', function () {
                 event.target.value = '';
             },
 
-            // ── Modal ──
+            // Modal
             showPresenceModal: function (icon, title, message, late, lateMsg, photo) {
                 this.modalIcon = icon || '✅';
                 this.modalTitle = title || 'Presence Result';
@@ -318,17 +298,16 @@ document.addEventListener('alpine:init', function () {
                 }
                 this.selectedShiftId = null;
                 this.presenceType = 'masuk';
-                this.name = this.isSelf ? 'Deuwi Satriya Irawan' : '';
             },
 
-            // ── Submit ──
+            // Submit
             submitPresence: function () {
                 if (!this.isFormValid || this.isSubmitting) return;
                 this.isSubmitting = true;
 
                 try {
-                    var outlet = this.outletList.find(function (o) { return o.id === this.selectedOutletId; }.bind(this));
-                    var shift = this.shiftList.find(function (s) { return s.id === this.selectedShiftId; }.bind(this));
+                    var outlet = this.outlets.find(function (o) { return o.id === this.selectedOutletId; }.bind(this));
+                    var shift = this.shifts.find(function (s) { return s.id === this.selectedShiftId; }.bind(this));
                     if (!outlet || !shift) {
                         this.showPresenceModal('❌', 'Error', 'Outlet or Shift not found.');
                         this.isSubmitting = false;
@@ -340,21 +319,19 @@ document.addEventListener('alpine:init', function () {
                     var now = new Date();
                     var nowMin = now.getHours() * 60 + now.getMinutes();
 
-                    var lateMin = 0, isLate = false, lateType = '';
+                    var lateMin = 0, isLate = false;
 
                     if (this.presenceType === 'masuk') {
                         var diff = nowMin - start;
                         if (diff > 15) {
                             isLate = true;
                             lateMin = Math.floor(diff);
-                            lateType = 'Check In';
                         }
                     } else {
                         var diff = nowMin - end;
                         if (diff > 30) {
                             isLate = true;
                             lateMin = Math.floor(diff);
-                            lateType = 'Check Out';
                         }
                     }
 
@@ -393,19 +370,21 @@ document.addEventListener('alpine:init', function () {
             },
 
             goHome: function () {
-                window.location.assign('index.html');
+                window.location.assign('home');
             }
         };
     });
 
-    // ─── COMPONENT: REKAP APP ──────────────────────────────────
+    // ================================================================
+    // 2. REKAP APP
+    // ================================================================
     Alpine.data('rekapApp', function () {
         return {
-            // ── State ──
+            // State
             currentTime: '--:--:--',
             clockInterval: null,
-            outletList: [],
-            shiftList: [], // semua shift dari API
+            outlets: [],
+            shifts: [],
             selectedOutletId: null,
             selectedShiftId: null,
             filteredData: [],
@@ -413,25 +392,22 @@ document.addEventListener('alpine:init', function () {
             loading: false,
             error: null,
 
-            // ── Computed ──
-            get outletsForFilter() {
-                return this.outletList;
+            // Computed: shift yang muncul di dropdown (hanya berdasarkan outlet yang dipilih)
+            get shiftForFilter() {
+                if (!this.selectedOutletId) return this.shifts;
+                return this.shifts.filter(function (s) {
+                    return s.company_id === this.selectedOutletId;
+                }.bind(this));
             },
 
-            get shiftsForFilter() {
-                // Filter shift berdasarkan outlet yang dipilih di filter
-                if (!this.selectedOutletId) return this.shiftList;
-                return this.shiftList.filter(function (s) { return s.company_id === this.selectedOutletId; }.bind(this));
-            },
-
-            // ── Lifecycle ──
+            // Lifecycle
             init: function () {
                 this.updateClock();
                 var self = this;
                 this.clockInterval = setInterval(function () { self.updateClock(); }, 1000);
                 this.loadOutlets();
                 this.loadShifts();
-                this.loadData();
+                this.loadDummyData();
             },
 
             updateClock: function () {
@@ -441,45 +417,52 @@ document.addEventListener('alpine:init', function () {
                     String(now.getSeconds()).padStart(2, '0');
             },
 
-            // ── API Calls ──
+            // API Calls
             loadOutlets: function () {
                 var self = this;
-                var url = API_BASE_URL + '/companies';
-                fetch(url, { headers: self._getHeaders() })
-                    .then(function (response) { return response.json(); })
+                apiAjax('/companies')
                     .then(function (data) {
-                        self.outletList = data;
-                        if (data.length > 0 && !self.selectedOutletId) {
-                            self.selectedOutletId = data[0].id;
+                        self.outlets = data.map(function (item) {
+                            return { id: item.id, name: item.name };
+                        });
+                        if (self.outlets.length > 0 && !self.selectedOutletId) {
+                            self.selectedOutletId = self.outlets[0].id;
                         }
                         self.applyFilter();
                     })
                     .catch(function (error) {
-                        console.warn('Failed to load outlets for rekap', error);
-                        self.outletList = [
+                        console.warn('Failed to load outlets:', error);
+                        self.outlets = [
                             { id: 1, name: 'My Fried Chicken' },
                             { id: 2, name: 'Raja Kepiting' },
                             { id: 3, name: 'Ayam Bebek Ganza' }
                         ];
-                        if (!self.selectedOutletId && self.outletList.length > 0) {
-                            self.selectedOutletId = self.outletList[0].id;
+                        if (!self.selectedOutletId && self.outlets.length > 0) {
+                            self.selectedOutletId = self.outlets[0].id;
                         }
+                        self.applyFilter();
                     });
             },
 
             loadShifts: function () {
                 var self = this;
-                var url = API_BASE_URL + '/shifts';
-                fetch(url, { headers: self._getHeaders() })
-                    .then(function (response) { return response.json(); })
+                apiAjax('/shifts')
                     .then(function (data) {
-                        self.shiftList = data;
+                        self.shifts = data.map(function (item) {
+                            return {
+                                id: item.id,
+                                company_id: item.company_id,
+                                name: item.name,
+                                start: item.start,
+                                end: item.end,
+                                code: item.code
+                            };
+                        });
                         self.applyFilter();
                     })
                     .catch(function (error) {
-                        console.warn('Failed to load shifts for rekap', error);
-                        // dummy shifts
-                        self.shiftList = [
+                        console.warn('Failed to load shifts:', error);
+                        self.shifts = [
                             { id: 1, company_id: 1, name: 'Shift Pagi', start: '07:00', end: '15:00', code: 'PG' },
                             { id: 2, company_id: 1, name: 'Shift Sore', start: '15:00', end: '23:00', code: 'SR' },
                             { id: 3, company_id: 2, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
@@ -493,67 +476,27 @@ document.addEventListener('alpine:init', function () {
                     });
             },
 
-            loadData: function () {
-                var self = this;
-                this.loading = true;
-                this.error = null;
-
-                if (USE_API) {
-                    // Untuk demo, kita pakai dummy data dulu, tapi nanti bisa diambil dari endpoint rekap
-                    // Bisa buat endpoint /api/rekap nanti
-                    this.useDummyData();
-                    this.loading = false;
-                } else {
-                    this.useDummyData();
-                    this.loading = false;
-                }
-            },
-
-            useDummyData: function () {
-                var allowedRoles = ['admin', 'hr', 'owner'];
-                var isAdmin = allowedRoles.indexOf(currentUserRole) !== -1;
-
-                if (isAdmin) {
-                    var allEmployees = refreshAllEmployeesDummy();
-                    this.allData = allEmployees.map(function (emp) {
-                        return {
-                            id: emp.id,
-                            nama: emp.nama,
-                            outlet_id: parseInt(emp.outlet_id),
-                            shift_id: parseInt(emp.shift_id),
-                            total_absen: parseInt(emp.total_absen),
-                            status: emp.status
-                        };
-                    });
-                } else {
-                    var emp = getDummyEmployee();
-                    this.allData = [{
+            loadDummyData: function () {
+                var employees = getDummyEmployees();
+                this.allData = employees.map(function (emp) {
+                    return {
                         id: emp.id,
                         nama: emp.nama,
-                        outlet_id: parseInt(emp.outlet_id),
-                        shift_id: parseInt(emp.shift_id),
-                        total_absen: parseInt(emp.total_absen),
+                        outlet_id: emp.outlet_id,
+                        shift_id: emp.shift_id,
+                        total_absen: emp.history ? emp.history.length : 0,
                         status: emp.status
-                    }];
-                }
+                    };
+                });
                 this.applyFilter();
+                this.loading = false;
             },
 
-            _getHeaders: function () {
-                var headers = {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                };
-                if (API_TOKEN) {
-                    headers['Authorization'] = 'Bearer ' + API_TOKEN;
-                }
-                return headers;
-            },
-
-            // ── Filter ──
+            // Filter
             applyFilter: function () {
                 var filtered = this.allData ? this.allData.slice() : [];
 
+                // Filter berdasarkan outlet
                 if (this.selectedOutletId !== null && this.selectedOutletId !== '' && this.selectedOutletId !== undefined) {
                     var outletId = parseInt(this.selectedOutletId);
                     filtered = filtered.filter(function (e) {
@@ -561,6 +504,7 @@ document.addEventListener('alpine:init', function () {
                     }.bind(this));
                 }
 
+                // Filter berdasarkan shift
                 if (this.selectedShiftId !== null && this.selectedShiftId !== '' && this.selectedShiftId !== undefined) {
                     var shiftId = parseInt(this.selectedShiftId);
                     filtered = filtered.filter(function (e) {
@@ -571,13 +515,21 @@ document.addEventListener('alpine:init', function () {
                 this.filteredData = filtered;
             },
 
+            onOutletChange: function () {
+                // Reset selected shift saat outlet berubah
+                this.selectedShiftId = null;
+                // Shift di dropdown otomatis berubah karena shiftForFilter adalah computed
+                this.applyFilter();
+            },
+
+            // Helpers
             getOutletName: function (outletId) {
-                var found = this.outletList.find(function (o) { return o.id === parseInt(outletId); });
+                var found = this.outlets.find(function (o) { return o.id === parseInt(outletId); });
                 return found ? found.name : '-';
             },
 
             getShiftName: function (shiftId) {
-                var found = this.shiftList.find(function (s) { return s.id === parseInt(shiftId); });
+                var found = this.shifts.find(function (s) { return s.id === parseInt(shiftId); });
                 return found ? found.name : '-';
             },
 
@@ -616,12 +568,12 @@ document.addEventListener('alpine:init', function () {
         };
     });
 
-    // ─── COMPONENT: DETAIL APP ────────────────────────────────
+    // ================================================================
+    // 3. DETAIL APP
+    // ================================================================
     Alpine.data('detailApp', function () {
         return {
-            // ... (sama seperti sebelumnya, hanya perlu menyesuaikan outletList/shiftList dari API jika diperlukan)
-            // Untuk detail, kita tetap pakai dummy data karena belum ada API detail.
-            // Bisa ditambahkan nanti.
+            // State
             currentTime: '--:--:--',
             clockInterval: null,
             employee: null,
@@ -637,6 +589,7 @@ document.addEventListener('alpine:init', function () {
             minDate: null,
             maxDate: null,
 
+            // Computed
             get canPrev() {
                 if (!this.currentDate || !this.minDate) return false;
                 var currentMonth = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
@@ -651,10 +604,12 @@ document.addEventListener('alpine:init', function () {
                 return currentMonth < maxMonth;
             },
 
+            // Lifecycle
             init: function () {
                 this.updateClock();
                 var self = this;
                 this.clockInterval = setInterval(function () { self.updateClock(); }, 1000);
+
                 var params = new URLSearchParams(window.location.search);
                 var idParam = params.get('id');
                 if (!idParam) {
@@ -670,7 +625,12 @@ document.addEventListener('alpine:init', function () {
                 }
                 this.outletId = parseInt(params.get('outlet')) || null;
                 this.shiftId = parseInt(params.get('shift')) || null;
-                this.loadDetail();
+
+                this.loadOutletsAndShifts().then(function () {
+                    self.loadDummyDetail();
+                }).catch(function () {
+                    self.loadDummyDetail();
+                });
             },
 
             updateClock: function () {
@@ -680,46 +640,76 @@ document.addEventListener('alpine:init', function () {
                     String(now.getSeconds()).padStart(2, '0');
             },
 
-            loadDetail: function () {
-                this.loading = true;
-                var empData = getEmployeeByIdDummy(this.employeeId);
+            // API
+            loadOutletsAndShifts: function () {
+                var self = this;
+                return Promise.all([
+                    apiAjax('/companies'),
+                    apiAjax('/shifts')
+                ]).then(function (results) {
+                    var companiesData = results[0];
+                    var shiftsData = results[1];
+
+                    self.outlets = companiesData.map(function (item) {
+                        return { id: item.id, name: item.name };
+                    });
+
+                    self.shifts = shiftsData.map(function (item) {
+                        return {
+                            id: item.id,
+                            company_id: item.company_id,
+                            name: item.name,
+                            start: item.start,
+                            end: item.end,
+                            code: item.code
+                        };
+                    });
+                }).catch(function (error) {
+                    console.warn('Failed to load outlets or shifts:', error);
+                    self.outlets = [
+                        { id: 1, name: 'My Fried Chicken' },
+                        { id: 2, name: 'Raja Kepiting' },
+                        { id: 3, name: 'Ayam Bebek Ganza' }
+                    ];
+                    self.shifts = [
+                        { id: 1, name: 'Pagi' },
+                        { id: 2, name: 'Sore' },
+                        { id: 3, name: 'Malam' }
+                    ];
+                });
+            },
+
+            loadDummyDetail: function () {
+                var empData = getDummyEmployeeById(this.employeeId);
                 if (!empData) {
                     this.loading = false;
                     this.employee = null;
                     return;
                 }
-                // Ambil outlet dan shift dari list (jika sudah di-load)
-                // Untuk sementara kita pakai dummy outlet & shift list
-                this.outlets = [
-                    { id: 1, name: 'My Fried Chicken' },
-                    { id: 2, name: 'Raja Kepiting' },
-                    { id: 3, name: 'Ayam Bebek Ganza' }
-                ];
-                this.shifts = [
-                    { id: 1, name: 'Pagi' },
-                    { id: 2, name: 'Sore' },
-                    { id: 3, name: 'Malam' }
-                ];
 
                 var outlet = this.outlets.find(function (o) { return o.id === empData.outlet_id; });
                 var shift = this.shifts.find(function (s) { return s.id === empData.shift_id; });
+
                 this.employee = {
                     id: empData.id,
                     nama: empData.nama,
                     outlet_id: empData.outlet_id,
                     shift_id: empData.shift_id,
-                    total_absen: empData.total_absen,
+                    total_absen: empData.history ? empData.history.length : 0,
                     status: empData.status,
                     outlet_name: outlet ? outlet.name : 'Unknown',
                     shift_name: shift ? shift.name : 'Unknown',
-                    history: empData.history
+                    history: empData.history || []
                 };
-                this.dayStatusMap = {};
-                empData.history.forEach(function (log) {
-                    this.dayStatusMap[log.date] = log.status;
-                }.bind(this));
 
-                var history = empData.history;
+                this.dayStatusMap = {};
+                if (empData.history) {
+                    empData.history.forEach(function (log) {
+                        this.dayStatusMap[log.date] = log.status;
+                    }.bind(this));
+                }
+
+                var history = empData.history || [];
                 if (history.length > 0) {
                     var firstDate = new Date(history[0].date);
                     var lastDate = new Date(history[history.length - 1].date);
@@ -729,6 +719,7 @@ document.addEventListener('alpine:init', function () {
                     this.minDate = new Date(2026, 4, 1);
                     this.maxDate = new Date(2026, 5, 1);
                 }
+
                 if (!this.currentDate || this.currentDate < this.minDate) {
                     this.currentDate = new Date(this.minDate);
                 }
@@ -736,6 +727,7 @@ document.addEventListener('alpine:init', function () {
                 this.loading = false;
             },
 
+            // Calendar
             renderCalendar: function () {
                 if (!this.currentDate) return;
                 var year = this.currentDate.getFullYear();
@@ -815,7 +807,7 @@ document.addEventListener('alpine:init', function () {
             },
 
             goHome: function () {
-                window.location.assign('index.html');
+                window.location.assign('home');
             }
         };
     });

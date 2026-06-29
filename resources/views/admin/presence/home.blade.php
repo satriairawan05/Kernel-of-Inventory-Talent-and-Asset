@@ -48,7 +48,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" style="color: #3d1a1a;">Filter by Outlet</label>
                                 <select class="form-select border-2 rounded-4" style="border-color: #dcc8c8;"
-                                    x-model="selectedOutletId" @change="applyFilter()">
+                                    x-model="selectedOutletId" @change="onOutletChange()">
                                     <option value="">All Outlets</option>
                                     <template x-for="outlet in outlets" :key="outlet.id">
                                         <option :value="outlet.id" x-text="outlet.name"></option>
@@ -60,7 +60,7 @@
                                 <select class="form-select border-2 rounded-4" style="border-color: #dcc8c8;"
                                     x-model="selectedShiftId" @change="applyFilter()">
                                     <option value="">All Shifts</option>
-                                    <template x-for="shift in shifts" :key="shift.id">
+                                    <template x-for="shift in shiftForFilter" :key="shift.id">
                                         <option :value="shift.id" x-text="shift.name"></option>
                                     </template>
                                 </select>
@@ -84,7 +84,8 @@
                                 <tbody>
                                     <template x-if="filteredData.length === 0">
                                         <tr>
-                                            <td colspan="6" class="text-center text-secondary">No employees found</td>
+                                            <td colspan="6" class="text-center text-secondary">No employees found
+                                            </td>
                                         </tr>
                                     </template>
                                     <template x-for="(item, index) in filteredData" :key="item.id">
@@ -105,7 +106,7 @@
                             </table>
                         </div>
 
-                         <!-- Legend -->
+                        <!-- Legend -->
                         <div class="mt-3 d-flex flex-wrap gap-3">
                             <span class="badge bg-success p-2">On Time</span>
                             <span class="badge bg-warning text-dark p-2">Late 15–30 min</span>
