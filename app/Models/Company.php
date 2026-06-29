@@ -66,6 +66,11 @@ class Company extends Model
         return $this->hasMany(MenuItem::class);
     }
 
+    public function drafts(): HasMany
+    {
+        return $this->hasMany(Draft::class);
+    }
+
     /**
      * Get the company logo URL attribute.
      */

@@ -1,7 +1,7 @@
 // ================================================================
 // assets/js/kita-pos.js - KitaPOS with Alpine.js
 // All data from API (jQuery AJAX), no hardcoded menus.
-// Multiple Draft Sessions (Dine In / Take Away)
+// Multiple Draft Sessions (Dine In / Take Away) - Database persisted
 // ================================================================
 
 console.log('🚀 KitaPOS script.js loaded successfully!');
@@ -14,7 +14,7 @@ document.addEventListener('alpine:init', function () {
         menuItems: [],
         nextId: 1,
         openingBalance: 0,
-        sessions: [],
+        sessions: [],           // Drafts loaded from API
         activeSessionId: null,
         selectedSession: null,
         cart: [],
@@ -23,6 +23,7 @@ document.addEventListener('alpine:init', function () {
         searchQuery: '',
         mobileCartOpen: false,
         toastMessage: 'Notification',
+        draftLoading: false,
 
         // Cashier
         cashierName: 'Guest',
@@ -91,12 +92,17 @@ document.addEventListener('alpine:init', function () {
         getSessionTotal: function (sessionId) {
             var session = this.sessions.find(function (s) { return s.id === sessionId; });
             if (!session) return 0;
-            return session.items.reduce(function (sum, item) { return sum + (item.price * item.qty); }, 0);
+            if (session.subtotal !== undefined && session.subtotal !== null) {
+                return this.toNumber(session.subtotal);
+            }
+            return session.items.reduce(function (sum, item) {
+                return sum + (this.toNumber(item.price) * this.toNumber(item.qty));
+            }.bind(this), 0);
         },
         getDraftQty: function (id) {
             var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
             if (!session) return 0;
-            var item = session.items.find(function (i) { return i.id === id; });
+            var item = session.items.find(function (i) { return i.menu_item_id === id; });
             return item ? item.qty : 0;
         },
         getDisplayDraftQty: function (id) {
@@ -111,6 +117,19 @@ document.addEventListener('alpine:init', function () {
         getDisplayQty: function (id) {
             var qty = this.getCartQty(id);
             return qty > 0 ? qty : 1;
+        },
+
+        // ---- HISTORY COMPUTED ----
+        get totalRevenue() {
+            return this.transactionHistory.reduce((sum, trx) => sum + (trx.total || 0), 0);
+        },
+        get grandTotal() {
+            return this.openingBalance + this.totalRevenue;
+        },
+        get totalItemsSold() {
+            return this.transactionHistory.reduce((sum, trx) => {
+                return sum + trx.items.reduce((s, item) => s + item.qty, 0);
+            }, 0);
         },
 
         // ---- CASHIER ----
@@ -132,6 +151,48 @@ document.addEventListener('alpine:init', function () {
             } catch (e) { }
         },
 
+        // ---- GET CSRF TOKEN HELPER ----
+        getCsrfToken: function () {
+            var token = document.querySelector('meta[name="csrf-token"]');
+            if (token) {
+                return token.getAttribute('content');
+            }
+            console.warn('CSRF token meta tag not found!');
+            return '';
+        },
+
+        // ---- HELPER TO NUMBER ----
+        toNumber: function (value) {
+            if (value === undefined || value === null) return 0;
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') {
+                // Remove commas (thousand separators in some locales)
+                var str = value.replace(/,/g, '');
+                // Check if it has a dot and the part after the last dot is exactly 2 digits (decimal)
+                var lastDotIndex = str.lastIndexOf('.');
+                if (lastDotIndex !== -1) {
+                    var afterDot = str.substring(lastDotIndex + 1);
+                    if (afterDot.length === 2) {
+                        // It's a decimal (e.g., 55000.00), parse as float and round
+                        var num = parseFloat(str);
+                        return Math.round(num);
+                    }
+                }
+                // Otherwise, remove all dots (thousand separators) and parse as integer
+                var cleaned = str.replace(/\./g, '');
+                return parseInt(cleaned, 10) || 0;
+            }
+            return 0;
+        },
+
+        // ---- FORMAT RUPIAH ----
+        formatRupiah: function (angka) {
+            if (angka === undefined || angka === null) return '0';
+            var num = this.toNumber(angka);
+            if (isNaN(num) || num === 0) return '0';
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        },
+
         // ---- INIT ----
         init: function () {
             try {
@@ -145,7 +206,7 @@ document.addEventListener('alpine:init', function () {
                     localStorage.setItem('openingBalance', this.openingBalance.toString());
                 } catch (e) { }
 
-                // ===== LOAD MENU FROM API (jQuery AJAX) =====
+                // ===== LOAD MENU FROM API =====
                 this._loadMenuFromAPI();
 
                 // ===== LOAD HISTORY & PRINTER SIZE =====
@@ -153,6 +214,7 @@ document.addEventListener('alpine:init', function () {
                     var storedHistory = localStorage.getItem('transactionHistory');
                     if (storedHistory) {
                         this.transactionHistory = JSON.parse(storedHistory);
+                        console.log('📜 History loaded:', this.transactionHistory.length, 'transactions');
                     }
                 } catch (e) { }
 
@@ -166,11 +228,17 @@ document.addEventListener('alpine:init', function () {
                 if (toastEl && typeof bootstrap !== 'undefined' && bootstrap.Toast) {
                     this.toast = new bootstrap.Toast(toastEl, { delay: 2500 });
                 }
+
+                // ===== LOAD DRAFTS FROM API =====
+                this.loadDraftsFromAPI();
+
                 console.log('✅ KitaPOS Store ready!');
                 console.log('👤 Cashier:', this.cashierName, '| Online:', this.isCashierOnline);
+                console.log('💰 Opening Balance:', this.openingBalance);
+                console.log('📊 Total Revenue:', this.totalRevenue);
+                console.log('💵 Grand Total:', this.grandTotal);
             } catch (error) {
                 console.error('❌ Error during initialization:', error);
-                // Jika terjadi error, inisialisasi dengan array kosong agar tidak crash
                 if (this.menuItems.length === 0) {
                     this.menuItems = [];
                     this.nextId = 1;
@@ -178,7 +246,7 @@ document.addEventListener('alpine:init', function () {
             }
         },
 
-        // ===== LOAD MENU FROM API (jQuery AJAX) =====
+        // ===== LOAD MENU FROM API =====
         _loadMenuFromAPI: function () {
             var self = this;
             var companyId = window.KitaPOS?.outlet?.id || 1;
@@ -187,7 +255,6 @@ document.addEventListener('alpine:init', function () {
             this.loading = true;
             this.apiError = false;
 
-            // Gunakan jQuery AJAX
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -195,9 +262,11 @@ document.addEventListener('alpine:init', function () {
                 headers: { 'Accept': 'application/json' },
                 success: function (response) {
                     if (response.success && response.data) {
-                        // Data dari API langsung digunakan
-                        self.menuItems = response.data;
-                        // Cari nextId terbesar
+                        self.menuItems = response.data.sort(function (a, b) {
+                            if (a.category === 'additional' && b.category !== 'additional') return 1;
+                            if (a.category !== 'additional' && b.category === 'additional') return -1;
+                            return a.name.localeCompare(b.name);
+                        });
                         var maxId = 0;
                         self.menuItems.forEach(function (item) {
                             if (item.id > maxId) maxId = item.id;
@@ -205,7 +274,6 @@ document.addEventListener('alpine:init', function () {
                         self.nextId = maxId + 1;
                         console.log('✅ Menu loaded from API:', self.menuItems.length, 'items');
                     } else {
-                        // Jika response tidak sukses, gunakan array kosong
                         console.warn('API response not successful, using empty menu.');
                         self.menuItems = [];
                         self.nextId = 1;
@@ -215,7 +283,6 @@ document.addEventListener('alpine:init', function () {
                 },
                 error: function (xhr, status, error) {
                     console.error('❌ Failed to load menu from API:', error);
-                    // Jika API gagal, gunakan array kosong (tidak hardcode)
                     self.menuItems = [];
                     self.nextId = 1;
                     self.apiError = true;
@@ -225,7 +292,668 @@ document.addEventListener('alpine:init', function () {
             });
         },
 
-        // ---- SAVE/LOAD ----
+        // ============================================================
+        // DRAFT API METHODS
+        // ============================================================
+
+        /**
+         * Refresh draft list from API (called manually by user).
+         */
+        refreshDrafts: function () {
+            this.loadDraftsFromAPI();
+        },
+
+        /**
+         * Load drafts from API and populate sessions.
+         */
+        loadDraftsFromAPI: function () {
+            var self = this;
+            var companyId = window.KitaPOS?.outlet?.id || 1;
+            var url = '/api/drafts?company_id=' + companyId;
+
+            this.draftLoading = true;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                headers: { 'Accept': 'application/json' },
+                success: function (response) {
+                    if (response.success && response.data) {
+                        self.sessions = response.data.map(function (draft) {
+                            return {
+                                id: draft.id,
+                                name: draft.name,
+                                type: draft.type,
+                                table: draft.table,
+                                typeLabel: draft.typeLabel,
+                                items: draft.items.map(function (item) {
+                                    return {
+                                        id: item.id,
+                                        menu_item_id: item.menu_item_id,
+                                        name: item.name,
+                                        price: self.toNumber(item.price),
+                                        qty: item.qty,
+                                        total: self.toNumber(item.total),
+                                    };
+                                }),
+                                createdAt: draft.createdAt,
+                                status: draft.status,
+                                subtotal: self.toNumber(draft.subtotal),
+                                _persisted: true
+                            };
+                        });
+                        if (self.sessions.length > 0 && !self.activeSessionId) {
+                            self.activeSessionId = self.sessions[0].id;
+                        }
+                        console.log('✅ Drafts loaded from API:', self.sessions.length);
+                        if (self.sessions.length > 0) {
+                            self.showToast('📋 ' + self.sessions.length + ' draft(s) dimuat');
+                        }
+                    } else {
+                        self.sessions = [];
+                        console.warn('No drafts or API response not successful');
+                    }
+                    self.draftLoading = false;
+                },
+                error: function (xhr, status, error) {
+                    console.error('❌ Failed to load drafts:', error);
+                    self.sessions = [];
+                    self.draftLoading = false;
+                    if (xhr.status >= 500) {
+                        self.showToast('⚠️ Gagal memuat draft dari server. (Error ' + xhr.status + ')');
+                    } else if (xhr.status === 403) {
+                        self.showToast('⚠️ Anda tidak memiliki akses ke draft.');
+                    } else if (xhr.status !== 404 && xhr.status !== 0) {
+                        self.showToast('⚠️ Gagal memuat draft.');
+                    }
+                }
+            });
+        },
+
+        /**
+         * Create a new draft (persisted to DB).
+         */
+        createNewSession: function () {
+            var type = this.newSessionType;
+            var table = this.newSessionTable ? parseInt(this.newSessionTable, 10) : null;
+            var name = '';
+            if (type === 'dinein') {
+                if (!table || table < 1) {
+                    this.showToast('❌ Masukkan nomor meja yang valid');
+                    return;
+                }
+                name = 'Meja ' + table;
+            } else {
+                name = 'Take Away';
+            }
+
+            var self = this;
+            var companyId = window.KitaPOS?.outlet?.id || 1;
+            var csrfToken = this.getCsrfToken();
+            if (!csrfToken) {
+                this.showToast('❌ CSRF token tidak ditemukan. Refresh halaman.');
+                return;
+            }
+
+            this.showToast('⏳ Membuat pesanan...');
+
+            $.ajax({
+                url: '/api/drafts',
+                type: 'POST',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    company_id: companyId,
+                    type: type,
+                    table_number: table,
+                    name: name,
+                    items: []
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var draft = response.data;
+                        self.sessions.push({
+                            id: draft.id,
+                            name: draft.name,
+                            type: draft.type,
+                            table: draft.table,
+                            typeLabel: draft.typeLabel,
+                            items: [],
+                            createdAt: draft.createdAt,
+                            status: draft.status,
+                            subtotal: self.toNumber(draft.subtotal),
+                            _persisted: true
+                        });
+                        self.activeSessionId = draft.id;
+                        self.showToast('✅ Pesanan baru dibuat: ' + draft.name);
+                        console.log('📦 Session created:', draft);
+                    } else {
+                        self.showToast('❌ Gagal membuat pesanan: ' + (response.message || 'Unknown error'));
+                        console.error('Create draft failed:', response);
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error creating draft:', xhr);
+                    var errorMsg = '❌ Gagal membuat pesanan. ';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg += xhr.responseJSON.message;
+                    } else if (xhr.status === 422) {
+                        errorMsg += 'Validasi gagal. Periksa data input.';
+                    } else if (xhr.status === 419) {
+                        errorMsg += 'Session expired. Refresh halaman.';
+                    } else {
+                        errorMsg += 'Coba lagi.';
+                    }
+                    self.showToast(errorMsg);
+                }
+            });
+
+            var el = document.getElementById('newSessionModal');
+            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var modal = bootstrap.Modal.getInstance(el);
+                if (modal) modal.hide();
+            }
+        },
+
+        /**
+         * Delete a draft (only if active/processing).
+         */
+        removeSession: function (id) {
+            if (!confirm('Hapus session ini?')) return;
+
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            $.ajax({
+                url: '/api/drafts/' + id,
+                type: 'DELETE',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    if (response.success) {
+                        self.sessions = self.sessions.filter(function (s) { return s.id !== id; });
+                        if (self.activeSessionId === id) {
+                            self.activeSessionId = self.sessions.length > 0 ? self.sessions[0].id : null;
+                        }
+                        self.showToast('🗑️ Session dihapus');
+                        console.log('🗑️ Session removed:', id);
+                    } else {
+                        self.showToast('❌ Gagal hapus: ' + response.message);
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error deleting draft:', xhr);
+                    self.showToast('❌ Gagal hapus session.');
+                }
+            });
+        },
+
+        /**
+         * Move draft to cart (change status to processing and return items).
+         */
+        confirmSessionToCart: function (sessionId) {
+            var self = this;
+            var session = this.sessions.find(function (s) { return s.id === sessionId; });
+            if (!session) {
+                this.showToast('❌ Session tidak ditemukan');
+                return;
+            }
+            if (session.items.length === 0) {
+                this.showToast('❌ Session kosong!');
+                return;
+            }
+
+            var csrfToken = this.getCsrfToken();
+
+            $.ajax({
+                url: '/api/drafts/' + sessionId + '/to-cart',
+                type: 'POST',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var data = response.data;
+                        data.items.forEach(function (item) {
+                            var existing = self.cart.find(function (c) { return c.id === item.id; });
+                            if (existing) {
+                                existing.qty += item.qty;
+                            } else {
+                                var menuItem = self.menuItems.find(function (mi) { return mi.id === item.id; });
+                                self.cart.push({
+                                    id: item.id,
+                                    name: item.name,
+                                    price: self.toNumber(item.price),
+                                    qty: item.qty,
+                                    icon: menuItem ? menuItem.icon : '🍽️'
+                                });
+                            }
+                        });
+
+                        self.sessions = self.sessions.filter(function (s) { return s.id !== sessionId; });
+                        if (self.activeSessionId === sessionId) {
+                            self.activeSessionId = self.sessions.length > 0 ? self.sessions[0].id : null;
+                        }
+
+                        var el = document.getElementById('sessionDetailModal');
+                        if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            var modal = bootstrap.Modal.getInstance(el);
+                            if (modal) modal.hide();
+                        }
+
+                        self.showToast('🛒 ' + data.name + ' dilanjutkan ke Keranjang!');
+                        console.log('🛒 Draft moved to cart:', data);
+                    } else {
+                        self.showToast('❌ Gagal pindahkan ke cart: ' + response.message);
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error moving draft to cart:', xhr);
+                    self.showToast('❌ Gagal pindahkan ke cart.');
+                }
+            });
+        },
+
+        /**
+         * Activate a draft (change from processing to active).
+         */
+        activateDraft: function (id) {
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            $.ajax({
+                url: '/api/drafts/' + id + '/activate',
+                type: 'POST',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var session = self.sessions.find(function (s) { return s.id === id; });
+                        if (session) {
+                            session.status = 'active';
+                        }
+                        self.showToast('✅ Draft diaktifkan kembali');
+                    } else {
+                        self.showToast('❌ Gagal aktivasi: ' + response.message);
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error activating draft:', xhr);
+                    self.showToast('❌ Gagal aktivasi draft.');
+                }
+            });
+        },
+
+        /**
+         * Set active session (local, no API call).
+         */
+        setActiveSession: function (id) {
+            this.activeSessionId = id;
+            var session = this.sessions.find(function (s) { return s.id === id; });
+            this.showToast('🔁 Session aktif: ' + (session ? session.name : 'unknown'));
+        },
+
+        /**
+         * Open session detail modal.
+         */
+        openSessionDetailModal: function (sessionId) {
+            console.log('🔍 Opening detail for session:', sessionId);
+            var session = this.sessions.find(function (s) { return s.id === sessionId; });
+            if (!session) {
+                this.showToast('❌ Session tidak ditemukan');
+                console.error('Session not found:', sessionId);
+                return;
+            }
+            this.selectedSession = session;
+            console.log('📋 Selected session:', this.selectedSession);
+            var el = document.getElementById('sessionDetailModal');
+            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                new bootstrap.Modal(el).show();
+            } else {
+                console.error('Modal element #sessionDetailModal not found');
+                this.showToast('❌ Modal tidak ditemukan');
+            }
+        },
+
+        // ============================================================
+        // DRAFT ITEM MUTATIONS (Sync with API)
+        // ============================================================
+
+        /**
+         * Add item to draft (API) or increment qty.
+         */
+        incrementDraftQty: function (id) {
+            if (!this.activeSessionId) {
+                this.showToast('❌ Buat pesanan baru terlebih dahulu!');
+                this.openNewSessionModal();
+                return;
+            }
+            var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
+            if (!session) {
+                this.showToast('❌ Session tidak ditemukan');
+                return;
+            }
+            if (session.status === 'processing') {
+                this.showToast('⚠️ Draft sedang diproses. Aktifkan terlebih dahulu dengan tombol "Active".');
+                return;
+            }
+
+            var menuItem = this.menuItems.find(function (i) { return i.id === id; });
+            if (!menuItem) {
+                this.showToast('❌ Menu tidak ditemukan');
+                return;
+            }
+            if (menuItem.status === 'out') {
+                this.showToast('❌ ' + menuItem.name + ' habis!');
+                return;
+            }
+
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            // Cek apakah item sudah ada di draft (berdasarkan menu_item_id)
+            var existing = session.items.find(function (i) { return i.menu_item_id === id; });
+            if (existing) {
+                // Update qty +1
+                var newQty = existing.qty + 1;
+                var url = '/api/drafts/' + session.id + '/items/' + existing.id;
+                $.ajax({
+                    url: url,
+                    type: 'PUT',
+                    dataType: 'json',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: { qty: newQty },
+                    success: function (response) {
+                        if (response.success) {
+                            self._updateSessionFromResponse(session.id, response.data.draft);
+                            self.showToast('📝 ' + menuItem.name + ' qty ditambah');
+                        } else {
+                            self.showToast('❌ Gagal update item: ' + response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error('Error updating draft item:', xhr);
+                        var msg = '❌ Gagal update item. ';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg += xhr.responseJSON.message;
+                        }
+                        self.showToast(msg);
+                    }
+                });
+            } else {
+                // Tambah item baru
+                var url = '/api/drafts/' + session.id + '/items';
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    dataType: 'json',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: {
+                        menu_item_id: menuItem.id,
+                        name: menuItem.name,
+                        price: this.toNumber(menuItem.price),
+                        qty: 1,
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            self._updateSessionFromResponse(session.id, response.data.draft);
+                            self.showToast('📝 ' + menuItem.name + ' ditambahkan ke ' + session.name);
+                        } else {
+                            self.showToast('❌ Gagal tambah item: ' + response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error('Error adding draft item:', xhr);
+                        var msg = '❌ Gagal tambah item. ';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg += xhr.responseJSON.message;
+                        }
+                        self.showToast(msg);
+                    }
+                });
+            }
+        },
+
+        /**
+         * Decrement item qty from draft (API).
+         */
+        decrementDraftQty: function (id) {
+            var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
+            if (!session) return;
+            if (session.status === 'processing') {
+                this.showToast('⚠️ Draft sedang diproses. Aktifkan terlebih dahulu dengan tombol "Active".');
+                return;
+            }
+
+            var item = session.items.find(function (i) { return i.menu_item_id === id; });
+            if (!item) return;
+
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+            var newQty = item.qty - 1;
+            var url = '/api/drafts/' + session.id + '/items/' + item.id;
+
+            if (newQty <= 0) {
+                $.ajax({
+                    url: url,
+                    type: 'DELETE',
+                    dataType: 'json',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            self._updateSessionFromResponse(session.id, response.data.draft);
+                            self.showToast('🗑️ Item dihapus dari draft');
+                        } else {
+                            self.showToast('❌ Gagal hapus item: ' + response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error('Error deleting draft item:', xhr);
+                        var msg = '❌ Gagal hapus item. ';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg += xhr.responseJSON.message;
+                        }
+                        self.showToast(msg);
+                    }
+                });
+            } else {
+                $.ajax({
+                    url: url,
+                    type: 'PUT',
+                    dataType: 'json',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: { qty: newQty },
+                    success: function (response) {
+                        if (response.success) {
+                            self._updateSessionFromResponse(session.id, response.data.draft);
+                            self.showToast('📝 Qty dikurangi');
+                        } else {
+                            self.showToast('❌ Gagal update item: ' + response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error('Error updating draft item:', xhr);
+                        var msg = '❌ Gagal update item. ';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg += xhr.responseJSON.message;
+                        }
+                        self.showToast(msg);
+                    }
+                });
+            }
+        },
+
+        /**
+         * Update draft item qty from input (API).
+         */
+        updateDraftQtyFromInput: function (id, event) {
+            var val = parseInt(event.target.value, 10);
+            if (isNaN(val) || val < 0) {
+                event.target.value = this.getDisplayDraftQty(id);
+                return;
+            }
+
+            var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
+            if (!session) {
+                event.target.value = 1;
+                return;
+            }
+            if (session.status === 'processing') {
+                this.showToast('⚠️ Draft sedang diproses. Aktifkan terlebih dahulu dengan tombol "Active".');
+                event.target.value = this.getDisplayDraftQty(id);
+                return;
+            }
+
+            var item = session.items.find(function (i) { return i.menu_item_id === id; });
+            if (!item && val > 0) {
+                var menuItem = this.menuItems.find(function (i) { return i.id === id; });
+                if (menuItem && menuItem.status !== 'out') {
+                    this.incrementDraftQty(id);
+                } else {
+                    this.showToast('❌ Item tidak tersedia');
+                    event.target.value = this.getDisplayDraftQty(id);
+                }
+                return;
+            }
+
+            if (!item) {
+                event.target.value = this.getDisplayDraftQty(id);
+                return;
+            }
+
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+            var url = '/api/drafts/' + session.id + '/items/' + item.id;
+
+            if (val === 0) {
+                $.ajax({
+                    url: url,
+                    type: 'DELETE',
+                    dataType: 'json',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            self._updateSessionFromResponse(session.id, response.data.draft);
+                            self.showToast('🗑️ Item dihapus');
+                        } else {
+                            self.showToast('❌ Gagal hapus item: ' + response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error('Error deleting draft item:', xhr);
+                        self.showToast('❌ Gagal hapus item.');
+                    }
+                });
+            } else {
+                $.ajax({
+                    url: url,
+                    type: 'PUT',
+                    dataType: 'json',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: { qty: val },
+                    success: function (response) {
+                        if (response.success) {
+                            self._updateSessionFromResponse(session.id, response.data.draft);
+                            self.showToast('📝 Qty diperbarui');
+                        } else {
+                            self.showToast('❌ Gagal update item: ' + response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error('Error updating draft item:', xhr);
+                        self.showToast('❌ Gagal update item.');
+                    }
+                });
+            }
+        },
+
+        /**
+         * Helper: Update session data from API response.
+         * Subtotal diambil dari response data draft.subtotal (sudah dihitung backend).
+         */
+        _updateSessionFromResponse: function (sessionId, draftData) {
+            var sessionIndex = this.sessions.findIndex(function (s) { return s.id === sessionId; });
+            if (sessionIndex === -1) return;
+
+            var items = draftData.items.map(function (item) {
+                return {
+                    id: item.id,
+                    menu_item_id: item.menu_item_id,
+                    name: item.name,
+                    price: this.toNumber(item.price),
+                    qty: item.qty,
+                    total: this.toNumber(item.total),
+                };
+            }.bind(this));
+
+            var updatedSession = {
+                id: draftData.id,
+                name: draftData.name,
+                type: draftData.type,
+                table: draftData.table,
+                typeLabel: draftData.type === 'dinein' ? '🍽️ Dine In' : '🛍️ Take Away',
+                items: items,
+                subtotal: this.toNumber(draftData.subtotal),
+                createdAt: draftData.createdAt,
+                status: draftData.status,
+                _persisted: true
+            };
+
+            console.log('🔄 Updated session:', updatedSession);
+            console.log('📊 Subtotal:', updatedSession.subtotal);
+
+            this.sessions.splice(sessionIndex, 1, updatedSession);
+            if (this.selectedSession && this.selectedSession.id === sessionId) {
+                this.selectedSession = updatedSession;
+            }
+        },
+
+        // ============================================================
+        // SESSION MANAGEMENT
+        // ============================================================
+
+        openNewSessionModal: function () {
+            this.newSessionType = 'dinein';
+            this.newSessionTable = '';
+            var el = document.getElementById('newSessionModal');
+            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                new bootstrap.Modal(el).show();
+            }
+        },
+
+        // ============================================================
+        // SAVE / LOAD
+        // ============================================================
+
         saveOpeningBalance: function (value) {
             this.openingBalance = value;
             try {
@@ -255,6 +983,9 @@ document.addEventListener('alpine:init', function () {
             };
             this.transactionHistory.push(transaction);
             this.saveTransactionHistory();
+            console.log('💾 Transaction saved:', transaction);
+            console.log('📊 Updated totalRevenue:', this.totalRevenue);
+            console.log('💵 Updated grandTotal:', this.grandTotal);
             return transaction;
         },
         showToast: function (msg) {
@@ -266,11 +997,10 @@ document.addEventListener('alpine:init', function () {
             }
         },
 
-        // ---- HELPERS ----
-        formatRupiah: function (angka) {
-            if (!angka && angka !== 0) return '';
-            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        },
+        // ============================================================
+        // HELPERS
+        // ============================================================
+
         formatPriceInput: function (event) {
             var value = event.target.value.replace(/\D/g, '');
             if (value === '') {
@@ -321,7 +1051,10 @@ document.addEventListener('alpine:init', function () {
             return initials;
         },
 
-        // ---- UI NAVIGATION ----
+        // ============================================================
+        // UI NAVIGATION
+        // ============================================================
+
         goHome: function () {
             window.location.href = window.KitaPOS.routes.home;
         },
@@ -344,200 +1077,10 @@ document.addEventListener('alpine:init', function () {
             this.mobileCartOpen = false;
         },
 
-        // ---- SESSION MANAGEMENT ----
-        openNewSessionModal: function () {
-            this.newSessionType = 'dinein';
-            this.newSessionTable = '';
-            var el = document.getElementById('newSessionModal');
-            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                new bootstrap.Modal(el).show();
-            }
-        },
-        createNewSession: function () {
-            var type = this.newSessionType;
-            var table = this.newSessionTable ? parseInt(this.newSessionTable, 10) : null;
-            var name = '';
-            if (type === 'dinein') {
-                if (!table || table < 1) {
-                    this.showToast('❌ Masukkan nomor meja yang valid');
-                    return;
-                }
-                name = 'Meja ' + table;
-            } else {
-                name = 'Take Away';
-            }
-            var session = {
-                id: Date.now(),
-                name: name,
-                type: type,
-                table: table,
-                typeLabel: type === 'dinein' ? '🍽️ Dine In' : '🛍️ Take Away',
-                items: [],
-                createdAt: new Date().toISOString()
-            };
-            this.sessions.push(session);
-            this.activeSessionId = session.id;
-            var el = document.getElementById('newSessionModal');
-            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                var modal = bootstrap.Modal.getInstance(el);
-                if (modal) modal.hide();
-            }
-            this.showToast('✅ Pesanan baru dibuat: ' + name);
-            console.log('📦 Session created:', session);
-        },
-        setActiveSession: function (id) {
-            this.activeSessionId = id;
-            var session = this.sessions.find(function (s) { return s.id === id; });
-            this.showToast('🔁 Session aktif: ' + (session ? session.name : 'unknown'));
-        },
-        removeSession: function (id) {
-            if (confirm('Hapus session ini?')) {
-                this.sessions = this.sessions.filter(function (s) { return s.id !== id; });
-                if (this.activeSessionId === id) {
-                    this.activeSessionId = this.sessions.length > 0 ? this.sessions[0].id : null;
-                }
-                this.showToast('🗑️ Session dihapus');
-                console.log('🗑️ Session removed:', id);
-            }
-        },
+        // ============================================================
+        // CART OPERATIONS
+        // ============================================================
 
-        // ---- SESSION DETAIL MODAL ----
-        openSessionDetailModal: function (sessionId) {
-            console.log('🔍 Opening detail for session:', sessionId);
-            var session = this.sessions.find(function (s) { return s.id === sessionId; });
-            if (!session) {
-                this.showToast('❌ Session tidak ditemukan');
-                console.error('Session not found:', sessionId);
-                return;
-            }
-            this.selectedSession = session;
-            console.log('📋 Selected session:', this.selectedSession);
-            var el = document.getElementById('sessionDetailModal');
-            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                new bootstrap.Modal(el).show();
-            } else {
-                console.error('Modal element #sessionDetailModal not found');
-                this.showToast('❌ Modal tidak ditemukan');
-            }
-        },
-
-        // ---- DRAFT (session) ITEMS ----
-        incrementDraftQty: function (id) {
-            if (!this.activeSessionId) {
-                this.showToast('❌ Buat pesanan baru terlebih dahulu!');
-                this.openNewSessionModal();
-                return;
-            }
-            var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
-            if (!session) {
-                this.showToast('❌ Session tidak ditemukan');
-                return;
-            }
-            var menuItem = this.menuItems.find(function (i) { return i.id === id; });
-            if (!menuItem) {
-                this.showToast('❌ Menu tidak ditemukan');
-                return;
-            }
-            if (menuItem.status === 'out') {
-                this.showToast('❌ ' + menuItem.name + ' habis!');
-                return;
-            }
-            var existing = session.items.find(function (i) { return i.id === id; });
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                session.items.push({ id: menuItem.id, name: menuItem.name, price: menuItem.price, qty: 1, icon: menuItem.icon });
-            }
-            this.showToast('📝 ' + menuItem.name + ' ditambahkan ke ' + session.name);
-        },
-        decrementDraftQty: function (id) {
-            var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
-            if (!session) return;
-            var idx = -1;
-            for (var i = 0; i < session.items.length; i++) {
-                if (session.items[i].id === id) { idx = i; break; }
-            }
-            if (idx === -1) return;
-            if (session.items[idx].qty > 1) {
-                session.items[idx].qty -= 1;
-            } else {
-                session.items.splice(idx, 1);
-            }
-        },
-        updateDraftQtyFromInput: function (id, event) {
-            var val = parseInt(event.target.value, 10);
-            if (isNaN(val) || val < 0) {
-                event.target.value = this.getDisplayDraftQty(id);
-                return;
-            }
-            var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
-            if (!session) {
-                event.target.value = 1;
-                return;
-            }
-            var idx = -1;
-            for (var i = 0; i < session.items.length; i++) {
-                if (session.items[i].id === id) { idx = i; break; }
-            }
-            if (idx === -1) {
-                if (val > 0) {
-                    var menuItem = this.menuItems.find(function (i) { return i.id === id; });
-                    if (menuItem && menuItem.status !== 'out') {
-                        session.items.push({ id: menuItem.id, name: menuItem.name, price: menuItem.price, qty: val, icon: menuItem.icon });
-                    } else {
-                        this.showToast('❌ Item tidak tersedia');
-                        event.target.value = this.getDisplayDraftQty(id);
-                    }
-                } else {
-                    event.target.value = this.getDisplayDraftQty(id);
-                }
-                return;
-            }
-            if (val === 0) {
-                session.items.splice(idx, 1);
-            } else {
-                var menuItem = this.menuItems.find(function (i) { return i.id === id; });
-                if (menuItem && menuItem.status === 'out') {
-                    this.showToast('❌ ' + menuItem.name + ' habis!');
-                    event.target.value = this.getDisplayDraftQty(id);
-                    return;
-                }
-                session.items[idx].qty = val;
-            }
-        },
-
-        // ---- CONFIRM SESSION TO CART ----
-        confirmSessionToCart: function (sessionId) {
-            var session = this.sessions.find(function (s) { return s.id === sessionId; });
-            if (!session || session.items.length === 0) {
-                this.showToast('❌ Session kosong!');
-                return;
-            }
-            // Merge items into cart
-            session.items.forEach(function (item) {
-                var existing = this.cart.find(function (c) { return c.id === item.id; });
-                if (existing) {
-                    existing.qty += item.qty;
-                } else {
-                    this.cart.push({ id: item.id, name: item.name, price: item.price, qty: item.qty, icon: item.icon });
-                }
-            }.bind(this));
-            // Remove session
-            this.sessions = this.sessions.filter(function (s) { return s.id !== sessionId; });
-            if (this.activeSessionId === sessionId) {
-                this.activeSessionId = this.sessions.length > 0 ? this.sessions[0].id : null;
-            }
-            // Close modal if open
-            var el = document.getElementById('sessionDetailModal');
-            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                var modal = bootstrap.Modal.getInstance(el);
-                if (modal) modal.hide();
-            }
-            this.showToast('🛒 ' + session.name + ' dilanjutkan ke Keranjang!');
-            console.log('🛒 Session confirmed to cart:', session.name);
-        },
-
-        // ---- CART OPERATIONS ----
         incrementQty: function (id) {
             var existing = this.cart.find(function (c) { return c.id === id; });
             if (existing) {
@@ -598,7 +1141,10 @@ document.addEventListener('alpine:init', function () {
             }
         },
 
-        // ---- MENU MANAGEMENT ----
+        // ============================================================
+        // MENU MANAGEMENT
+        // ============================================================
+
         openAddMenu: function (category) {
             if (category === undefined) category = 'food';
             this.newItem = { name: '', price: '', category: category, status: 'available', icon: category === 'additional' ? '➕' : '🍽️', imagePreview: null, imageData: null };
@@ -722,10 +1268,9 @@ document.addEventListener('alpine:init', function () {
             // Update sessions & cart
             this.sessions.forEach(function (session) {
                 session.items.forEach(function (item) {
-                    if (item.id === id) {
+                    if (item.menu_item_id === id) {
                         item.name = name;
                         item.price = price;
-                        item.icon = this.editItem.icon || '🍽️';
                     }
                 }.bind(this));
             }.bind(this));
@@ -746,7 +1291,10 @@ document.addEventListener('alpine:init', function () {
             this.showToast('✅ Menu "' + name + '" updated successfully!');
         },
 
-        // ---- OPENING BALANCE ----
+        // ============================================================
+        // OPENING BALANCE
+        // ============================================================
+
         openEditOpeningBalance: function () {
             this.editOpeningBalance = this.formatRupiah(this.openingBalance);
             var el = document.getElementById('editOpeningBalanceModal');
@@ -764,7 +1312,10 @@ document.addEventListener('alpine:init', function () {
             }
         },
 
-        // ---- CHECKOUT ----
+        // ============================================================
+        // CHECKOUT
+        // ============================================================
+
         openCheckout: function () {
             if (this.cart.length === 0) return;
             this.paymentMethod = 'cash';
@@ -943,7 +1494,10 @@ document.addEventListener('alpine:init', function () {
             return options;
         },
 
-        // ---- HISTORY ----
+        // ============================================================
+        // HISTORY
+        // ============================================================
+
         deleteTransaction: function (id) {
             if (confirm('Delete transaction #' + id + '?')) {
                 this.transactionHistory = this.transactionHistory.filter(function (trx) { return trx.id !== id; });
@@ -960,7 +1514,10 @@ document.addEventListener('alpine:init', function () {
             }
         },
 
-        // ---- PRINTER ----
+        // ============================================================
+        // PRINTER
+        // ============================================================
+
         applyPrinterSize: function () {
             try {
                 localStorage.setItem('defaultPrinterSize', this.defaultPrinterSize);
@@ -973,7 +1530,10 @@ document.addEventListener('alpine:init', function () {
             this.outletId = id || 1;
         },
 
-        // ---- PRINT ----
+        // ============================================================
+        // PRINT
+        // ============================================================
+
         printStrukMobile: function (transaction) {
             if (!transaction || !transaction.items || transaction.items.length === 0) {
                 this.showToast('❌ No transaction data to print!');
@@ -1144,7 +1704,10 @@ document.addEventListener('alpine:init', function () {
             };
         },
 
-        // ---- CALCULATOR ----
+        // ============================================================
+        // CALCULATOR
+        // ============================================================
+
         calcAppend: function (val) { this.calcExpression += val; this.updateCalcDisplay(); },
         calcClear: function () { this.calcExpression = ''; this.updateCalcDisplay(); },
         calcBackspace: function () { this.calcExpression = this.calcExpression.slice(0, -1); this.updateCalcDisplay(); },
@@ -1159,19 +1722,23 @@ document.addEventListener('alpine:init', function () {
         },
         updateCalcDisplay: function () { this.calcDisplay = this.calcExpression || '0'; },
 
-        // ---- FILTER ----
+        // ============================================================
+        // FILTER
+        // ============================================================
+
         setCategory: function (cat) { this.currentCategory = cat; },
         filterMenu: function () { }
     });
 
-    // ===== UI COMPONENTS =====
+    // ============================================================
+    // UI COMPONENTS
+    // ============================================================
+
     Alpine.data('navbarComponent', function () { return {}; });
+
     Alpine.data('menuGridComponent', function () {
         return {
-            init: function () {
-                // Tidak perlu fetch gambar karena API sudah mengirimkan data gambar
-                // Jika ada gambar, tampilkan; jika tidak, inisial akan digunakan
-            },
+            init: function () { },
             getInitials: function (name) {
                 if (!name) return '??';
                 var words = name.split(' ');
@@ -1189,7 +1756,14 @@ document.addEventListener('alpine:init', function () {
         };
     });
 
-    Alpine.data('draftSessionsComponent', function () { return {}; });
+    Alpine.data('draftSessionsComponent', function () {
+        return {
+            refreshDrafts: function () {
+                Alpine.store('pos').refreshDrafts();
+            }
+        };
+    });
+
     Alpine.data('cartSidebarComponent', function () { return {}; });
     Alpine.data('mobileCartComponent', function () { return {}; });
     Alpine.data('checkoutComponent', function () { return {}; });
@@ -1197,13 +1771,15 @@ document.addEventListener('alpine:init', function () {
     Alpine.data('calculatorComponent', function () { return {}; });
     Alpine.data('addEditMenuComponent', function () { return {}; });
 
-    // ===== ROOT =====
+    // ============================================================
+    // ROOT
+    // ============================================================
+
     Alpine.data('posApp', function () {
         return {
             init: function () {
                 var store = Alpine.store('pos');
 
-                // ===== SET CASHIER BASED ON TIME =====
                 var currentHour = new Date().getHours();
                 var cashierName = 'May';
 
@@ -1256,5 +1832,5 @@ document.addEventListener('alpine:init', function () {
         };
     });
 
-    console.log('✅ KitaPOS with Alpine.js ready! (Data from API via AJAX)');
+    console.log('✅ KitaPOS with Alpine.js ready! (Draft tetap ada setelah refresh)');
 });

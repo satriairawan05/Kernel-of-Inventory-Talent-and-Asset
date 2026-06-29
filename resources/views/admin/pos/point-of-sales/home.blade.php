@@ -28,7 +28,7 @@
                 isOnline: {{ auth()->check() ? 'true' : 'false' }}
             },
             outlet: {
-                id: 1, 
+                id: {{ auth()->user()->company_id ?? 1 }}, 
                 name: "My Fried Chicken",
                 address: "Pusat",
                 openingBalance: "{{ $openingBalance ?? '150000' }}",

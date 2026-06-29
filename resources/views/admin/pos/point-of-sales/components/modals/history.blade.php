@@ -37,6 +37,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div>
                     <div class="history-opening-balance">
                         <div class="d-flex justify-content-between align-items-center">
@@ -45,13 +46,17 @@
                                 x-text="'Rp ' + $store.pos.formatRupiah($store.pos.openingBalance)"></span>
                         </div>
                     </div>
+
+                    <!-- Total Transactions (menggunakan totalRevenue) -->
                     <div class="history-total-transactions">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="label"><i class="bi bi-receipt me-2"></i>Total Transactions</span>
                             <span class="total"
-                                x-text="'Rp ' + $store.pos.formatRupiah($store.pos.totalTransactions)"></span>
+                                x-text="'Rp ' + $store.pos.formatRupiah($store.pos.totalRevenue)"></span>
                         </div>
                     </div>
+
+                    <!-- Grand Total -->
                     <div class="history-grand-total">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="label"><i class="bi bi-cash-stack me-2"></i>Grand Total</span>
@@ -59,13 +64,16 @@
                                 x-text="'Rp ' + $store.pos.formatRupiah($store.pos.grandTotal)"></span>
                         </div>
                     </div>
+
                     <hr />
+
                     <template x-if="$store.pos.transactionHistory.length === 0">
                         <div class="history-empty">
                             <i class="bi bi-inbox"></i>
                             <p>No transactions yet</p>
                         </div>
                     </template>
+
                     <template x-for="trx in $store.pos.transactionHistory.slice().reverse()" :key="trx.id">
                         <div class="history-item">
                             <div class="header">
@@ -77,10 +85,7 @@
                                         title="Print receipt">
                                         <i class="bi bi-printer"></i>
                                     </button>
-                                    {{-- <button class="delete-history-btn" @click="$store.pos.deleteTransaction(trx.id)"
-                                        title="Delete transaction">
-                                        <i class="bi bi-trash"></i>
-                                    </button> --}}
+                                    <!-- tombol hapus opsional -->
                                 </div>
                             </div>
                             <div class="detail">
@@ -104,6 +109,7 @@
                         </div>
                     </template>
                 </div>
+
                 <div class="d-flex justify-content-end gap-2 mt-3">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button class="btn btn-danger" @click="$store.pos.clearAllTransactions()">Clear All</button>

@@ -81,10 +81,24 @@ function generateDummyHistory(lateMin) {
 
 function getDummyEmployees() {
     return [
+        // ===== My Fried Chicken (outlet_id: 1) =====
+        // shift 1 = Pagi, shift 2 = Sore
         { id: 1, nama: 'Deuwi Satriya Irawan', outlet_id: 1, shift_id: 2, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) },
-        { id: 2, nama: 'Budi Santoso', outlet_id: 2, shift_id: 1, total_absen: 0, status: 'late-5-15', history: generateDummyHistory(15) },
-        { id: 3, nama: 'Siti Rahayu', outlet_id: 3, shift_id: 2, total_absen: 0, status: 'late-30-60', history: generateDummyHistory(35) },
-        { id: 4, nama: 'Agus Wijaya', outlet_id: 1, shift_id: 1, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) }
+        { id: 4, nama: 'Agus Wijaya', outlet_id: 1, shift_id: 1, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) },
+        { id: 7, nama: 'Dewi Lestari', outlet_id: 1, shift_id: 1, total_absen: 0, status: 'late-5-15', history: generateDummyHistory(10) },
+        { id: 8, nama: 'Hendra Saputra', outlet_id: 1, shift_id: 2, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) },
+        // ===== Raja Kepiting (outlet_id: 2) =====
+        // shift 3 = Pagi, shift 4 = Sore, shift 5 = Malam
+        { id: 2, nama: 'Budi Santoso', outlet_id: 2, shift_id: 3, total_absen: 0, status: 'late-5-15', history: generateDummyHistory(15) },
+        { id: 5, nama: 'Rina Andriani', outlet_id: 2, shift_id: 4, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) },
+        { id: 9, nama: 'Fajar Setiawan', outlet_id: 2, shift_id: 5, total_absen: 0, status: 'late-30-60', history: generateDummyHistory(45) },
+        { id: 10, nama: 'Tuti Handayani', outlet_id: 2, shift_id: 3, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) },
+        // ===== Ayam Bebek Ganza (outlet_id: 3) =====
+        // shift 6 = Pagi, shift 7 = Sore, shift 8 = Malam
+        { id: 3, nama: 'Siti Rahayu', outlet_id: 3, shift_id: 7, total_absen: 0, status: 'late-30-60', history: generateDummyHistory(35) },
+        { id: 6, nama: 'Joko Prasetyo', outlet_id: 3, shift_id: 6, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) },
+        { id: 11, nama: 'Maya Sari', outlet_id: 3, shift_id: 8, total_absen: 0, status: 'late-5-15', history: generateDummyHistory(20) },
+        { id: 12, nama: 'Ahmad Fauzi', outlet_id: 3, shift_id: 6, total_absen: 0, status: 'on-time', history: generateDummyHistory(0) }
     ];
 }
 
@@ -102,7 +116,7 @@ document.addEventListener('alpine:init', function () {
     // ================================================================
     Alpine.data('presenceApp', function () {
         return {
-            // State
+            // ── State ──
             outlets: [],
             shifts: [],
             selectedOutletId: null,
@@ -124,11 +138,11 @@ document.addEventListener('alpine:init', function () {
             photoPreview: null,
             loading: false,
 
-            // Computed: shift yang muncul di dropdown (hanya berdasarkan outlet yang dipilih)
+            // ── Computed ──
             get shiftsForOutlet() {
                 if (!this.selectedOutletId) return [];
                 return this.shifts.filter(function (s) {
-                    return s.company_id === this.selectedOutletId;
+                    return s.company_id === parseInt(this.selectedOutletId);
                 }.bind(this));
             },
 
@@ -136,7 +150,7 @@ document.addEventListener('alpine:init', function () {
                 return this.selectedOutletId && this.selectedShiftId !== null && this.name.trim().length > 0;
             },
 
-            // Lifecycle
+            // ── Lifecycle ──
             init: function () {
                 this.updateClock();
                 var self = this;
@@ -151,7 +165,7 @@ document.addEventListener('alpine:init', function () {
                     String(now.getSeconds()).padStart(2, '0');
             },
 
-            // API Calls
+            // ── API ──
             loadOutlets: function () {
                 var self = this;
                 this.loading = true;
@@ -177,8 +191,7 @@ document.addEventListener('alpine:init', function () {
                 var self = this;
                 if (!companyId) return;
                 this.loading = true;
-                var url = '/shifts?company_id=' + companyId;
-                apiAjax(url)
+                apiAjax('/shifts?company_id=' + companyId)
                     .then(function (data) {
                         self.shifts = data.map(function (item) {
                             return {
@@ -222,14 +235,14 @@ document.addEventListener('alpine:init', function () {
                         { id: 2, company_id: 1, name: 'Shift Sore', start: '15:00', end: '23:00', code: 'SR' }
                     ],
                     2: [
-                        { id: 1, company_id: 2, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
-                        { id: 2, company_id: 2, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
-                        { id: 3, company_id: 2, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
+                        { id: 3, company_id: 2, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
+                        { id: 4, company_id: 2, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
+                        { id: 5, company_id: 2, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
                     ],
                     3: [
-                        { id: 1, company_id: 3, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
-                        { id: 2, company_id: 3, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
-                        { id: 3, company_id: 3, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
+                        { id: 6, company_id: 3, name: 'Shift Pagi', start: '08:00', end: '16:00', code: 'PG' },
+                        { id: 7, company_id: 3, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
+                        { id: 8, company_id: 3, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
                     ]
                 };
                 this.shifts = dummyMap[companyId] || [];
@@ -239,7 +252,6 @@ document.addEventListener('alpine:init', function () {
                 }
             },
 
-            // Event Handlers
             onOutletChange: function () {
                 this.selectedShiftId = null;
                 if (this.selectedOutletId) {
@@ -263,7 +275,6 @@ document.addEventListener('alpine:init', function () {
                 event.target.value = '';
             },
 
-            // Modal
             showPresenceModal: function (icon, title, message, late, lateMsg, photo) {
                 this.modalIcon = icon || '✅';
                 this.modalTitle = title || 'Presence Result';
@@ -300,7 +311,6 @@ document.addEventListener('alpine:init', function () {
                 this.presenceType = 'masuk';
             },
 
-            // Submit
             submitPresence: function () {
                 if (!this.isFormValid || this.isSubmitting) return;
                 this.isSubmitting = true;
@@ -376,11 +386,11 @@ document.addEventListener('alpine:init', function () {
     });
 
     // ================================================================
-    // 2. REKAP APP
+    // 2. REKAP APP (FIXED)
     // ================================================================
     Alpine.data('rekapApp', function () {
         return {
-            // State
+            // ── State ──
             currentTime: '--:--:--',
             clockInterval: null,
             outlets: [],
@@ -392,22 +402,29 @@ document.addEventListener('alpine:init', function () {
             loading: false,
             error: null,
 
-            // Computed: shift yang muncul di dropdown (hanya berdasarkan outlet yang dipilih)
+            // ── Computed ──
+            // Shift yang muncul di dropdown (hanya berdasarkan outlet yang dipilih)
+            // Jika "All Outlets" dipilih, tampilkan semua shift
             get shiftForFilter() {
-                if (!this.selectedOutletId) return this.shifts;
-                return this.shifts.filter(function (s) {
-                    return s.company_id === this.selectedOutletId;
+                // Jika belum ada outlet dipilih, tampilkan semua shift
+                if (!this.selectedOutletId || this.selectedOutletId === '') {
+                    return this.shifts;
+                }
+                var outletId = parseInt(this.selectedOutletId);
+                var filtered = this.shifts.filter(function (s) {
+                    return s.company_id === outletId;
                 }.bind(this));
+                return filtered;
             },
 
-            // Lifecycle
+            // ── Lifecycle ──
             init: function () {
                 this.updateClock();
                 var self = this;
                 this.clockInterval = setInterval(function () { self.updateClock(); }, 1000);
+
+                // Urutan: load outlets -> setelah selesai, load shifts -> setelah selesai, load dummy data
                 this.loadOutlets();
-                this.loadShifts();
-                this.loadDummyData();
             },
 
             updateClock: function () {
@@ -417,7 +434,7 @@ document.addEventListener('alpine:init', function () {
                     String(now.getSeconds()).padStart(2, '0');
             },
 
-            // API Calls
+            // ── API ──
             loadOutlets: function () {
                 var self = this;
                 apiAjax('/companies')
@@ -428,7 +445,7 @@ document.addEventListener('alpine:init', function () {
                         if (self.outlets.length > 0 && !self.selectedOutletId) {
                             self.selectedOutletId = self.outlets[0].id;
                         }
-                        self.applyFilter();
+                        self.loadShifts();
                     })
                     .catch(function (error) {
                         console.warn('Failed to load outlets:', error);
@@ -437,10 +454,10 @@ document.addEventListener('alpine:init', function () {
                             { id: 2, name: 'Raja Kepiting' },
                             { id: 3, name: 'Ayam Bebek Ganza' }
                         ];
-                        if (!self.selectedOutletId && self.outlets.length > 0) {
+                        if (self.outlets.length > 0 && !self.selectedOutletId) {
                             self.selectedOutletId = self.outlets[0].id;
                         }
-                        self.applyFilter();
+                        self.loadShifts();
                     });
             },
 
@@ -458,7 +475,9 @@ document.addEventListener('alpine:init', function () {
                                 code: item.code
                             };
                         });
-                        self.applyFilter();
+                        // Reset selected shift
+                        self.selectedShiftId = null;
+                        self.loadDummyData();
                     })
                     .catch(function (error) {
                         console.warn('Failed to load shifts:', error);
@@ -472,7 +491,8 @@ document.addEventListener('alpine:init', function () {
                             { id: 7, company_id: 3, name: 'Shift Sore', start: '16:00', end: '00:00', code: 'SR' },
                             { id: 8, company_id: 3, name: 'Shift Malam', start: '00:00', end: '08:00', code: 'ML' }
                         ];
-                        self.applyFilter();
+                        self.selectedShiftId = null;
+                        self.loadDummyData();
                     });
             },
 
@@ -492,23 +512,23 @@ document.addEventListener('alpine:init', function () {
                 this.loading = false;
             },
 
-            // Filter
+            // ── Filter ──
             applyFilter: function () {
                 var filtered = this.allData ? this.allData.slice() : [];
 
-                // Filter berdasarkan outlet
+                // Filter berdasarkan outlet (jika ada outlet yang dipilih)
                 if (this.selectedOutletId !== null && this.selectedOutletId !== '' && this.selectedOutletId !== undefined) {
                     var outletId = parseInt(this.selectedOutletId);
                     filtered = filtered.filter(function (e) {
-                        return parseInt(e.outlet_id) === outletId;
+                        return e.outlet_id === outletId;
                     }.bind(this));
                 }
 
-                // Filter berdasarkan shift
+                // Filter berdasarkan shift (jika ada shift yang dipilih)
                 if (this.selectedShiftId !== null && this.selectedShiftId !== '' && this.selectedShiftId !== undefined) {
                     var shiftId = parseInt(this.selectedShiftId);
                     filtered = filtered.filter(function (e) {
-                        return parseInt(e.shift_id) === shiftId;
+                        return e.shift_id === shiftId;
                     }.bind(this));
                 }
 
@@ -516,13 +536,12 @@ document.addEventListener('alpine:init', function () {
             },
 
             onOutletChange: function () {
-                // Reset selected shift saat outlet berubah
+                // Reset shift saat outlet berubah
                 this.selectedShiftId = null;
-                // Shift di dropdown otomatis berubah karena shiftForFilter adalah computed
                 this.applyFilter();
             },
 
-            // Helpers
+            // ── Helpers ──
             getOutletName: function (outletId) {
                 var found = this.outlets.find(function (o) { return o.id === parseInt(outletId); });
                 return found ? found.name : '-';
@@ -573,7 +592,6 @@ document.addEventListener('alpine:init', function () {
     // ================================================================
     Alpine.data('detailApp', function () {
         return {
-            // State
             currentTime: '--:--:--',
             clockInterval: null,
             employee: null,
@@ -589,7 +607,6 @@ document.addEventListener('alpine:init', function () {
             minDate: null,
             maxDate: null,
 
-            // Computed
             get canPrev() {
                 if (!this.currentDate || !this.minDate) return false;
                 var currentMonth = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
@@ -604,7 +621,6 @@ document.addEventListener('alpine:init', function () {
                 return currentMonth < maxMonth;
             },
 
-            // Lifecycle
             init: function () {
                 this.updateClock();
                 var self = this;
@@ -640,7 +656,6 @@ document.addEventListener('alpine:init', function () {
                     String(now.getSeconds()).padStart(2, '0');
             },
 
-            // API
             loadOutletsAndShifts: function () {
                 var self = this;
                 return Promise.all([
@@ -727,7 +742,6 @@ document.addEventListener('alpine:init', function () {
                 this.loading = false;
             },
 
-            // Calendar
             renderCalendar: function () {
                 if (!this.currentDate) return;
                 var year = this.currentDate.getFullYear();
