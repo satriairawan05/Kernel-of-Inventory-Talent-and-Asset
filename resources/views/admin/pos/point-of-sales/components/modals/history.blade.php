@@ -9,6 +9,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+
+                <!-- Setting Printer -->
                 <div class="card mb-4 border-0 bg-light-subtle shadow-sm">
                     <div class="card-body p-3">
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -38,6 +40,7 @@
                     </div>
                 </div>
 
+                <!-- Ringkasan Keuangan -->
                 <div>
                     <div class="history-opening-balance">
                         <div class="d-flex justify-content-between align-items-center">
@@ -46,8 +49,6 @@
                                 x-text="'Rp ' + $store.pos.formatRupiah($store.pos.openingBalance)"></span>
                         </div>
                     </div>
-
-                    <!-- Total Transactions (menggunakan totalRevenue) -->
                     <div class="history-total-transactions">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="label"><i class="bi bi-receipt me-2"></i>Total Transactions</span>
@@ -55,8 +56,6 @@
                                 x-text="'Rp ' + $store.pos.formatRupiah($store.pos.totalRevenue)"></span>
                         </div>
                     </div>
-
-                    <!-- Grand Total -->
                     <div class="history-grand-total">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="label"><i class="bi bi-cash-stack me-2"></i>Grand Total</span>
@@ -64,56 +63,70 @@
                                 x-text="'Rp ' + $store.pos.formatRupiah($store.pos.grandTotal)"></span>
                         </div>
                     </div>
-
                     <hr />
-
-                    <template x-if="$store.pos.transactionHistory.length === 0">
-                        <div class="history-empty">
-                            <i class="bi bi-inbox"></i>
-                            <p>No transactions yet</p>
-                        </div>
-                    </template>
-
-                    <template x-for="trx in $store.pos.transactionHistory.slice().reverse()" :key="trx.id">
-                        <div class="history-item">
-                            <div class="header">
-                                <span x-text="'#' + trx.id + ' - ' + trx.timestamp"></span>
-                                <div class="history-actions">
-                                    <span class="text-accent"
-                                        x-text="'Rp ' + $store.pos.formatRupiah(trx.total)"></span>
-                                    <button class="print-history-btn" @click="$store.pos.printStrukMobile(trx)"
-                                        title="Print receipt">
-                                        <i class="bi bi-printer"></i>
-                                    </button>
-                                    <!-- tombol hapus opsional -->
-                                </div>
-                            </div>
-                            <div class="detail">
-                                <span><i class="bi bi-tag"></i> <span x-text="trx.method"></span></span>
-                                <span><i class="bi bi-cash-stack"></i> Paid: <span
-                                        x-text="'Rp ' + $store.pos.formatRupiah(trx.paid)"></span></span>
-                                <template x-if="trx.discount && trx.discount > 0">
-                                    <span><i class="bi bi-percent"></i> Discount: <span
-                                            x-text="'-Rp ' + $store.pos.formatRupiah(trx.discount)"></span></span>
-                                </template>
-                                <template x-if="trx.method === 'Cash'">
-                                    <span><i class="bi bi-arrow-return-left"></i> Change: <span
-                                            x-text="'Rp ' + $store.pos.formatRupiah(trx.change)"></span></span>
-                                </template>
-                            </div>
-                            <div class="detail" style="font-size:0.8rem;color:#888;">
-                                <i class="bi bi-list-ul"></i>
-                                <span
-                                    x-text="trx.items.map(item => item.name + ' (' + item.qty + '×Rp' + $store.pos.formatRupiah(item.price) + ')').join(', ')"></span>
-                            </div>
-                        </div>
-                    </template>
                 </div>
 
+                <!-- Daftar Transaksi -->
+                <template x-if="$store.pos.transactionHistory.length === 0">
+                    <div class="history-empty">
+                        <i class="bi bi-inbox"></i>
+                        <p>No transactions yet</p>
+                    </div>
+                </template>
+
+                <template x-for="(trx, index) in $store.pos.transactionHistory.slice().reverse()" :key="trx.id">
+                    <div class="history-item">
+                        <div class="header">
+                            <span>
+                                <!-- ID transaksi (urutan lokal) -->
+                                <span class="fw-bold">#<span x-text="trx.id"></span></span>
+                                <span class="mx-1">-</span>
+                                <!-- Nomor transaksi dari server -->
+                                <span x-text="trx.nomor_transaksi"></span>
+                                <!-- Tanggal dan jam -->
+                                <span class="text-muted ms-2" x-text="trx.timestamp"></span>
+                            </span>
+                            <div class="history-actions">
+                                <span class="text-accent"
+                                    x-text="'Rp ' + $store.pos.formatRupiah(trx.total)"></span>
+                                <button class="print-history-btn" @click="$store.pos.printStrukMobile(trx)"
+                                    title="Print receipt">
+                                    <i class="bi bi-printer"></i>
+                                </button>
+                                <!-- opsional tombol hapus per transaksi -->
+                            </div>
+                        </div>
+
+                        <!-- Detail pembayaran -->
+                        <div class="detail">
+                            <span><i class="bi bi-tag"></i> <span x-text="trx.method"></span></span>
+                            <span><i class="bi bi-cash-stack"></i> Paid: <span
+                                    x-text="'Rp ' + $store.pos.formatRupiah(trx.paid)"></span></span>
+                            <template x-if="trx.discount && trx.discount > 0">
+                                <span><i class="bi bi-percent"></i> Discount: <span
+                                        x-text="'-Rp ' + $store.pos.formatRupiah(trx.discount)"></span></span>
+                            </template>
+                            <template x-if="trx.method === 'Cash'">
+                                <span><i class="bi bi-arrow-return-left"></i> Change: <span
+                                        x-text="'Rp ' + $store.pos.formatRupiah(trx.change)"></span></span>
+                            </template>
+                        </div>
+
+                        <!-- Daftar item -->
+                        <div class="detail" style="font-size:0.8rem;color:#888;">
+                            <i class="bi bi-list-ul"></i>
+                            <span
+                                x-text="trx.items.map(item => item.name + ' (' + item.qty + '×Rp' + $store.pos.formatRupiah(item.price) + ')').join(', ')"></span>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Tombol Aksi -->
                 <div class="d-flex justify-content-end gap-2 mt-3">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button class="btn btn-danger" @click="$store.pos.clearAllTransactions()">Clear All</button>
                 </div>
+
             </div>
         </div>
     </div>

@@ -6,6 +6,7 @@ use App\Services\RoleService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Cache;
 
 class Controller extends BaseController
 {
@@ -58,47 +59,47 @@ class Controller extends BaseController
     }
 
     /**
- * Get modules that have more than one page with 'Read' access, along with a sample page.
- *
- * @param int $groupId
- * @return \Illuminate\Support\Collection
- */
-public static function getHomeAccessModules(int $groupId): \Illuminate\Support\Collection
-{
-    $modules = \Illuminate\Support\Facades\DB::table('group_pages')
-        ->join('pages', 'pages.id', '=', 'group_pages.page_id')
-        ->where('group_pages.group_id', $groupId)
-        ->where('pages.action', 'Read')
-        ->where('group_pages.access', 1)
-        ->select('pages.module', DB::raw('COUNT(DISTINCT pages.page_name) as total'))
-        ->groupBy('pages.module')
-        ->having('total', '>', 1)
-        ->pluck('module');
-
-    if ($modules->isEmpty()) {
-        return collect();
-    }
-
-    $result = collect();
-    foreach ($modules as $module) {
-        $page = \Illuminate\Support\Facades\DB::table('group_pages')
+     * Get modules that have more than one page with 'Read' access, along with a sample page.
+     *
+     * @param int $groupId
+     * @return \Illuminate\Support\Collection
+     */
+    public static function getHomeAccessModules(int $groupId): \Illuminate\Support\Collection
+    {
+        $modules = \Illuminate\Support\Facades\DB::table('group_pages')
             ->join('pages', 'pages.id', '=', 'group_pages.page_id')
             ->where('group_pages.group_id', $groupId)
-            ->where('pages.module', $module)
             ->where('pages.action', 'Read')
             ->where('group_pages.access', 1)
-            ->select('pages.page_name', 'pages.route')
-            ->first();
+            ->select('pages.module', DB::raw('COUNT(DISTINCT pages.page_name) as total'))
+            ->groupBy('pages.module')
+            ->having('total', '>', 1)
+            ->pluck('module');
 
-        if ($page) {
-            $result->push((object) [
-                'module' => $module,
-                'page_name' => $page->page_name,
-                'route' => $page->route,
-            ]);
+        if ($modules->isEmpty()) {
+            return collect();
         }
-    }
 
-    return $result;
-}
+        $result = collect();
+        foreach ($modules as $module) {
+            $page = \Illuminate\Support\Facades\DB::table('group_pages')
+                ->join('pages', 'pages.id', '=', 'group_pages.page_id')
+                ->where('group_pages.group_id', $groupId)
+                ->where('pages.module', $module)
+                ->where('pages.action', 'Read')
+                ->where('group_pages.access', 1)
+                ->select('pages.page_name', 'pages.route')
+                ->first();
+
+            if ($page) {
+                $result->push((object) [
+                    'module' => $module,
+                    'page_name' => $page->page_name,
+                    'route' => $page->route,
+                ]);
+            }
+        }
+
+        return $result;
+    }
 }

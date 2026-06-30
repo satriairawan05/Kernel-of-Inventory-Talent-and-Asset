@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('discount_type', 20)->nullable(); // 'rp' atau 'percent'
             $table->decimal('discount_value', 15, 2)->nullable()->default(0);
             $table->decimal('total', 15, 2)->nullable()->default(0);
+            $table->text('notes')->nullable();
             
             // Metadata
             $table->timestamp('completed_at')->nullable();

@@ -20,9 +20,11 @@
                 </template>
                 <div class="menu-name" x-text="item.name"></div>
                 <div class="menu-price" x-text="'Rp ' + $store.pos.formatRupiah(item.price)"></div>
+
+                <!-- Status Stok Realtime -->
                 <template x-if="item.category !== 'additional'">
-                    <span class="menu-status" :class="item.status"
-                        x-text="item.status === 'available' ? '✅ Available' : item.status === 'low' ? '⚠️ Low Stock' : '❌ Out of Stock'"></span>
+                    <span class="menu-status" :class="item.stock > 25 ? 'available' : item.stock > 0 ? 'low' : 'out'"
+                        x-text="item.stock > 25 ? '✅ Available' : item.stock > 0 ? '⚠️ Low Stock' : '❌ Out of Stock'"></span>
                 </template>
 
                 <div class="menu-actions">
@@ -33,20 +35,27 @@
                         </button>
                         <input type="number" class="qty-input" :value="$store.pos.getDisplayDraftQty(item.id)"
                             @change="$store.pos.updateDraftQtyFromInput(item.id, $event)"
-                            :readonly="item.status === 'out'" min="0" />
+                            :readonly="item.stock_status === 'out' || item.status === 'out'" min="0" />
                         <button class="btn-qty btn-qty-plus" @click="$store.pos.incrementDraftQty(item.id)"
-                            :disabled="item.status === 'out'"
-                            :title="item.status === 'out' ? 'Out of Stock' : 'Add Draft'">
+                            :disabled="item.stock_status === 'out' || item.status === 'out'"
+                            :title="(item.stock_status === 'out' || item.status === 'out') ? 'Out of Stock' :
+                            'Add to Draft'">
                             <i class="bi bi-plus"></i>
                         </button>
                     </div>
                     @auth
-                        @if(auth()->user()->group_id == 1)
-                        <button class="btn-action btn-edit-action" @click="$store.pos.openEditMenu(item.id)" title="Edit menu">
-                            <i class="bi bi-pencil"></i>
-                        </button>
+                        @if (auth()->user()->group_id == 1)
+                            <button class="btn-action btn-edit-action" @click="$store.pos.openEditMenu(item.id)"
+                                title="Edit menu">
+                                <i class="bi bi-pencil"></i>
+                            </button>
                         @endif
                     @endauth
+                </div>
+                <!-- Optional: tampilkan stok numerik (jika ada) -->
+                <div class="menu-stock"
+                    x-show="item.stock !== undefined && item.category !== 'additional'"
+                    x-text="'Stok: ' + (item.stock ?? '∞')" style="font-size: 10px; color: #888; margin-top: 2px; text-align: center;">
                 </div>
             </div>
         </template>

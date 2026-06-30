@@ -1057,6 +1057,15 @@ body {
     z-index: 9999 !important;
 }
 
+.menu-status.available { color: green; }
+.menu-status.low { color: orange; }
+.menu-status.out { color: red; }
+
+.btn-qty-plus:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* ===== CALCULATOR ===== */
 .calc-modal .modal-content {
     max-width: 330px;

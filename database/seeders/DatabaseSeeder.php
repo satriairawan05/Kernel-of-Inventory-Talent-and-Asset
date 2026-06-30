@@ -26,7 +26,6 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\ShiftSeeder::class,
             \Database\Seeders\ProductSeeder::class,
             \Database\Seeders\ProductVariantSeeder::class,
-            \Database\Seeders\MenuItemSeeder::class,
             \Database\Seeders\SystemSettingSeeder::class,
         ]);
     }

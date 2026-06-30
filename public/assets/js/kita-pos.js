@@ -3,6 +3,7 @@
 // All data from API (jQuery AJAX), no hardcoded menus.
 // Multiple Draft Sessions (Dine In / Take Away) - Database persisted
 // Cart management integrated with API
+// Stock status realtime check (re-factored)
 // ================================================================
 
 document.addEventListener('alpine:init', function () {
@@ -65,6 +66,9 @@ document.addEventListener('alpine:init', function () {
         newSessionTable: '',
         loading: false,
         apiError: false,
+
+        // ---- STOCK STATUS CACHE ----
+        stockStatusCache: {},
 
         // ---- COMPUTED ----
         get filteredMenu() {
@@ -278,6 +282,7 @@ document.addEventListener('alpine:init', function () {
                     this.refreshCsrfToken();
                 }.bind(this), 500);
             } catch (error) {
+                console.error('Init error:', error);
                 if (this.menuItems.length === 0) {
                     this.menuItems = [];
                     this.nextId = 1;
@@ -294,13 +299,16 @@ document.addEventListener('alpine:init', function () {
             this.loading = true;
             this.apiError = false;
 
+            console.log('[KitaPOS] Loading menu from:', url);
+
             $.ajax({
                 url: url,
                 type: 'GET',
                 dataType: 'json',
                 headers: { 'Accept': 'application/json' },
                 success: function (response) {
-                    if (response.success && response.data) {
+                    console.log('[KitaPOS] Menu API response:', response);
+                    if (response && response.success && Array.isArray(response.data)) {
                         self.menuItems = response.data.sort(function (a, b) {
                             if (a.category === 'additional' && b.category !== 'additional') return 1;
                             if (a.category !== 'additional' && b.category === 'additional') return -1;
@@ -311,21 +319,120 @@ document.addEventListener('alpine:init', function () {
                             if (item.id > maxId) maxId = item.id;
                         });
                         self.nextId = maxId + 1;
+
+                        // Refresh stock status for all items (silent, errors ignored)
+                        try {
+                            self.refreshAllStockStatus();
+                        } catch (e) {
+                            console.warn('[KitaPOS] Stock status refresh failed:', e);
+                        }
+
+                        self.showToast('✅ Menu loaded (' + self.menuItems.length + ' items)');
                     } else {
+                        console.error('[KitaPOS] Invalid menu response:', response);
                         self.menuItems = [];
                         self.nextId = 1;
                         self.apiError = true;
+                        self.showToast('⚠️ Failed to load menu: invalid response');
                     }
                     self.loading = false;
                 },
                 error: function (xhr, status, error) {
+                    console.error('[KitaPOS] Menu AJAX error:', status, error, xhr);
                     self.menuItems = [];
                     self.nextId = 1;
                     self.apiError = true;
                     self.loading = false;
-                    self.showToast('⚠️ Failed to load menu from server. Please refresh the page.');
+                    var errorMsg = '⚠️ Failed to load menu from server. ';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg += xhr.responseJSON.message;
+                    } else if (xhr.status === 500) {
+                        errorMsg += 'Internal server error. Check logs.';
+                    } else {
+                        errorMsg += 'Please refresh the page.';
+                    }
+                    self.showToast(errorMsg);
                 }
             });
+        },
+
+        // ============================================================
+        // STOCK STATUS (Real-time)
+        // ============================================================
+
+        /**
+         * Fetch stock status for a single menu item.
+         * GET /api/menu/{id}/stock
+         * This endpoint now returns stock per menu (calculated from variant stock).
+         */
+        fetchStockStatus: function (menuItemId, callback) {
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            // Check cache first
+            if (this.stockStatusCache[menuItemId]) {
+                if (callback) callback(this.stockStatusCache[menuItemId]);
+                return;
+            }
+
+            $.ajax({
+                url: '/api/menu/' + menuItemId + '/stock',
+                type: 'GET',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    if (response && response.success && response.data) {
+                        self.stockStatusCache[menuItemId] = {
+                            stock: response.data.stock || 0,
+                            status: response.data.status || 'available',
+                            status_label: response.data.status_label || 'Available'
+                        };
+                        // Update menu item status and stock directly
+                        var menuItem = self.menuItems.find(function (mi) { return mi.id === menuItemId; });
+                        if (menuItem) {
+                            menuItem.status = response.data.status;
+                            menuItem.stock = response.data.stock;
+                            menuItem.stock_status = response.data.status;
+                            console.log('[KitaPOS] Updated stock for', menuItem.name, '->', menuItem.stock, menuItem.status);
+                        }
+                        if (callback) callback(self.stockStatusCache[menuItemId]);
+                    } else {
+                        if (callback) callback(null);
+                    }
+                },
+                error: function (xhr) {
+                    // Silently fail – do not disrupt UI
+                    console.warn('[KitaPOS] Stock fetch failed for item ' + menuItemId, xhr.status);
+                    if (callback) callback(null);
+                }
+            });
+        },
+
+        /**
+         * Refresh stock status for all menu items (silent).
+         * Clears cache and fetches fresh data for each item.
+         */
+        refreshAllStockStatus: function () {
+            var self = this;
+            // Clear cache
+            this.stockStatusCache = {};
+            this.menuItems.forEach(function (item) {
+                self.fetchStockStatus(item.id, function (data) {
+                    // Do nothing on callback, just update silently
+                });
+            });
+        },
+
+        /**
+         * Manual refresh stock status (clears cache and shows toast).
+         */
+        refreshStockStatus: function () {
+            this.stockStatusCache = {};
+            this.refreshAllStockStatus();
+            this.showToast('🔄 Stock status updated');
         },
 
         // ============================================================
@@ -345,7 +452,7 @@ document.addEventListener('alpine:init', function () {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 success: function (response) {
-                    if (response.success && response.data) {
+                    if (response && response.success && response.data) {
                         var cartData = response.data;
                         self.cartId = cartData.id;
                         self.cart = cartData.items.map(function (item) {
@@ -398,7 +505,7 @@ document.addEventListener('alpine:init', function () {
                 },
                 data: { qty: qty },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         var cart = response.data.cart;
                         self.cart = cart.items.map(function (item) {
                             var menuItem = self.menuItems.find(function (mi) { return mi.id === item.menu_item_id; });
@@ -417,7 +524,7 @@ document.addEventListener('alpine:init', function () {
                             self.discountDisplay = cart.discount_type === 'rp' ? self.formatRupiah(cart.discount_value) : cart.discount_value.toString();
                         }
                     } else {
-                        self.showToast('❌ Failed to update cart item: ' + (response.message || 'Unknown error'));
+                        self.showToast('❌ Failed to update cart item: ' + (response ? response.message : 'Unknown error'));
                         self.loadCartFromAPI();
                     }
                 },
@@ -446,7 +553,7 @@ document.addEventListener('alpine:init', function () {
                     value: this.discountValue
                 },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         var cart = response.data.cart;
                         self.cart = cart.items.map(function (item) {
                             var menuItem = self.menuItems.find(function (mi) { return mi.id === item.menu_item_id; });
@@ -466,7 +573,7 @@ document.addEventListener('alpine:init', function () {
                         }
                         self.showToast('✅ Discount applied');
                     } else {
-                        self.showToast('❌ Failed to apply discount: ' + (response.message || 'Unknown error'));
+                        self.showToast('❌ Failed to apply discount: ' + (response ? response.message : 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
@@ -495,7 +602,7 @@ document.addEventListener('alpine:init', function () {
                 dataType: 'json',
                 headers: { 'Accept': 'application/json' },
                 success: function (response) {
-                    if (response.success && response.data) {
+                    if (response && response.success && response.data) {
                         self.sessions = response.data.map(function (draft) {
                             return {
                                 id: draft.id,
@@ -584,7 +691,7 @@ document.addEventListener('alpine:init', function () {
                     items: []
                 },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         var draft = response.data;
                         self.sessions.push({
                             id: draft.id,
@@ -601,7 +708,7 @@ document.addEventListener('alpine:init', function () {
                         self.activeSessionId = draft.id;
                         self.showToast('✅ New order created: ' + draft.name);
                     } else {
-                        self.showToast('❌ Failed to create order: ' + (response.message || 'Unknown error'));
+                        self.showToast('❌ Failed to create order: ' + (response ? response.message : 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
@@ -641,14 +748,14 @@ document.addEventListener('alpine:init', function () {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         self.sessions = self.sessions.filter(function (s) { return s.id !== id; });
                         if (self.activeSessionId === id) {
                             self.activeSessionId = self.sessions.length > 0 ? self.sessions[0].id : null;
                         }
                         self.showToast('🗑️ Session deleted');
                     } else {
-                        self.showToast('❌ Failed to delete: ' + response.message);
+                        self.showToast('❌ Failed to delete: ' + (response ? response.message : 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
@@ -680,7 +787,7 @@ document.addEventListener('alpine:init', function () {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         var data = response.data;
                         if (data.cart) {
                             self.cartId = data.cart.id;
@@ -731,7 +838,7 @@ document.addEventListener('alpine:init', function () {
 
                         self.showToast('🛒 ' + (data.draftName || data.name || 'Draft') + ' moved to Cart!');
                     } else {
-                        self.showToast('❌ Failed to move to cart: ' + (response.message || 'Unknown error'));
+                        self.showToast('❌ Failed to move to cart: ' + (response ? response.message : 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
@@ -757,14 +864,14 @@ document.addEventListener('alpine:init', function () {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         var session = self.sessions.find(function (s) { return s.id === id; });
                         if (session) {
                             session.status = 'active';
                         }
                         self.showToast('✅ Draft reactivated');
                     } else {
-                        self.showToast('❌ Failed to activate: ' + response.message);
+                        self.showToast('❌ Failed to activate: ' + (response ? response.message : 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
@@ -841,11 +948,11 @@ document.addEventListener('alpine:init', function () {
                     },
                     data: { qty: newQty },
                     success: function (response) {
-                        if (response.success) {
+                        if (response && response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
                             self.showToast('📝 ' + menuItem.name + ' quantity increased');
                         } else {
-                            self.showToast('❌ Failed to update item: ' + response.message);
+                            self.showToast('❌ Failed to update item: ' + (response ? response.message : 'Unknown error'));
                         }
                     },
                     error: function (xhr) {
@@ -873,11 +980,11 @@ document.addEventListener('alpine:init', function () {
                         qty: 1,
                     },
                     success: function (response) {
-                        if (response.success) {
+                        if (response && response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
                             self.showToast('📝 ' + menuItem.name + ' added to ' + session.name);
                         } else {
-                            self.showToast('❌ Failed to add item: ' + response.message);
+                            self.showToast('❌ Failed to add item: ' + (response ? response.message : 'Unknown error'));
                         }
                     },
                     error: function (xhr) {
@@ -917,11 +1024,11 @@ document.addEventListener('alpine:init', function () {
                         'X-CSRF-TOKEN': csrfToken
                     },
                     success: function (response) {
-                        if (response.success) {
+                        if (response && response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
                             self.showToast('🗑️ Item removed from draft');
                         } else {
-                            self.showToast('❌ Failed to delete item: ' + response.message);
+                            self.showToast('❌ Failed to delete item: ' + (response ? response.message : 'Unknown error'));
                         }
                     },
                     error: function (xhr) {
@@ -943,11 +1050,11 @@ document.addEventListener('alpine:init', function () {
                     },
                     data: { qty: newQty },
                     success: function (response) {
-                        if (response.success) {
+                        if (response && response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
                             self.showToast('📝 Quantity decreased');
                         } else {
-                            self.showToast('❌ Failed to update item: ' + response.message);
+                            self.showToast('❌ Failed to update item: ' + (response ? response.message : 'Unknown error'));
                         }
                     },
                     error: function (xhr) {
@@ -980,10 +1087,40 @@ document.addEventListener('alpine:init', function () {
             }
 
             var item = session.items.find(function (i) { return i.menu_item_id === id; });
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            // Jika item belum ada dan val > 0, tambahkan item baru dengan qty = val
             if (!item && val > 0) {
                 var menuItem = this.menuItems.find(function (i) { return i.id === id; });
                 if (menuItem && menuItem.status !== 'out') {
-                    this.incrementDraftQty(id);
+                    // Tambahkan item baru dengan qty = val
+                    $.ajax({
+                        url: '/api/drafts/' + session.id + '/items',
+                        type: 'POST',
+                        dataType: 'json',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        data: {
+                            menu_item_id: menuItem.id,
+                            name: menuItem.name,
+                            price: this.toNumber(menuItem.price),
+                            qty: val,
+                        },
+                        success: function (response) {
+                            if (response && response.success) {
+                                self._updateSessionFromResponse(session.id, response.data.draft);
+                                self.showToast('📝 ' + menuItem.name + ' added (' + val + 'x)');
+                            } else {
+                                self.showToast('❌ Failed to add item: ' + (response ? response.message : 'Unknown error'));
+                            }
+                        },
+                        error: function (xhr) {
+                            self.showToast('❌ Failed to add item.');
+                        }
+                    });
                 } else {
                     this.showToast('❌ Item not available');
                     event.target.value = this.getDisplayDraftQty(id);
@@ -996,8 +1133,7 @@ document.addEventListener('alpine:init', function () {
                 return;
             }
 
-            var self = this;
-            var csrfToken = this.getCsrfToken();
+            // Jika item sudah ada, update qty
             var url = '/api/drafts/' + session.id + '/items/' + item.id;
 
             if (val === 0) {
@@ -1010,11 +1146,11 @@ document.addEventListener('alpine:init', function () {
                         'X-CSRF-TOKEN': csrfToken
                     },
                     success: function (response) {
-                        if (response.success) {
+                        if (response && response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
                             self.showToast('🗑️ Item deleted');
                         } else {
-                            self.showToast('❌ Failed to delete item: ' + response.message);
+                            self.showToast('❌ Failed to delete item: ' + (response ? response.message : 'Unknown error'));
                         }
                     },
                     error: function (xhr) {
@@ -1032,11 +1168,11 @@ document.addEventListener('alpine:init', function () {
                     },
                     data: { qty: val },
                     success: function (response) {
-                        if (response.success) {
+                        if (response && response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
-                            self.showToast('📝 Quantity updated');
+                            self.showToast('📝 Quantity updated to ' + val);
                         } else {
-                            self.showToast('❌ Failed to update item: ' + response.message);
+                            self.showToast('❌ Failed to update item: ' + (response ? response.message : 'Unknown error'));
                         }
                     },
                     error: function (xhr) {
@@ -1108,11 +1244,12 @@ document.addEventListener('alpine:init', function () {
                 localStorage.setItem('transactionHistory', JSON.stringify(this.transactionHistory));
             } catch (e) { }
         },
-        saveTransaction: function (method, total, paid, change, items, discountAmt, discountType, discountValue, subtotal) {
+        saveTransaction: function (method, total, paid, change, items, discountAmt, discountType, discountValue, subtotal, nomorTransaksi) {
             var now = new Date();
             var timestamp = this.formatTanggalIndonesia(now);
             var transaction = {
                 id: this.transactionHistory.length + 1,
+                nomor_transaksi: nomorTransaksi || ('#' + (this.transactionHistory.length + 1)),
                 timestamp: timestamp,
                 items: items,
                 total: total,
@@ -1135,6 +1272,34 @@ document.addEventListener('alpine:init', function () {
                     this.toast.show();
                 } catch (e) { }
             }
+        },
+
+        // ---- Generate Transaction Number from API ----
+        generateTransactionNumber: function (callback) {
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            $.ajax({
+                url: '/trx-number',  // using route name 'transaction.number' (URL: /trx-number)
+                type: 'GET',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    if (response && response.success && response.data) {
+                        callback(response.data);
+                    } else {
+                        self.showToast('❌ Gagal menghasilkan nomor transaksi');
+                        callback(null);
+                    }
+                },
+                error: function (xhr) {
+                    self.showToast('❌ Gagal menghubungi server untuk nomor transaksi');
+                    callback(null);
+                }
+            });
         },
 
         // ============================================================
@@ -1369,7 +1534,7 @@ document.addEventListener('alpine:init', function () {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         var newItem = response.data;
                         self.menuItems.push({
                             id: newItem.id,
@@ -1390,7 +1555,7 @@ document.addEventListener('alpine:init', function () {
                         }
                         self.showToast('✅ Menu "' + newItem.name + '" added successfully!');
                     } else {
-                        self.showToast('❌ Failed to save menu: ' + (response.message || 'Unknown error'));
+                        self.showToast('❌ Failed to save menu: ' + (response ? response.message : 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
@@ -1548,7 +1713,7 @@ document.addEventListener('alpine:init', function () {
                     'X-HTTP-Method-Override': 'PUT'
                 },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         var index = -1;
                         for (var i = 0; i < self.menuItems.length; i++) {
                             if (self.menuItems[i].id === id) { index = i; break; }
@@ -1591,7 +1756,7 @@ document.addEventListener('alpine:init', function () {
                         self.editItem = { name: '', price: '', category: 'food', status: 'available', icon: '🍽️', imagePreview: null, imageData: null };
                         self.showToast('✅ Menu "' + name + '" updated successfully!');
                     } else {
-                        self.showToast('❌ Failed to update menu: ' + (response.message || 'Unknown error'));
+                        self.showToast('❌ Failed to update menu: ' + (response ? response.message : 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
@@ -1635,7 +1800,7 @@ document.addEventListener('alpine:init', function () {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 success: function (response) {
-                    if (response.success) {
+                    if (response && response.success) {
                         self.menuItems = self.menuItems.filter(function (item) { return item.id !== id; });
                         self.cart = self.cart.filter(function (item) { return item.id !== id; });
                         self.sessions.forEach(function (session) {
@@ -1643,7 +1808,7 @@ document.addEventListener('alpine:init', function () {
                         });
                         self.showToast('🗑️ Menu deleted successfully');
                     } else {
-                        self.showToast('❌ Failed to delete menu: ' + (response.message || 'Unknown error'));
+                        self.showToast('❌ Failed to delete menu: ' + (response ? response.message : 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
@@ -1751,6 +1916,7 @@ document.addEventListener('alpine:init', function () {
                 var total = this.discountedTotal;
                 var method = this.paymentMethod;
                 var paid = this.paymentAmountRaw;
+                var change = method === 'cash' ? paid - total : 0;
 
                 if (method === 'cash' && paid < total) {
                     this.showToast('❌ Payment insufficient!');
@@ -1773,25 +1939,61 @@ document.addEventListener('alpine:init', function () {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
+                    data: {
+                        payment_method: method,
+                        paid: paid,
+                        change: change
+                    },
                     success: function (response) {
-                        if (response.success) {
-                            var transactionData = response.data.transaction;
-                            var items = self.cart.map(function (item) {
-                                return { name: item.name, qty: item.qty, price: item.price, subtotal: item.price * item.qty };
+                        if (response && response.success) {
+                            var transaction = response.data.transaction;
+
+                            // Convert items dari response ke format yang diharapkan (jika perlu)
+                            var items = transaction.items.map(function (item) {
+                                return {
+                                    name: item.name,
+                                    qty: item.qty,
+                                    price: item.price,
+                                    subtotal: item.subtotal
+                                };
                             });
-                            var transaction = self.saveTransaction(
-                                method,
-                                total,
-                                paid,
-                                method === 'cash' ? paid - total : 0,
+
+                            // Simpan ke localStorage (untuk history / fallback)
+                            var localTrx = self.saveTransaction(
+                                transaction.payment_method,
+                                transaction.total,
+                                transaction.paid,
+                                transaction.change,
                                 items,
-                                self.discountAmount,
-                                self.discountType,
-                                self.discountValue,
-                                self.cartTotal
+                                transaction.discount_amount,
+                                transaction.discount_type,
+                                transaction.discount_value,
+                                transaction.subtotal,
+                                transaction.transaction_number
                             );
+
+                            // Gunakan data transaksi dari server untuk print (lebih akurat)
+                            // Format sesuai yang diharapkan printStrukMobile
+                            var printData = {
+                                id: transaction.id,
+                                nomor_transaksi: transaction.transaction_number,
+                                timestamp: self.formatTanggalIndonesia(new Date(transaction.transaction_date)),
+                                items: items,
+                                total: transaction.total,
+                                subtotal: transaction.subtotal,
+                                discount: transaction.discount_amount,
+                                discountType: transaction.discount_type,
+                                discountValue: transaction.discount_value,
+                                method: transaction.payment_method,
+                                paid: transaction.paid,
+                                change: transaction.change
+                            };
+
                             self.showToast('✅ Checkout successful!');
-                            self.printStrukMobile(transaction);
+                            self.printStrukMobile(printData);
+
+                            // Refresh stock status after checkout (update menu stock)
+                            self.refreshStockStatus();
 
                             self.cart = [];
                             self.cartId = null;
@@ -1803,7 +2005,7 @@ document.addEventListener('alpine:init', function () {
                                 if (modal) modal.hide();
                             }
                         } else {
-                            self.showToast('❌ Checkout failed: ' + (response.message || 'Unknown error'));
+                            self.showToast('❌ Checkout failed: ' + (response ? response.message : 'Unknown error'));
                         }
                     },
                     error: function (xhr) {
@@ -1982,7 +2184,7 @@ document.addEventListener('alpine:init', function () {
                 receipt.align('left')
                     .text('Cashier : ' + this.cashierName).newline()
                     .text('Time : ' + this.formatTanggalIndonesia(transaction.timestamp)).newline()
-                    .text('Receipt #' + transaction.id).newline()
+                    .text('Receipt #' + (transaction.nomor_transaksi || transaction.id)).newline()
                     .text('Payment : ' + (transaction.method === 'Cash' ? 'Cash' : 'QRIS')).newline()
                     .line('-'.repeat(maxWidth));
                 receipt.align('center')
@@ -2104,6 +2306,7 @@ document.addEventListener('alpine:init', function () {
             var totalQty = transaction.items.reduce(function (sum, item) { return sum + item.qty; }, 0);
             this.strukData = {
                 id: transaction.id,
+                nomor_transaksi: transaction.nomor_transaksi || transaction.id,
                 timestamp: transaction.timestamp,
                 items: transaction.items,
                 total: transaction.total,

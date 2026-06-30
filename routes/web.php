@@ -28,6 +28,9 @@ Route::get('/', function () {
 
 Auth::routes(['login' => true]);
 
+// CSRF
+Route::get('/refresh-csrf', [\App\Http\Controllers\Api\APIController::class, 'refreshCsrfToken'])->middleware('auth');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 

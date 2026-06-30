@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Enums\{DraftTypeEnum, DraftStatusEnum};
+use App\Enums\MenuStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\{Company, MenuItem, Shift, Draft, DraftItem, Cart};
+use App\Models\{Company, MenuItem, Shift, Draft, DraftItem, Cart, Stock, Transaction, TransactionItem};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Log, Storage};
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class APIController extends Controller
@@ -23,6 +25,34 @@ class APIController extends Controller
         ], $status);
     }
 
+    /**
+     * Get authenticated user or fallback for development.
+     */
+    private function getUser(Request $request)
+    {
+        $user = auth()->user();
+        if ($user) {
+            return $user;
+        }
+
+        // Fallback untuk development (local) - jika tidak ada auth
+        if (app()->environment('local')) {
+            $userId = $request->input('user_id', 1);
+            $companyId = $request->input('company_id', 1);
+            return (object) [
+                'id'         => $userId,
+                'company_id' => $companyId,
+                'group_id'   => 1, // admin
+                'name'       => 'Development User',
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Refresh CSRF token (web route, uses session).
+     */
     public function refreshCsrfToken(Request $request)
     {
         $request->session()->regenerateToken();
@@ -54,7 +84,7 @@ class APIController extends Controller
     public function getShifts(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
             $companyId = $request->has('company_id') ? $request->company_id : null;
 
             if ($user && $user->group_id != 1 && !$companyId) {
@@ -92,14 +122,13 @@ class APIController extends Controller
     public function getMenu(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
             $companyId = $request->has('company_id') ? $request->company_id : ($user->company_id ?? 1);
 
             $query = MenuItem::with(['productVariant.stock'])
                 ->when($companyId, function ($q) use ($companyId) {
                     return $q->where('company_id', $companyId);
                 })
-                ->where('status', '!=', 'out')
                 ->orderBy('name');
 
             if ($request->has('category') && $request->category != 'all') {
@@ -107,6 +136,62 @@ class APIController extends Controller
             }
 
             $menu = $query->get();
+
+            // If no menu items, return empty array
+            if ($menu->isEmpty()) {
+                return $this->response([]);
+            }
+
+            // Group menu items by product_variant_id
+            $variantGroups = [];
+            foreach ($menu as $item) {
+                $variantId = $item->product_variant_id;
+                if ($variantId) {
+                    if (!isset($variantGroups[$variantId])) {
+                        $variantGroups[$variantId] = [
+                            'items'      => [],
+                            'totalStock' => 0,
+                        ];
+                    }
+                    $variantGroups[$variantId]['items'][] = $item;
+                }
+            }
+
+            // Fetch total stock for each variant
+            $variantIds = array_keys($variantGroups);
+            if (!empty($variantIds)) {
+                $stocks = Stock::whereIn('product_variant_id', $variantIds)->get()->keyBy('product_variant_id');
+                foreach ($variantIds as $vid) {
+                    // Safe access: check if stock exists
+                    $variantGroups[$vid]['totalStock'] = (int) ($stocks[$vid]->current_stock ?? 0);
+                }
+            }
+
+            // Calculate stock per menu and status for each item
+            foreach ($variantGroups as $variantId => $group) {
+                $totalStock = $group['totalStock'];
+                $count = count($group['items']);
+                $perMenuStock = $count > 0 ? floor($totalStock / $count) : 0;
+                foreach ($group['items'] as $item) {
+                    $item->per_menu_stock = $perMenuStock;
+                    // Determine status based on perMenuStock
+                    if ($perMenuStock <= 0) {
+                        $item->calculated_status = 'out';
+                    } elseif ($perMenuStock <= 25) {
+                        $item->calculated_status = 'low';
+                    } else {
+                        $item->calculated_status = 'available';
+                    }
+                }
+            }
+
+            // For items without variant, use stock & status from database
+            foreach ($menu as $item) {
+                if (!$item->product_variant_id) {
+                    $item->per_menu_stock = (int) ($item->stock ?? 0);
+                    $item->calculated_status = $item->status ?? 'available';
+                }
+            }
 
             $formatted = $menu->map(function ($item) {
                 $imageUrl = null;
@@ -116,25 +201,32 @@ class APIController extends Controller
                     $imageUrl = asset('storage/' . $item->image);
                 }
 
+                // Safely get variant info
+                $variantData = null;
+                if ($item->productVariant) {
+                    $variantData = [
+                        'id'    => $item->productVariant->id,
+                        'name'  => $item->productVariant->variant_name ?? '',
+                        'stock' => (int) ($item->productVariant->stock?->current_stock ?? 0),
+                    ];
+                }
+
                 return [
                     'id'       => $item->id,
                     'name'     => $item->name,
                     'price'    => (int) $item->price,
                     'category' => $item->category,
-                    'status'   => $item->status,
+                    'status'   => $item->calculated_status ?? $item->status ?? 'available',
                     'image'    => $imageUrl,
-                    'stock'    => (int) ($item->stock ?? 0),
+                    'stock'    => (int) ($item->per_menu_stock ?? $item->stock ?? 0),
                     'icon'     => $this->getInitials($item->name),
-                    'variant'  => $item->productVariant ? [
-                        'id'    => $item->productVariant->id,
-                        'name'  => $item->productVariant->variant_name,
-                        'stock' => (int) ($item->productVariant->stock?->current_stock ?? 0),
-                    ] : null,
+                    'variant'  => $variantData,
                 ];
             });
 
             return $this->response($formatted);
         } catch (\Exception $e) {
+            // Log detailed error for debugging
             Log::error('API getMenu error: ' . $e->getMessage());
             Log::error('API getMenu trace: ' . $e->getTraceAsString());
             return $this->response(null, 'Failed to fetch menu: ' . $e->getMessage(), 500);
@@ -142,14 +234,17 @@ class APIController extends Controller
     }
 
     /**
-     * Create a new menu item (including additional).
+     * Create a new menu item.
      * POST /api/menu
-     * Allowed for all authenticated users (no admin restriction for additional)
      */
     public function storeMenu(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $request->input('company_id', $user->company_id ?? 1);
 
             $validated = $request->validate([
@@ -160,10 +255,6 @@ class APIController extends Controller
                 'image'    => 'nullable|image|max:2048',
             ]);
 
-            // Jika kategori "additional", set product_variant_id dan stock = null
-            // Jika bukan additional, tetap bisa disimpan dengan product_variant_id null
-            // (tapi untuk regular menu, biasanya harus ada product_variant_id, kita tetap nullable)
-
             $imagePath = null;
             if ($request->hasFile('image')) {
                 $imagePath = $request->file('image')->store('menu_images', 'public');
@@ -171,7 +262,7 @@ class APIController extends Controller
 
             $menu = MenuItem::create([
                 'company_id'         => $companyId,
-                'product_variant_id' => null, // additional tidak terikat varian
+                'product_variant_id' => null,
                 'name'               => $validated['name'],
                 'price'              => $validated['price'],
                 'category'           => $validated['category'],
@@ -197,16 +288,13 @@ class APIController extends Controller
     }
 
     /**
-     * Update a menu item (including additional).
+     * Update a menu item.
      * PUT /api/menu/{id}
-     * Only admin (group_id = 1) can update.
      */
     public function updateMenu(Request $request, $id)
     {
         try {
-            $user = auth()->user();
-
-            // === ONLY ADMIN (group_id = 1) ===
+            $user = $this->getUser($request);
             if (!$user || $user->group_id != 1) {
                 return $this->response(null, 'Unauthorized. Only admin can manage menu.', 403);
             }
@@ -259,14 +347,11 @@ class APIController extends Controller
     /**
      * Delete a menu item.
      * DELETE /api/menu/{id}
-     * Only admin (group_id = 1) can delete.
      */
     public function deleteMenu($id)
     {
         try {
-            $user = auth()->user();
-
-            // === ONLY ADMIN (group_id = 1) ===
+            $user = $this->getUser(request());
             if (!$user || $user->group_id != 1) {
                 return $this->response(null, 'Unauthorized. Only admin can manage menu.', 403);
             }
@@ -321,7 +406,7 @@ class APIController extends Controller
     public function getDrafts(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
             $companyId = $request->has('company_id')
                 ? $request->company_id
                 : ($user->company_id ?? 1);
@@ -369,7 +454,11 @@ class APIController extends Controller
     public function createDraft(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $request->input('company_id', $user->company_id ?? 1);
 
             $validated = $request->validate([
@@ -449,7 +538,11 @@ class APIController extends Controller
     public function deleteDraft($id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser(request());
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
             $draft = Draft::where('company_id', $companyId)->find($id);
@@ -476,7 +569,11 @@ class APIController extends Controller
     public function activateDraft($id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser(request());
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
             $draft = Draft::where('company_id', $companyId)->find($id);
@@ -506,19 +603,21 @@ class APIController extends Controller
     // ============================================================
 
     /**
-     * Get active cart for current user/session.
+     * Get active cart for current user.
      * GET /api/cart
      */
     public function getCart(Request $request)
     {
         try {
-            $user = auth()->user();
-            $companyId = $user->company_id ?? 1;
-            $sessionId = $request->session()->getId();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
 
-            $cart = Cart::forCompany($companyId)
-                ->forUser($user?->id)
-                ->forSession($sessionId)
+            $companyId = $user->company_id ?? 1;
+
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
                 ->where('status', 'active')
                 ->with('items')
                 ->first();
@@ -535,24 +634,26 @@ class APIController extends Controller
     }
 
     /**
-     * Create a new cart (or get existing).
+     * Create a new cart for the user.
      * POST /api/cart
      */
     public function createCart(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
-            $sessionId = $request->session()->getId();
 
             $validated = $request->validate([
                 'type' => 'required|in:dinein,takeaway',
                 'table_number' => 'nullable|integer|min:1',
             ]);
 
-            $existing = Cart::forCompany($companyId)
-                ->forUser($user?->id)
-                ->forSession($sessionId)
+            $existing = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
                 ->where('status', 'active')
                 ->first();
 
@@ -562,8 +663,7 @@ class APIController extends Controller
 
             $cart = Cart::create([
                 'company_id' => $companyId,
-                'user_id' => $user?->id,
-                'session_id' => $sessionId,
+                'user_id' => $user->id,
                 'type' => $validated['type'],
                 'table_number' => $validated['table_number'] ?? null,
                 'status' => 'active',
@@ -585,10 +685,17 @@ class APIController extends Controller
     public function updateCart(Request $request, $id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
-            $cart = Cart::forCompany($companyId)->find($id);
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
+                ->find($id);
+
             if (!$cart) {
                 return $this->response(null, 'Cart not found', 404);
             }
@@ -629,10 +736,17 @@ class APIController extends Controller
     public function addCartItem(Request $request, $id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
-            $cart = Cart::forCompany($companyId)->find($id);
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
+                ->find($id);
+
             if (!$cart) {
                 return $this->response(null, 'Cart not found', 404);
             }
@@ -684,10 +798,17 @@ class APIController extends Controller
     public function updateCartItem(Request $request, $cartId, $itemId)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
-            $cart = Cart::forCompany($companyId)->find($cartId);
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
+                ->find($cartId);
+
             if (!$cart) {
                 return $this->response(null, 'Cart not found', 404);
             }
@@ -720,10 +841,17 @@ class APIController extends Controller
     public function deleteCartItem($cartId, $itemId)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser(request());
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
-            $cart = Cart::forCompany($companyId)->find($cartId);
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
+                ->find($cartId);
+
             if (!$cart) {
                 return $this->response(null, 'Cart not found', 404);
             }
@@ -751,10 +879,17 @@ class APIController extends Controller
     public function applyCartDiscount(Request $request, $id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
-            $cart = Cart::forCompany($companyId)->find($id);
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
+                ->find($id);
+
             if (!$cart) {
                 return $this->response(null, 'Cart not found', 404);
             }
@@ -790,10 +925,17 @@ class APIController extends Controller
     public function removeCartDiscount($id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser(request());
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
-            $cart = Cart::forCompany($companyId)->find($id);
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
+                ->find($id);
+
             if (!$cart) {
                 return $this->response(null, 'Cart not found', 404);
             }
@@ -820,10 +962,17 @@ class APIController extends Controller
     public function checkoutCart(Request $request, $id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
-            $cart = Cart::forCompany($companyId)->find($id);
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
+                ->find($id);
+
             if (!$cart) {
                 return $this->response(null, 'Cart not found', 404);
             }
@@ -836,35 +985,231 @@ class APIController extends Controller
                 return $this->response(null, 'Cart already processed', 403);
             }
 
-            $cart->recalculate();
-            $cart->markAsCompleted();
+            // Mulai transaction
+            DB::beginTransaction();
 
-            // TODO: Create transaction / invoice from cart data
+            try {
+                // Recalculate total
+                $cart->recalculate();
 
-            return $this->response([
-                'cart' => $cart->load('items'),
-                'transaction' => [
-                    'id' => $cart->id,
-                    'total' => $cart->total,
-                    'items' => $cart->items,
-                ],
-            ], 'Checkout successful');
+                // ---- Cari draft dari notes ----
+                $draftId = null;
+                if ($cart->notes) {
+                    preg_match('/draft_id:(\d+)/', $cart->notes, $matches);
+                    if (!empty($matches[1])) {
+                        $draftId = (int) $matches[1];
+                    }
+                }
+
+                if ($draftId) {
+                    $draft = Draft::where('company_id', $companyId)->find($draftId);
+                    if ($draft && $draft->status !== DraftStatusEnum::COMPLETED) {
+                        $draft->status = DraftStatusEnum::COMPLETED;
+                        $draft->save();
+                        Log::info('Draft #' . $draft->id . ' completed during checkout of cart #' . $cart->id);
+                    }
+                }
+
+                // Complete cart
+                $cart->setCompleted();
+
+                // ---- Generate transaction number ----
+                $transactionNumber = Transaction::generateTransactionNumber();
+
+                // ---- Buat transaksi ----
+                $transaction = Transaction::create([
+                    'cart_id'            => $cart->id,
+                    'draft_id'           => $draftId,
+                    'user_id'            => $user->id,
+                    'company_id'         => $companyId,
+                    'transaction_number' => $transactionNumber,
+                    'transaction_date'   => now(),
+                    'subtotal'           => $cart->subtotal,
+                    'discount_type'      => $cart->discount_type,
+                    'discount_value'     => $cart->discount_value ?? 0,
+                    'discount_amount'    => $cart->discount_amount ?? 0,
+                    'total'              => $cart->total,
+                    'payment_method'     => $request->input('payment_method', 'cash'),
+                    'paid'               => $request->input('paid', $cart->total),
+                    'change'             => $request->input('change', 0),
+                    'status'             => 'completed',
+                ]);
+
+                // ---- Simpan item-item transaksi ----
+                foreach ($cart->items as $cartItem) {
+                    TransactionItem::create([
+                        'transaction_id'    => $transaction->id,
+                        'menu_item_id'      => $cartItem->menu_item_id,
+                        'name'              => $cartItem->name,
+                        'price'             => $cartItem->price,
+                        'qty'               => $cartItem->qty,
+                        'subtotal'          => $cartItem->price * $cartItem->qty,
+                        'discount_per_item' => 0,
+                    ]);
+                }
+
+                // ============================================================
+                // UPDATE STOCK, CATAT MOVEMENT, INVENTORY REPORT
+                // ============================================================
+
+                // 1. Kelompokkan total qty per variant
+                $variantUpdates = [];
+                foreach ($cart->items as $cartItem) {
+                    $menuItem = MenuItem::find($cartItem->menu_item_id);
+                    if ($menuItem && $menuItem->product_variant_id) {
+                        $variantId = $menuItem->product_variant_id;
+                        if (!isset($variantUpdates[$variantId])) {
+                            $variantUpdates[$variantId] = 0;
+                        }
+                        $variantUpdates[$variantId] += $cartItem->qty;
+                    }
+                }
+
+                // 2. Proses setiap variant
+                $inventoryReport = null;
+                $today = now()->toDateString();
+
+                foreach ($variantUpdates as $variantId => $totalQty) {
+                    // Ambil stock sekarang
+                    $stock = Stock::where('product_variant_id', $variantId)->first();
+                    if (!$stock) {
+                        // Jika stock tidak ada, lewati (seharusnya ada)
+                        Log::warning("Stock not found for variant ID $variantId during checkout");
+                        continue;
+                    }
+
+                    $stockBefore = (int) $stock->current_stock;
+                    $stockAfter = $stockBefore - $totalQty;
+
+                    // Validasi stok cukup
+                    if ($stockAfter < 0) {
+                        throw new \Exception("Insufficient stock for variant ID $variantId. Available: $stockBefore, requested: $totalQty");
+                    }
+
+                    // Update stock
+                    $stock->current_stock = $stockAfter;
+                    $stock->save();
+
+                    // ---- Catat StockMovement ----
+                    StockMovement::create([
+                        'product_variant_id' => $variantId,
+                        'pic_id'             => $user->id,
+                        'movement_type'      => 'selling',
+                        'qty'                => $totalQty,
+                        'stock_before'       => $stockBefore,
+                        'stock_after'        => $stockAfter,
+                        'notes'              => "Penjualan dari transaksi #{$transaction->transaction_number}",
+                        'receiver_sender'    => $user->name,
+                    ]);
+
+                    // ---- Inventory Report ----
+                    if (!$inventoryReport) {
+                        // Cari report hari ini untuk company ini
+                        $inventoryReport = InventoryReport::firstOrCreate(
+                            [
+                                'report_date' => $today,
+                                'location'    => $companyId,
+                                'reported_by' => $user->id,
+                            ],
+                            [
+                                'opened_at'            => now(),
+                                'cashier_name'         => $user->name,
+                                'total_products_sold'  => 0,
+                                'notes'                => 'Auto generated report',
+                            ]
+                        );
+                    }
+
+                    // Cari atau buat InventoryReportItem
+                    $reportItem = InventoryReportItem::where('inventory_report_id', $inventoryReport->id)
+                        ->where('product_variant_id', $variantId)
+                        ->first();
+
+                    if ($reportItem) {
+                        // Tambah selling
+                        $reportItem->selling += $totalQty;
+                        $reportItem->remain = $reportItem->first_stock + $reportItem->stock_in - $reportItem->selling;
+                        $reportItem->save();
+                    } else {
+                        // Buat baru, first_stock = stockBefore (stok sebelum transaksi ini)
+                        InventoryReportItem::create([
+                            'inventory_report_id' => $inventoryReport->id,
+                            'product_variant_id'   => $variantId,
+                            'first_stock'          => $stockBefore,
+                            'stock_in'             => 0,
+                            'selling'              => $totalQty,
+                            'remain'               => $stockBefore - $totalQty,
+                        ]);
+                    }
+
+                    // Update total_products_sold di inventory report
+                    $inventoryReport->total_products_sold += $totalQty;
+                    $inventoryReport->save();
+                }
+
+                // Commit transaction
+                DB::commit();
+
+                // ---- Dispatch print job (async) ----
+                try {
+                    PrintReceiptJob::dispatch($transaction);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to dispatch print job: ' . $e->getMessage());
+                    // Print gagal, tapi transaksi tetap sukses
+                }
+
+                // ---- Siapkan response untuk frontend ----
+                $responseData = [
+                    'id'                 => $transaction->id,
+                    'transaction_number' => $transaction->transaction_number,
+                    'transaction_date'   => $transaction->transaction_date->toISOString(),
+                    'subtotal'           => $transaction->subtotal,
+                    'discount_type'      => $transaction->discount_type,
+                    'discount_value'     => $transaction->discount_value,
+                    'discount_amount'    => $transaction->discount_amount,
+                    'total'              => $transaction->total,
+                    'payment_method'     => $transaction->payment_method,
+                    'paid'               => $transaction->paid,
+                    'change'             => $transaction->change,
+                    'items'              => $transaction->items->map(function ($item) {
+                        return [
+                            'name'     => $item->name,
+                            'price'    => $item->price,
+                            'qty'      => $item->qty,
+                            'subtotal' => $item->subtotal,
+                        ];
+                    }),
+                ];
+
+                return $this->response([
+                    'cart'        => $cart->load('items'),
+                    'transaction' => $responseData,
+                ], 'Checkout successful');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Checkout transaction error: ' . $e->getMessage());
+                return $this->response(null, 'Checkout failed: ' . $e->getMessage(), 500);
+            }
         } catch (\Exception $e) {
             Log::error('API checkoutCart error: ' . $e->getMessage());
+            Log::error('API checkoutCart trace: ' . $e->getTraceAsString());
             return $this->response(null, 'Checkout failed: ' . $e->getMessage(), 500);
         }
     }
 
     /**
-     * Move draft to cart.
+     * Move draft to cart (using user_id, not session).
      * POST /api/drafts/{id}/to-cart
      */
     public function moveDraftToCart(Request $request, $id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
-            $sessionId = $request->session()->getId();
 
             $draft = Draft::with('items')
                 ->where('company_id', $companyId)
@@ -882,23 +1227,30 @@ class APIController extends Controller
                 return $this->response(null, 'Draft is empty', 422);
             }
 
-            $cart = Cart::forCompany($companyId)
-                ->forUser($user?->id)
-                ->forSession($sessionId)
+            // Cari atau buat cart aktif untuk user ini
+            $cart = Cart::where('company_id', $companyId)
+                ->where('user_id', $user->id)
                 ->where('status', 'active')
                 ->first();
 
             if (!$cart) {
                 $cart = Cart::create([
                     'company_id' => $companyId,
-                    'user_id' => $user?->id,
-                    'session_id' => $sessionId,
+                    'user_id' => $user->id,
                     'type' => $draft->type,
                     'table_number' => $draft->table_number,
                     'status' => 'active',
                     'subtotal' => 0,
                     'total' => 0,
+                    'notes' => 'draft_id:' . $draft->id,
                 ]);
+            } else {
+                // Jika cart sudah ada, tambahkan draft_id ke notes (append)
+                $notes = $cart->notes ?: '';
+                if (strpos($notes, 'draft_id:') === false) {
+                    $cart->notes = trim($notes . ' draft_id:' . $draft->id);
+                    $cart->save();
+                }
             }
 
             foreach ($draft->items as $draftItem) {
@@ -937,7 +1289,11 @@ class APIController extends Controller
     public function addDraftItem(Request $request, $id)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
             $draft = Draft::where('company_id', $companyId)->find($id);
@@ -1002,7 +1358,11 @@ class APIController extends Controller
     public function updateDraftItem(Request $request, $draftId, $itemId)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
             $draft = Draft::where('company_id', $companyId)->find($draftId);
@@ -1052,7 +1412,11 @@ class APIController extends Controller
     public function deleteDraftItem(Request $request, $draftId, $itemId)
     {
         try {
-            $user = auth()->user();
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
             $companyId = $user->company_id ?? 1;
 
             $draft = Draft::where('company_id', $companyId)->find($draftId);
@@ -1082,5 +1446,135 @@ class APIController extends Controller
             Log::error('API deleteDraftItem error: ' . $e->getMessage());
             return $this->response(null, 'Failed to delete item: ' . $e->getMessage(), 500);
         }
+    }
+
+    /**
+     * Menghasilkan nomor transaksi baru dengan counter harian.
+     * Format: KITA/YYYY/MM/DD/XXXX (XXXX = 4 digit, reset tiap hari)
+     */
+    public function generateTrxNumber()
+    {
+        $date = now()->format('Ymd');
+        $key  = "trx_counter_{$date}";
+
+        $counter = Cache::get($key, 0);
+        $counter++;
+
+        Cache::put($key, $counter, now()->endOfDay());
+
+        $year   = now()->year;
+        $month  = now()->month;
+        $day    = now()->day;
+        $padded = str_pad($counter, 4, '0', STR_PAD_LEFT);
+
+        $data = "KITA/{$year}/{$month}/{$day}/{$padded}";
+
+        return $this->response($data);
+    }
+
+    /**
+     * Check stock status of a menu item.
+     * GET /api/menu/{id}/stock
+     */
+    public function getStockStatus($id)
+    {
+        try {
+            $menuItem = MenuItem::with('productVariant.stock')->find($id);
+            if (!$menuItem) {
+                return $this->response(null, 'Menu item not found', 404);
+            }
+
+            $variantId = $menuItem->product_variant_id;
+            $perMenuStock = 0;
+
+            if ($variantId) {
+                $count = MenuItem::where('product_variant_id', $variantId)->count();
+                $totalStock = (int) ($menuItem->productVariant->stock->current_stock ?? 0);
+                $perMenuStock = $count > 0 ? floor($totalStock / $count) : 0;
+            } else {
+                $perMenuStock = (int) ($menuItem->stock ?? 0);
+            }
+
+            $status = $this->determineStatus($perMenuStock);
+
+            return $this->response([
+                'menu_item_id' => $menuItem->id,
+                'product_variant_id' => $variantId,
+                'stock' => $perMenuStock,
+                'total_variant_stock' => $variantId ? (int) ($menuItem->productVariant->stock->current_stock ?? 0) : null,
+                'status' => $status,
+                'status_label' => $this->getStatusLabel($status),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API getStockStatus error: ' . $e->getMessage());
+            return $this->response(null, 'Failed to get stock status', 500);
+        }
+    }
+
+    /**
+     * Update menu item status based on current stock.
+     * POST /api/menu/{id}/update-status
+     */
+    public function updateStockStatus($id)
+    {
+        try {
+            $menuItem = MenuItem::with('productVariant.stock')->find($id);
+            if (!$menuItem) {
+                return $this->response(null, 'Menu item not found', 404);
+            }
+
+            $variantId = $menuItem->product_variant_id;
+            $perMenuStock = 0;
+
+            if ($variantId) {
+                $count = MenuItem::where('product_variant_id', $variantId)->count();
+                $totalStock = (int) ($menuItem->productVariant->stock->current_stock ?? 0);
+                $perMenuStock = $count > 0 ? floor($totalStock / $count) : 0;
+            } else {
+                $perMenuStock = (int) ($menuItem->stock ?? 0);
+            }
+
+            $newStatus = $this->determineStatus($perMenuStock);
+            $menuItem->status = $newStatus;
+            $menuItem->save();
+
+            return $this->response([
+                'menu_item_id' => $menuItem->id,
+                'product_variant_id' => $variantId,
+                'stock' => $perMenuStock,
+                'old_status' => $menuItem->getOriginal('status'),
+                'new_status' => $newStatus,
+            ], 'Stock status updated');
+        } catch (\Exception $e) {
+            Log::error('API updateStockStatus error: ' . $e->getMessage());
+            return $this->response(null, 'Failed to update stock status', 500);
+        }
+    }
+
+    /**
+     * Determine status based on stock quantity.
+     */
+    private function determineStatus($stock)
+    {
+        if ($stock <= 0) {
+            return MenuStatusEnum::OUT->value;
+        } elseif ($stock <= 25) {
+            return MenuStatusEnum::LOW->value;
+        } else {
+            return MenuStatusEnum::AVAILABLE->value;
+        }
+    }
+
+    /**
+     * Get label for status.
+     */
+    private function getStatusLabel($status)
+    {
+        foreach (MenuStatusEnum::cases() as $case) {
+            if ($case->value === $status) {
+                return $case->label();
+            }
+        }
+        return ucfirst($status);
     }
 }
