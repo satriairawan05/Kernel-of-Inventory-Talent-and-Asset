@@ -12,6 +12,8 @@ Route::get('company',[API\APIController::class, 'getCompanies'])->name('company.
 Route::get('shift',[API\APIController::class, 'getShifts'])->name('shift.index');
 Route::get('menu', [API\APIController::class, 'getMenu'])->name('menu.index');
 
+Route::get('/refresh-csrf', [App\Http\Controllers\Api\APIController::class, 'refreshCsrfToken'])->middleware('auth');
+
 Route::get('/drafts', [API\APIController::class, 'getDrafts'])->name('draft.index');
 Route::post('/drafts', [API\APIController::class, 'createDraft'])->name('draft.create');
 Route::delete('/drafts/{id}', [API\APIController::class, 'deleteDraft'])->name('draft.delete');

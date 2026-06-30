@@ -4,17 +4,13 @@
 // Multiple Draft Sessions (Dine In / Take Away) - Database persisted
 // ================================================================
 
-console.log('🚀 KitaPOS script.js loaded successfully!');
-
 document.addEventListener('alpine:init', function () {
-    console.log('⚡ Alpine.js initialized!');
-
     Alpine.store('pos', {
         // ---- STATE ----
         menuItems: [],
         nextId: 1,
         openingBalance: 0,
-        sessions: [],           // Drafts loaded from API
+        sessions: [],
         activeSessionId: null,
         selectedSession: null,
         cart: [],
@@ -24,6 +20,9 @@ document.addEventListener('alpine:init', function () {
         mobileCartOpen: false,
         toastMessage: 'Notification',
         draftLoading: false,
+
+        _csrfRefreshing: false,
+        _previousCashier: null,
 
         // Cashier
         cashierName: 'Guest',
@@ -135,12 +134,19 @@ document.addEventListener('alpine:init', function () {
         // ---- CASHIER ----
         setCashier: function (name, online) {
             if (online === undefined) online = true;
+            var previous = this.cashierName;
             this.cashierName = name || 'Guest';
             this.isCashierOnline = online;
             try {
                 localStorage.setItem('cashierName', this.cashierName);
                 localStorage.setItem('isCashierOnline', JSON.stringify(this.isCashierOnline));
             } catch (e) { }
+            if (previous !== this.cashierName || !this._previousCashier) {
+                this._previousCashier = this.cashierName;
+                setTimeout(function () {
+                    this.refreshCsrfToken();
+                }.bind(this), 100);
+            }
         },
         loadCashier: function () {
             try {
@@ -157,8 +163,44 @@ document.addEventListener('alpine:init', function () {
             if (token) {
                 return token.getAttribute('content');
             }
-            console.warn('CSRF token meta tag not found!');
             return '';
+        },
+
+        // ---- REFRESH CSRF TOKEN ----
+        refreshCsrfToken: function () {
+            if (this._csrfRefreshing) {
+                return;
+            }
+            this._csrfRefreshing = true;
+            var self = this;
+            $.ajax({
+                url: '/refresh-csrf',
+                type: 'GET',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': this.getCsrfToken()
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var newToken = response.data.csrf_token;
+                        $('meta[name="csrf-token"]').attr('content', newToken);
+                        $.ajaxSetup({
+                            headers: {
+                                'X-CSRF-TOKEN': newToken
+                            }
+                        });
+                        self.showToast('🔑 Security token updated');
+                    } else {
+                        self.showToast('❌ Failed to refresh token');
+                    }
+                    self._csrfRefreshing = false;
+                },
+                error: function (xhr) {
+                    self.showToast('❌ Failed to refresh security token.');
+                    self._csrfRefreshing = false;
+                }
+            });
         },
 
         // ---- HELPER TO NUMBER ----
@@ -166,19 +208,15 @@ document.addEventListener('alpine:init', function () {
             if (value === undefined || value === null) return 0;
             if (typeof value === 'number') return value;
             if (typeof value === 'string') {
-                // Remove commas (thousand separators in some locales)
                 var str = value.replace(/,/g, '');
-                // Check if it has a dot and the part after the last dot is exactly 2 digits (decimal)
                 var lastDotIndex = str.lastIndexOf('.');
                 if (lastDotIndex !== -1) {
                     var afterDot = str.substring(lastDotIndex + 1);
                     if (afterDot.length === 2) {
-                        // It's a decimal (e.g., 55000.00), parse as float and round
                         var num = parseFloat(str);
                         return Math.round(num);
                     }
                 }
-                // Otherwise, remove all dots (thousand separators) and parse as integer
                 var cleaned = str.replace(/\./g, '');
                 return parseInt(cleaned, 10) || 0;
             }
@@ -206,15 +244,12 @@ document.addEventListener('alpine:init', function () {
                     localStorage.setItem('openingBalance', this.openingBalance.toString());
                 } catch (e) { }
 
-                // ===== LOAD MENU FROM API =====
                 this._loadMenuFromAPI();
 
-                // ===== LOAD HISTORY & PRINTER SIZE =====
                 try {
                     var storedHistory = localStorage.getItem('transactionHistory');
                     if (storedHistory) {
                         this.transactionHistory = JSON.parse(storedHistory);
-                        console.log('📜 History loaded:', this.transactionHistory.length, 'transactions');
                     }
                 } catch (e) { }
 
@@ -229,16 +264,12 @@ document.addEventListener('alpine:init', function () {
                     this.toast = new bootstrap.Toast(toastEl, { delay: 2500 });
                 }
 
-                // ===== LOAD DRAFTS FROM API =====
                 this.loadDraftsFromAPI();
 
-                console.log('✅ KitaPOS Store ready!');
-                console.log('👤 Cashier:', this.cashierName, '| Online:', this.isCashierOnline);
-                console.log('💰 Opening Balance:', this.openingBalance);
-                console.log('📊 Total Revenue:', this.totalRevenue);
-                console.log('💵 Grand Total:', this.grandTotal);
+                setTimeout(function () {
+                    this.refreshCsrfToken();
+                }.bind(this), 500);
             } catch (error) {
-                console.error('❌ Error during initialization:', error);
                 if (this.menuItems.length === 0) {
                     this.menuItems = [];
                     this.nextId = 1;
@@ -272,9 +303,7 @@ document.addEventListener('alpine:init', function () {
                             if (item.id > maxId) maxId = item.id;
                         });
                         self.nextId = maxId + 1;
-                        console.log('✅ Menu loaded from API:', self.menuItems.length, 'items');
                     } else {
-                        console.warn('API response not successful, using empty menu.');
                         self.menuItems = [];
                         self.nextId = 1;
                         self.apiError = true;
@@ -282,12 +311,11 @@ document.addEventListener('alpine:init', function () {
                     self.loading = false;
                 },
                 error: function (xhr, status, error) {
-                    console.error('❌ Failed to load menu from API:', error);
                     self.menuItems = [];
                     self.nextId = 1;
                     self.apiError = true;
                     self.loading = false;
-                    self.showToast('⚠️ Gagal memuat menu dari server. Silakan refresh halaman.');
+                    self.showToast('⚠️ Failed to load menu from server. Please refresh the page.');
                 }
             });
         },
@@ -296,16 +324,10 @@ document.addEventListener('alpine:init', function () {
         // DRAFT API METHODS
         // ============================================================
 
-        /**
-         * Refresh draft list from API (called manually by user).
-         */
         refreshDrafts: function () {
             this.loadDraftsFromAPI();
         },
 
-        /**
-         * Load drafts from API and populate sessions.
-         */
         loadDraftsFromAPI: function () {
             var self = this;
             var companyId = window.KitaPOS?.outlet?.id || 1;
@@ -345,44 +367,38 @@ document.addEventListener('alpine:init', function () {
                         if (self.sessions.length > 0 && !self.activeSessionId) {
                             self.activeSessionId = self.sessions[0].id;
                         }
-                        console.log('✅ Drafts loaded from API:', self.sessions.length);
                         if (self.sessions.length > 0) {
-                            self.showToast('📋 ' + self.sessions.length + ' draft(s) dimuat');
+                            self.showToast('📋 ' + self.sessions.length + ' draft(s) loaded');
                         }
                     } else {
                         self.sessions = [];
-                        console.warn('No drafts or API response not successful');
                     }
                     self.draftLoading = false;
                 },
                 error: function (xhr, status, error) {
-                    console.error('❌ Failed to load drafts:', error);
                     self.sessions = [];
                     self.draftLoading = false;
                     if (xhr.status >= 500) {
-                        self.showToast('⚠️ Gagal memuat draft dari server. (Error ' + xhr.status + ')');
+                        self.showToast('⚠️ Failed to load drafts from server. (Error ' + xhr.status + ')');
                     } else if (xhr.status === 403) {
-                        self.showToast('⚠️ Anda tidak memiliki akses ke draft.');
+                        self.showToast('⚠️ You don\'t have permission to access drafts.');
                     } else if (xhr.status !== 404 && xhr.status !== 0) {
-                        self.showToast('⚠️ Gagal memuat draft.');
+                        self.showToast('⚠️ Failed to load drafts.');
                     }
                 }
             });
         },
 
-        /**
-         * Create a new draft (persisted to DB).
-         */
         createNewSession: function () {
             var type = this.newSessionType;
             var table = this.newSessionTable ? parseInt(this.newSessionTable, 10) : null;
             var name = '';
             if (type === 'dinein') {
                 if (!table || table < 1) {
-                    this.showToast('❌ Masukkan nomor meja yang valid');
+                    this.showToast('❌ Please enter a valid table number');
                     return;
                 }
-                name = 'Meja ' + table;
+                name = 'Table ' + table;
             } else {
                 name = 'Take Away';
             }
@@ -391,11 +407,11 @@ document.addEventListener('alpine:init', function () {
             var companyId = window.KitaPOS?.outlet?.id || 1;
             var csrfToken = this.getCsrfToken();
             if (!csrfToken) {
-                this.showToast('❌ CSRF token tidak ditemukan. Refresh halaman.');
+                this.showToast('❌ CSRF token not found. Please refresh the page.');
                 return;
             }
 
-            this.showToast('⏳ Membuat pesanan...');
+            this.showToast('⏳ Creating order...');
 
             $.ajax({
                 url: '/api/drafts',
@@ -428,24 +444,21 @@ document.addEventListener('alpine:init', function () {
                             _persisted: true
                         });
                         self.activeSessionId = draft.id;
-                        self.showToast('✅ Pesanan baru dibuat: ' + draft.name);
-                        console.log('📦 Session created:', draft);
+                        self.showToast('✅ New order created: ' + draft.name);
                     } else {
-                        self.showToast('❌ Gagal membuat pesanan: ' + (response.message || 'Unknown error'));
-                        console.error('Create draft failed:', response);
+                        self.showToast('❌ Failed to create order: ' + (response.message || 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
-                    console.error('Error creating draft:', xhr);
-                    var errorMsg = '❌ Gagal membuat pesanan. ';
+                    var errorMsg = '❌ Failed to create order. ';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMsg += xhr.responseJSON.message;
                     } else if (xhr.status === 422) {
-                        errorMsg += 'Validasi gagal. Periksa data input.';
+                        errorMsg += 'Validation failed. Check input data.';
                     } else if (xhr.status === 419) {
-                        errorMsg += 'Session expired. Refresh halaman.';
+                        errorMsg += 'Session expired. Refresh the page.';
                     } else {
-                        errorMsg += 'Coba lagi.';
+                        errorMsg += 'Try again.';
                     }
                     self.showToast(errorMsg);
                 }
@@ -458,11 +471,8 @@ document.addEventListener('alpine:init', function () {
             }
         },
 
-        /**
-         * Delete a draft (only if active/processing).
-         */
         removeSession: function (id) {
-            if (!confirm('Hapus session ini?')) return;
+            if (!confirm('Delete this session?')) return;
 
             var self = this;
             var csrfToken = this.getCsrfToken();
@@ -481,31 +491,26 @@ document.addEventListener('alpine:init', function () {
                         if (self.activeSessionId === id) {
                             self.activeSessionId = self.sessions.length > 0 ? self.sessions[0].id : null;
                         }
-                        self.showToast('🗑️ Session dihapus');
-                        console.log('🗑️ Session removed:', id);
+                        self.showToast('🗑️ Session deleted');
                     } else {
-                        self.showToast('❌ Gagal hapus: ' + response.message);
+                        self.showToast('❌ Failed to delete: ' + response.message);
                     }
                 },
                 error: function (xhr) {
-                    console.error('Error deleting draft:', xhr);
-                    self.showToast('❌ Gagal hapus session.');
+                    self.showToast('❌ Failed to delete session.');
                 }
             });
         },
 
-        /**
-         * Move draft to cart (change status to processing and return items).
-         */
         confirmSessionToCart: function (sessionId) {
             var self = this;
             var session = this.sessions.find(function (s) { return s.id === sessionId; });
             if (!session) {
-                this.showToast('❌ Session tidak ditemukan');
+                this.showToast('❌ Session not found');
                 return;
             }
             if (session.items.length === 0) {
-                this.showToast('❌ Session kosong!');
+                this.showToast('❌ Session is empty!');
                 return;
             }
 
@@ -549,22 +554,17 @@ document.addEventListener('alpine:init', function () {
                             if (modal) modal.hide();
                         }
 
-                        self.showToast('🛒 ' + data.name + ' dilanjutkan ke Keranjang!');
-                        console.log('🛒 Draft moved to cart:', data);
+                        self.showToast('🛒 ' + data.name + ' moved to Cart!');
                     } else {
-                        self.showToast('❌ Gagal pindahkan ke cart: ' + response.message);
+                        self.showToast('❌ Failed to move to cart: ' + response.message);
                     }
                 },
                 error: function (xhr) {
-                    console.error('Error moving draft to cart:', xhr);
-                    self.showToast('❌ Gagal pindahkan ke cart.');
+                    self.showToast('❌ Failed to move to cart.');
                 }
             });
         },
 
-        /**
-         * Activate a draft (change from processing to active).
-         */
         activateDraft: function (id) {
             var self = this;
             var csrfToken = this.getCsrfToken();
@@ -583,46 +583,35 @@ document.addEventListener('alpine:init', function () {
                         if (session) {
                             session.status = 'active';
                         }
-                        self.showToast('✅ Draft diaktifkan kembali');
+                        self.showToast('✅ Draft reactivated');
                     } else {
-                        self.showToast('❌ Gagal aktivasi: ' + response.message);
+                        self.showToast('❌ Failed to activate: ' + response.message);
                     }
                 },
                 error: function (xhr) {
-                    console.error('Error activating draft:', xhr);
-                    self.showToast('❌ Gagal aktivasi draft.');
+                    self.showToast('❌ Failed to activate draft.');
                 }
             });
         },
 
-        /**
-         * Set active session (local, no API call).
-         */
         setActiveSession: function (id) {
             this.activeSessionId = id;
             var session = this.sessions.find(function (s) { return s.id === id; });
-            this.showToast('🔁 Session aktif: ' + (session ? session.name : 'unknown'));
+            this.showToast('🔁 Active session: ' + (session ? session.name : 'unknown'));
         },
 
-        /**
-         * Open session detail modal.
-         */
         openSessionDetailModal: function (sessionId) {
-            console.log('🔍 Opening detail for session:', sessionId);
             var session = this.sessions.find(function (s) { return s.id === sessionId; });
             if (!session) {
-                this.showToast('❌ Session tidak ditemukan');
-                console.error('Session not found:', sessionId);
+                this.showToast('❌ Session not found');
                 return;
             }
             this.selectedSession = session;
-            console.log('📋 Selected session:', this.selectedSession);
             var el = document.getElementById('sessionDetailModal');
             if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                 new bootstrap.Modal(el).show();
             } else {
-                console.error('Modal element #sessionDetailModal not found');
-                this.showToast('❌ Modal tidak ditemukan');
+                this.showToast('❌ Modal not found');
             }
         },
 
@@ -630,42 +619,37 @@ document.addEventListener('alpine:init', function () {
         // DRAFT ITEM MUTATIONS (Sync with API)
         // ============================================================
 
-        /**
-         * Add item to draft (API) or increment qty.
-         */
         incrementDraftQty: function (id) {
             if (!this.activeSessionId) {
-                this.showToast('❌ Buat pesanan baru terlebih dahulu!');
+                this.showToast('❌ Create a new order first!');
                 this.openNewSessionModal();
                 return;
             }
             var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
             if (!session) {
-                this.showToast('❌ Session tidak ditemukan');
+                this.showToast('❌ Session not found');
                 return;
             }
             if (session.status === 'processing') {
-                this.showToast('⚠️ Draft sedang diproses. Aktifkan terlebih dahulu dengan tombol "Active".');
+                this.showToast('⚠️ Draft is being processed. Activate it first using the "Active" button.');
                 return;
             }
 
             var menuItem = this.menuItems.find(function (i) { return i.id === id; });
             if (!menuItem) {
-                this.showToast('❌ Menu tidak ditemukan');
+                this.showToast('❌ Menu not found');
                 return;
             }
             if (menuItem.status === 'out') {
-                this.showToast('❌ ' + menuItem.name + ' habis!');
+                this.showToast('❌ ' + menuItem.name + ' is out of stock!');
                 return;
             }
 
             var self = this;
             var csrfToken = this.getCsrfToken();
 
-            // Cek apakah item sudah ada di draft (berdasarkan menu_item_id)
             var existing = session.items.find(function (i) { return i.menu_item_id === id; });
             if (existing) {
-                // Update qty +1
                 var newQty = existing.qty + 1;
                 var url = '/api/drafts/' + session.id + '/items/' + existing.id;
                 $.ajax({
@@ -680,14 +664,13 @@ document.addEventListener('alpine:init', function () {
                     success: function (response) {
                         if (response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
-                            self.showToast('📝 ' + menuItem.name + ' qty ditambah');
+                            self.showToast('📝 ' + menuItem.name + ' quantity increased');
                         } else {
-                            self.showToast('❌ Gagal update item: ' + response.message);
+                            self.showToast('❌ Failed to update item: ' + response.message);
                         }
                     },
                     error: function (xhr) {
-                        console.error('Error updating draft item:', xhr);
-                        var msg = '❌ Gagal update item. ';
+                        var msg = '❌ Failed to update item. ';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             msg += xhr.responseJSON.message;
                         }
@@ -695,7 +678,6 @@ document.addEventListener('alpine:init', function () {
                     }
                 });
             } else {
-                // Tambah item baru
                 var url = '/api/drafts/' + session.id + '/items';
                 $.ajax({
                     url: url,
@@ -714,14 +696,13 @@ document.addEventListener('alpine:init', function () {
                     success: function (response) {
                         if (response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
-                            self.showToast('📝 ' + menuItem.name + ' ditambahkan ke ' + session.name);
+                            self.showToast('📝 ' + menuItem.name + ' added to ' + session.name);
                         } else {
-                            self.showToast('❌ Gagal tambah item: ' + response.message);
+                            self.showToast('❌ Failed to add item: ' + response.message);
                         }
                     },
                     error: function (xhr) {
-                        console.error('Error adding draft item:', xhr);
-                        var msg = '❌ Gagal tambah item. ';
+                        var msg = '❌ Failed to add item. ';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             msg += xhr.responseJSON.message;
                         }
@@ -731,14 +712,11 @@ document.addEventListener('alpine:init', function () {
             }
         },
 
-        /**
-         * Decrement item qty from draft (API).
-         */
         decrementDraftQty: function (id) {
             var session = this.sessions.find(function (s) { return s.id === this.activeSessionId; }.bind(this));
             if (!session) return;
             if (session.status === 'processing') {
-                this.showToast('⚠️ Draft sedang diproses. Aktifkan terlebih dahulu dengan tombol "Active".');
+                this.showToast('⚠️ Draft is being processed. Activate it first using the "Active" button.');
                 return;
             }
 
@@ -762,14 +740,13 @@ document.addEventListener('alpine:init', function () {
                     success: function (response) {
                         if (response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
-                            self.showToast('🗑️ Item dihapus dari draft');
+                            self.showToast('🗑️ Item removed from draft');
                         } else {
-                            self.showToast('❌ Gagal hapus item: ' + response.message);
+                            self.showToast('❌ Failed to delete item: ' + response.message);
                         }
                     },
                     error: function (xhr) {
-                        console.error('Error deleting draft item:', xhr);
-                        var msg = '❌ Gagal hapus item. ';
+                        var msg = '❌ Failed to delete item. ';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             msg += xhr.responseJSON.message;
                         }
@@ -789,14 +766,13 @@ document.addEventListener('alpine:init', function () {
                     success: function (response) {
                         if (response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
-                            self.showToast('📝 Qty dikurangi');
+                            self.showToast('📝 Quantity decreased');
                         } else {
-                            self.showToast('❌ Gagal update item: ' + response.message);
+                            self.showToast('❌ Failed to update item: ' + response.message);
                         }
                     },
                     error: function (xhr) {
-                        console.error('Error updating draft item:', xhr);
-                        var msg = '❌ Gagal update item. ';
+                        var msg = '❌ Failed to update item. ';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             msg += xhr.responseJSON.message;
                         }
@@ -806,9 +782,6 @@ document.addEventListener('alpine:init', function () {
             }
         },
 
-        /**
-         * Update draft item qty from input (API).
-         */
         updateDraftQtyFromInput: function (id, event) {
             var val = parseInt(event.target.value, 10);
             if (isNaN(val) || val < 0) {
@@ -822,7 +795,7 @@ document.addEventListener('alpine:init', function () {
                 return;
             }
             if (session.status === 'processing') {
-                this.showToast('⚠️ Draft sedang diproses. Aktifkan terlebih dahulu dengan tombol "Active".');
+                this.showToast('⚠️ Draft is being processed. Activate it first using the "Active" button.');
                 event.target.value = this.getDisplayDraftQty(id);
                 return;
             }
@@ -833,7 +806,7 @@ document.addEventListener('alpine:init', function () {
                 if (menuItem && menuItem.status !== 'out') {
                     this.incrementDraftQty(id);
                 } else {
-                    this.showToast('❌ Item tidak tersedia');
+                    this.showToast('❌ Item not available');
                     event.target.value = this.getDisplayDraftQty(id);
                 }
                 return;
@@ -860,14 +833,13 @@ document.addEventListener('alpine:init', function () {
                     success: function (response) {
                         if (response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
-                            self.showToast('🗑️ Item dihapus');
+                            self.showToast('🗑️ Item deleted');
                         } else {
-                            self.showToast('❌ Gagal hapus item: ' + response.message);
+                            self.showToast('❌ Failed to delete item: ' + response.message);
                         }
                     },
                     error: function (xhr) {
-                        console.error('Error deleting draft item:', xhr);
-                        self.showToast('❌ Gagal hapus item.');
+                        self.showToast('❌ Failed to delete item.');
                     }
                 });
             } else {
@@ -883,23 +855,18 @@ document.addEventListener('alpine:init', function () {
                     success: function (response) {
                         if (response.success) {
                             self._updateSessionFromResponse(session.id, response.data.draft);
-                            self.showToast('📝 Qty diperbarui');
+                            self.showToast('📝 Quantity updated');
                         } else {
-                            self.showToast('❌ Gagal update item: ' + response.message);
+                            self.showToast('❌ Failed to update item: ' + response.message);
                         }
                     },
                     error: function (xhr) {
-                        console.error('Error updating draft item:', xhr);
-                        self.showToast('❌ Gagal update item.');
+                        self.showToast('❌ Failed to update item.');
                     }
                 });
             }
         },
 
-        /**
-         * Helper: Update session data from API response.
-         * Subtotal diambil dari response data draft.subtotal (sudah dihitung backend).
-         */
         _updateSessionFromResponse: function (sessionId, draftData) {
             var sessionIndex = this.sessions.findIndex(function (s) { return s.id === sessionId; });
             if (sessionIndex === -1) return;
@@ -927,9 +894,6 @@ document.addEventListener('alpine:init', function () {
                 status: draftData.status,
                 _persisted: true
             };
-
-            console.log('🔄 Updated session:', updatedSession);
-            console.log('📊 Subtotal:', updatedSession.subtotal);
 
             this.sessions.splice(sessionIndex, 1, updatedSession);
             if (this.selectedSession && this.selectedSession.id === sessionId) {
@@ -983,9 +947,6 @@ document.addEventListener('alpine:init', function () {
             };
             this.transactionHistory.push(transaction);
             this.saveTransactionHistory();
-            console.log('💾 Transaction saved:', transaction);
-            console.log('📊 Updated totalRevenue:', this.totalRevenue);
-            console.log('💵 Updated grandTotal:', this.grandTotal);
             return transaction;
         },
         showToast: function (msg) {
@@ -1086,12 +1047,12 @@ document.addEventListener('alpine:init', function () {
             if (existing) {
                 var menuItem = this.menuItems.find(function (i) { return i.id === id; });
                 if (menuItem && menuItem.status === 'out') {
-                    this.showToast('❌ ' + menuItem.name + ' habis!');
+                    this.showToast('❌ ' + menuItem.name + ' is out of stock!');
                     return;
                 }
                 existing.qty += 1;
             } else {
-                this.showToast('❌ Item tidak ada di keranjang.');
+                this.showToast('❌ Item not in cart.');
             }
         },
         decrementQty: function (id) {
@@ -1118,7 +1079,7 @@ document.addEventListener('alpine:init', function () {
             }
             if (idx === -1) {
                 event.target.value = this.getDisplayQty(id);
-                this.showToast('❌ Item tidak ada di keranjang.');
+                this.showToast('❌ Item not in cart.');
                 return;
             }
             if (val === 0) {
@@ -1126,7 +1087,7 @@ document.addEventListener('alpine:init', function () {
             } else {
                 var menuItem = this.menuItems.find(function (i) { return i.id === id; });
                 if (menuItem && menuItem.status === 'out') {
-                    this.showToast('❌ ' + menuItem.name + ' habis!');
+                    this.showToast('❌ ' + menuItem.name + ' is out of stock!');
                     event.target.value = this.getDisplayQty(id);
                     return;
                 }
@@ -1137,7 +1098,7 @@ document.addEventListener('alpine:init', function () {
             var item = this.cart.find(function (c) { return c.id === id; });
             if (item && item.qty > targetQty) {
                 item.qty = targetQty;
-                this.showToast('✅ Qty reset to ' + targetQty);
+                this.showToast('✅ Quantity reset to ' + targetQty);
             }
         },
 
@@ -1265,7 +1226,6 @@ document.addEventListener('alpine:init', function () {
                 icon: this.editItem.icon || '🍽️',
                 image: this.editItem.imageData || this.menuItems[index].image
             };
-            // Update sessions & cart
             this.sessions.forEach(function (session) {
                 session.items.forEach(function (item) {
                     if (item.menu_item_id === id) {
@@ -1360,7 +1320,7 @@ document.addEventListener('alpine:init', function () {
                     this.changeAmount = 0;
                 }
             } catch (error) {
-                console.error('Error in updateChange:', error);
+                // Silent error
             }
         },
         handlePaymentMethodChange: function () {
@@ -1376,7 +1336,7 @@ document.addEventListener('alpine:init', function () {
                     this.changeAmount = 0;
                 }
             } catch (error) {
-                console.error('Error in handlePaymentMethodChange:', error);
+                // Silent error
             }
         },
         confirmCheckout: function () {
@@ -1415,7 +1375,6 @@ document.addEventListener('alpine:init', function () {
                     if (modal) modal.hide();
                 }
             } catch (error) {
-                console.error('Error in confirmCheckout:', error);
                 this.showToast('❌ Checkout failed!');
             }
         },
@@ -1465,33 +1424,54 @@ document.addEventListener('alpine:init', function () {
         get discountedTotal() {
             return Math.max(this.cartTotal - this.discountAmount, 0);
         },
-        get quickPayOptions() {
-            var total = this.discountedTotal;
+
+        // ===== QUICK PAY OPTIONS =====
+        _buildQuickPayOptions: function (total) {
             if (total <= 0) return [0];
-            var end = 100000;
-            if (total > 100000) {
-                end = Math.ceil(total / 100000) * 100000;
-                if (end <= total) end += 100000;
+
+            var options = [total];
+            options.push(total + 1000);
+            options.push(total + 2000);
+            options.push(total + 5000);
+
+            if (total <= 50000) {
+                options.push(50000);
             }
-            var down = Math.floor(total / 10000) * 10000;
-            if (down === total) down = Math.max(0, down - 10000);
-            if (total < 50000) down = 50000;
-            if (down <= 0) down = 10000;
-            var up = Math.ceil(total / 10000) * 10000;
-            if (up === total) up = up + 10000;
-            if (total < 50000) up = Math.max(down + 10000, 60000);
-            if (up <= down) up = down + 10000;
-            if (total <= 100000 && up >= end) up = Math.min(end - 10000, Math.ceil((total + end) / 2) / 10000 * 10000);
-            if (up <= down) up = down + 10000;
-            var others = [down, up, end].filter(function (v) { return v > 0 && v !== total; });
-            others = Array.from(new Set(others)).sort(function (a, b) { return a - b; });
-            var options = [total].concat(others);
-            var endIndex = options.indexOf(end);
-            if (endIndex !== -1 && endIndex !== options.length - 1) {
-                options.splice(endIndex, 1);
-                options.push(end);
+            if (total <= 100000) {
+                options.push(100000);
             }
-            return options;
+
+            var unique = options.filter(function (v, i, self) {
+                return self.indexOf(v) === i;
+            });
+            unique.sort(function (a, b) { return a - b; });
+
+            // Pastikan 100000 selalu di akhir jika total <= 100000
+            if (total <= 100000) {
+                var idx100 = unique.indexOf(100000);
+                if (idx100 !== -1 && idx100 !== unique.length - 1) {
+                    unique.splice(idx100, 1);
+                    unique.push(100000);
+                }
+            }
+
+            // Potong maksimal 5 opsi
+            if (unique.length > 5) {
+                var firstFour = unique.slice(0, 4);
+                var last = unique[unique.length - 1];
+                unique = firstFour.concat(last);
+            }
+
+            return unique;
+        },
+
+        get quickPayOptions() {
+            return this._buildQuickPayOptions(this.discountedTotal);
+        },
+
+        getDraftQuickPayOptions: function (sessionId) {
+            var total = this.getSessionTotal(sessionId);
+            return this._buildQuickPayOptions(total);
         },
 
         // ============================================================
@@ -1559,13 +1539,13 @@ document.addEventListener('alpine:init', function () {
                     .text(this.outletAddress).newline()
                     .line('-'.repeat(maxWidth));
                 receipt.align('left')
-                    .text('Kasir : ' + this.cashierName).newline()
-                    .text('Waktu : ' + this.formatTanggalIndonesia(transaction.timestamp)).newline()
-                    .text('No. Struk : #' + transaction.id).newline()
-                    .text('Bayar : ' + (transaction.method === 'Cash' ? 'Tunai' : 'QRIS')).newline()
+                    .text('Cashier : ' + this.cashierName).newline()
+                    .text('Time : ' + this.formatTanggalIndonesia(transaction.timestamp)).newline()
+                    .text('Receipt #' + transaction.id).newline()
+                    .text('Payment : ' + (transaction.method === 'Cash' ? 'Cash' : 'QRIS')).newline()
                     .line('-'.repeat(maxWidth));
                 receipt.align('center')
-                    .bold(true).text('LUNAS').newline().bold(false)
+                    .bold(true).text('PAID').newline().bold(false)
                     .line('-'.repeat(maxWidth));
                 receipt.align('left')
                     .text('Item'.padEnd(20) + 'Qty'.padStart(6) + 'Total'.padStart(14)).newline()
@@ -1583,7 +1563,7 @@ document.addEventListener('alpine:init', function () {
                     .text('Subtotal : ' + subtotalStr).newline();
                 if (transaction.discount && transaction.discount > 0) {
                     var diskonStr = '-Rp' + this.formatRupiah(transaction.discount);
-                    receipt.text('Diskon : ' + diskonStr).newline();
+                    receipt.text('Discount : ' + diskonStr).newline();
                 }
                 var totalQty = transaction.items.reduce(function (sum, item) { return sum + item.qty; }, 0);
                 var totalStr = 'Rp' + this.formatRupiah(transaction.total);
@@ -1591,12 +1571,12 @@ document.addEventListener('alpine:init', function () {
                     .text('Total (' + totalQty + ') : ' + totalStr).newline()
                     .bold(false)
                     .line('-'.repeat(maxWidth));
-                receipt.text('Bayar : Rp' + this.formatRupiah(transaction.paid)).newline()
-                    .text('Kembali : Rp' + this.formatRupiah(transaction.change)).newline()
+                receipt.text('Paid : Rp' + this.formatRupiah(transaction.paid)).newline()
+                    .text('Change : Rp' + this.formatRupiah(transaction.change)).newline()
                     .line('-'.repeat(maxWidth));
                 receipt.align('center')
                     .text('Powered by KitaPOS').newline()
-                    .text('Terima kasih').newline()
+                    .text('Thank you').newline()
                     .newline().newline().newline();
                 var resultData = receipt.encode();
                 var binary = '';
@@ -1641,7 +1621,7 @@ document.addEventListener('alpine:init', function () {
                     }.bind(this));
                     if (transaction.discount && transaction.discount > 0) {
                         receipt.line('-'.repeat(is80mm ? 48 : 32))
-                            .text(this.formatReceiptLine('Diskon', '-Rp ' + this.formatRupiah(transaction.discount), is80mm)).newline();
+                            .text(this.formatReceiptLine('Discount', '-Rp ' + this.formatRupiah(transaction.discount), is80mm)).newline();
                     }
                     receipt.line('-'.repeat(is80mm ? 48 : 32))
                         .text(this.formatReceiptLine('TOTAL', 'Rp ' + this.formatRupiah(transaction.total), is80mm)).newline()
@@ -1831,6 +1811,4 @@ document.addEventListener('alpine:init', function () {
             }
         };
     });
-
-    console.log('✅ KitaPOS with Alpine.js ready! (Draft tetap ada setelah refresh)');
 });

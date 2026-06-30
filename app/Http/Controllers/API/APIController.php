@@ -24,6 +24,12 @@ class APIController extends Controller
         ], $status);
     }
 
+    public function refreshCsrfToken(Request $request)
+    {
+        $request->session()->regenerateToken();
+        return response()->json(['csrf_token' => csrf_token()]);
+    }
+
     /**
      * Get all companies/outlets.
      * GET /api/companies
