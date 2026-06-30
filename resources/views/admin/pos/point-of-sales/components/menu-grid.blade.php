@@ -28,7 +28,7 @@
                 <div class="menu-actions">
                     <div class="qty-control">
                         <button class="btn-qty btn-qty-minus" @click="$store.pos.decrementDraftQty(item.id)"
-                            x-show="$store.pos.getDraftQty(item.id) > 0" title="Kurangi dari draft">
+                            x-show="$store.pos.getDraftQty(item.id) > 0" title="Less than the draft">
                             <i class="bi bi-dash"></i>
                         </button>
                         <input type="number" class="qty-input" :value="$store.pos.getDisplayDraftQty(item.id)"
@@ -36,14 +36,17 @@
                             :readonly="item.status === 'out'" min="0" />
                         <button class="btn-qty btn-qty-plus" @click="$store.pos.incrementDraftQty(item.id)"
                             :disabled="item.status === 'out'"
-                            :title="item.status === 'out' ? 'Habis' : 'Tambah ke Draft'">
+                            :title="item.status === 'out' ? 'Out of Stock' : 'Add Draft'">
                             <i class="bi bi-plus"></i>
                         </button>
                     </div>
-                    <button class="btn-action btn-edit-action" @click="$store.pos.openEditMenu(item.id)"
-                        title="Edit menu">
-                        <i class="bi bi-pencil"></i>
-                    </button>
+                    @auth
+                        @if(auth()->user()->group_id == 1)
+                        <button class="btn-action btn-edit-action" @click="$store.pos.openEditMenu(item.id)" title="Edit menu">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        @endif
+                    @endauth
                 </div>
             </div>
         </template>

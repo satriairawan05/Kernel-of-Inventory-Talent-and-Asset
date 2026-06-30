@@ -52,6 +52,6 @@
     <button class="btn-add-manual additional-btn" @click="$store.pos.openAddMenu('additional')">
         <i class="bi bi-plus-circle me-1"></i> Add Additional Menu
     </button>
-    {{-- <button class="btn-add-manual" @click="$store.pos.openAddMenu()"><i class="bi bi-plus-circle me-1"></i> Add
-        Manual Menu</button> --}}
+    <!-- <button class="btn-add-manual" @click="$store.pos.openAddMenu()"><i class="bi bi-plus-circle me-1"></i> Add
+        Manual Menu</button> -->
 </div>

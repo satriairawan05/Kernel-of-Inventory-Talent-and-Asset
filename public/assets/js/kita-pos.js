@@ -2,6 +2,7 @@
 // assets/js/kita-pos.js - KitaPOS with Alpine.js
 // All data from API (jQuery AJAX), no hardcoded menus.
 // Multiple Draft Sessions (Dine In / Take Away) - Database persisted
+// Cart management integrated with API
 // ================================================================
 
 document.addEventListener('alpine:init', function () {
@@ -14,6 +15,7 @@ document.addEventListener('alpine:init', function () {
         activeSessionId: null,
         selectedSession: null,
         cart: [],
+        cartId: null,
         transactionHistory: [],
         currentCategory: 'all',
         searchQuery: '',
@@ -231,6 +233,11 @@ document.addEventListener('alpine:init', function () {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         },
 
+        // ---- CHECK ADMIN ----
+        isAdmin: function () {
+            return window.KitaPOS && window.KitaPOS.user && window.KitaPOS.user.group_id === 1;
+        },
+
         // ---- INIT ----
         init: function () {
             try {
@@ -265,6 +272,7 @@ document.addEventListener('alpine:init', function () {
                 }
 
                 this.loadDraftsFromAPI();
+                this.loadCartFromAPI();
 
                 setTimeout(function () {
                     this.refreshCsrfToken();
@@ -316,6 +324,153 @@ document.addEventListener('alpine:init', function () {
                     self.apiError = true;
                     self.loading = false;
                     self.showToast('⚠️ Failed to load menu from server. Please refresh the page.');
+                }
+            });
+        },
+
+        // ============================================================
+        // CART API METHODS
+        // ============================================================
+
+        loadCartFromAPI: function () {
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            $.ajax({
+                url: '/api/cart',
+                type: 'GET',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    if (response.success && response.data) {
+                        var cartData = response.data;
+                        self.cartId = cartData.id;
+                        self.cart = cartData.items.map(function (item) {
+                            var menuItem = self.menuItems.find(function (mi) { return mi.id === item.menu_item_id; });
+                            return {
+                                id: item.menu_item_id || item.id,
+                                _itemId: item.id,
+                                name: item.name,
+                                price: self.toNumber(item.price),
+                                qty: item.qty,
+                                icon: menuItem ? menuItem.icon : '🍽️'
+                            };
+                        });
+                        if (cartData.discount_type) {
+                            self.discountType = cartData.discount_type;
+                            self.discountValue = self.toNumber(cartData.discount_value);
+                            self.discountDisplay = cartData.discount_type === 'rp' ? self.formatRupiah(cartData.discount_value) : cartData.discount_value.toString();
+                        }
+                    } else {
+                        self.cart = [];
+                        self.cartId = null;
+                    }
+                },
+                error: function (xhr) {
+                    // silent fail
+                }
+            });
+        },
+
+        syncCartItem: function (itemId, qty) {
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            if (!this.cartId) return;
+
+            var cartItem = this.cart.find(function (c) { return c.id === itemId; });
+            if (!cartItem || !cartItem._itemId) {
+                return;
+            }
+
+            var url = '/api/cart/' + this.cartId + '/items/' + cartItem._itemId;
+
+            $.ajax({
+                url: url,
+                type: 'PUT',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: { qty: qty },
+                success: function (response) {
+                    if (response.success) {
+                        var cart = response.data.cart;
+                        self.cart = cart.items.map(function (item) {
+                            var menuItem = self.menuItems.find(function (mi) { return mi.id === item.menu_item_id; });
+                            return {
+                                id: item.menu_item_id || item.id,
+                                _itemId: item.id,
+                                name: item.name,
+                                price: self.toNumber(item.price),
+                                qty: item.qty,
+                                icon: menuItem ? menuItem.icon : '🍽️'
+                            };
+                        });
+                        if (cart.discount_type) {
+                            self.discountType = cart.discount_type;
+                            self.discountValue = self.toNumber(cart.discount_value);
+                            self.discountDisplay = cart.discount_type === 'rp' ? self.formatRupiah(cart.discount_value) : cart.discount_value.toString();
+                        }
+                    } else {
+                        self.showToast('❌ Failed to update cart item: ' + (response.message || 'Unknown error'));
+                        self.loadCartFromAPI();
+                    }
+                },
+                error: function (xhr) {
+                    self.showToast('❌ Failed to update cart item.');
+                }
+            });
+        },
+
+        applyDiscountToCart: function () {
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            if (!this.cartId) return;
+
+            $.ajax({
+                url: '/api/cart/' + this.cartId + '/discount',
+                type: 'POST',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    type: this.discountType,
+                    value: this.discountValue
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var cart = response.data.cart;
+                        self.cart = cart.items.map(function (item) {
+                            var menuItem = self.menuItems.find(function (mi) { return mi.id === item.menu_item_id; });
+                            return {
+                                id: item.menu_item_id || item.id,
+                                _itemId: item.id,
+                                name: item.name,
+                                price: self.toNumber(item.price),
+                                qty: item.qty,
+                                icon: menuItem ? menuItem.icon : '🍽️'
+                            };
+                        });
+                        if (cart.discount_type) {
+                            self.discountType = cart.discount_type;
+                            self.discountValue = self.toNumber(cart.discount_value);
+                            self.discountDisplay = cart.discount_type === 'rp' ? self.formatRupiah(cart.discount_value) : cart.discount_value.toString();
+                        }
+                        self.showToast('✅ Discount applied');
+                    } else {
+                        self.showToast('❌ Failed to apply discount: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr) {
+                    self.showToast('❌ Failed to apply discount.');
                 }
             });
         },
@@ -527,21 +682,41 @@ document.addEventListener('alpine:init', function () {
                 success: function (response) {
                     if (response.success) {
                         var data = response.data;
-                        data.items.forEach(function (item) {
-                            var existing = self.cart.find(function (c) { return c.id === item.id; });
-                            if (existing) {
-                                existing.qty += item.qty;
-                            } else {
-                                var menuItem = self.menuItems.find(function (mi) { return mi.id === item.id; });
-                                self.cart.push({
-                                    id: item.id,
+                        if (data.cart) {
+                            self.cartId = data.cart.id;
+                            self.cart = data.cart.items.map(function (item) {
+                                var menuItem = self.menuItems.find(function (mi) { return mi.id === item.menu_item_id; });
+                                return {
+                                    id: item.menu_item_id || item.id,
+                                    _itemId: item.id,
                                     name: item.name,
                                     price: self.toNumber(item.price),
                                     qty: item.qty,
                                     icon: menuItem ? menuItem.icon : '🍽️'
-                                });
+                                };
+                            });
+                            if (data.cart.discount_type) {
+                                self.discountType = data.cart.discount_type;
+                                self.discountValue = self.toNumber(data.cart.discount_value);
+                                self.discountDisplay = data.cart.discount_type === 'rp' ? self.formatRupiah(data.cart.discount_value) : data.cart.discount_value.toString();
                             }
-                        });
+                        } else {
+                            data.items.forEach(function (item) {
+                                var existing = self.cart.find(function (c) { return c.id === item.id; });
+                                if (existing) {
+                                    existing.qty += item.qty;
+                                } else {
+                                    var menuItem = self.menuItems.find(function (mi) { return mi.id === item.id; });
+                                    self.cart.push({
+                                        id: item.id,
+                                        name: item.name,
+                                        price: self.toNumber(item.price),
+                                        qty: item.qty,
+                                        icon: menuItem ? menuItem.icon : '🍽️'
+                                    });
+                                }
+                            });
+                        }
 
                         self.sessions = self.sessions.filter(function (s) { return s.id !== sessionId; });
                         if (self.activeSessionId === sessionId) {
@@ -554,13 +729,17 @@ document.addEventListener('alpine:init', function () {
                             if (modal) modal.hide();
                         }
 
-                        self.showToast('🛒 ' + data.name + ' moved to Cart!');
+                        self.showToast('🛒 ' + (data.draftName || data.name || 'Draft') + ' moved to Cart!');
                     } else {
-                        self.showToast('❌ Failed to move to cart: ' + response.message);
+                        self.showToast('❌ Failed to move to cart: ' + (response.message || 'Unknown error'));
                     }
                 },
                 error: function (xhr) {
-                    self.showToast('❌ Failed to move to cart.');
+                    var msg = '❌ Failed to move to cart. ';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += xhr.responseJSON.message;
+                    }
+                    self.showToast(msg);
                 }
             });
         },
@@ -1039,7 +1218,7 @@ document.addEventListener('alpine:init', function () {
         },
 
         // ============================================================
-        // CART OPERATIONS
+        // CART OPERATIONS (sync with API)
         // ============================================================
 
         incrementQty: function (id) {
@@ -1051,6 +1230,7 @@ document.addEventListener('alpine:init', function () {
                     return;
                 }
                 existing.qty += 1;
+                this.syncCartItem(id, existing.qty);
             } else {
                 this.showToast('❌ Item not in cart.');
             }
@@ -1063,8 +1243,10 @@ document.addEventListener('alpine:init', function () {
             if (idx === -1) return;
             if (this.cart[idx].qty > 1) {
                 this.cart[idx].qty -= 1;
+                this.syncCartItem(id, this.cart[idx].qty);
             } else {
                 this.cart.splice(idx, 1);
+                this.syncCartItem(id, 0);
             }
         },
         updateQtyFromInput: function (id, event) {
@@ -1084,6 +1266,7 @@ document.addEventListener('alpine:init', function () {
             }
             if (val === 0) {
                 this.cart.splice(idx, 1);
+                this.syncCartItem(id, 0);
             } else {
                 var menuItem = this.menuItems.find(function (i) { return i.id === id; });
                 if (menuItem && menuItem.status === 'out') {
@@ -1092,22 +1275,28 @@ document.addEventListener('alpine:init', function () {
                     return;
                 }
                 this.cart[idx].qty = val;
+                this.syncCartItem(id, val);
             }
         },
         resetTo: function (id, targetQty) {
             var item = this.cart.find(function (c) { return c.id === id; });
             if (item && item.qty > targetQty) {
                 item.qty = targetQty;
+                this.syncCartItem(id, targetQty);
                 this.showToast('✅ Quantity reset to ' + targetQty);
             }
         },
 
         // ============================================================
-        // MENU MANAGEMENT
+        // MENU MANAGEMENT (with admin check)
         // ============================================================
 
         openAddMenu: function (category) {
             if (category === undefined) category = 'food';
+            if (category !== 'additional' && !this.isAdmin()) {
+                this.showToast('❌ You are not authorized to add menu.');
+                return;
+            }
             this.newItem = { name: '', price: '', category: category, status: 'available', icon: category === 'additional' ? '➕' : '🍽️', imagePreview: null, imageData: null };
             setTimeout(function () {
                 if (typeof $ !== 'undefined' && $.fn && $.fn.select2) {
@@ -1129,21 +1318,99 @@ document.addEventListener('alpine:init', function () {
             }
         },
         saveNewItem: function () {
-            var item = {
-                id: this.nextId++,
-                name: this.newItem.name.trim(),
-                price: parseInt(this.newItem.price.replace(/\D/g, ''), 10) || 0,
-                category: this.newItem.category,
-                status: this.newItem.status,
-                icon: this.newItem.icon || '🍽️'
-            };
-            this.menuItems.push(item);
-            var el = document.getElementById('addItemModal');
-            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                var modal = bootstrap.Modal.getInstance(el);
-                if (modal) modal.hide();
+            if (this.newItem.category !== 'additional' && !this.isAdmin()) {
+                this.showToast('❌ You are not authorized to add menu.');
+                return;
             }
-            this.showToast('✅ Menu "' + item.name + '" added successfully!');
+
+            if (!this.newItem.name.trim()) {
+                this.showToast('❌ Menu name is required!');
+                return;
+            }
+            var price = parseInt(this.newItem.price.replace(/\D/g, ''), 10) || 0;
+            if (price <= 0) {
+                this.showToast('❌ Price must be a positive number!');
+                return;
+            }
+
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            var formData = new FormData();
+            formData.append('name', this.newItem.name.trim());
+            formData.append('price', price);
+            formData.append('category', this.newItem.category);
+            formData.append('status', this.newItem.status);
+            if (this.newItem.imageData && this.newItem.imageData.startsWith('data:image')) {
+                try {
+                    var byteString = atob(this.newItem.imageData.split(',')[1]);
+                    var mimeString = this.newItem.imageData.split(',')[0].split(':')[1].split(';')[0];
+                    var ab = new ArrayBuffer(byteString.length);
+                    var ia = new Uint8Array(ab);
+                    for (var i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    var blob = new Blob([ab], { type: mimeString });
+                    formData.append('image', blob, 'menu_image.jpg');
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            this.showToast('⏳ Saving menu...');
+
+            $.ajax({
+                url: '/api/menu',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var newItem = response.data;
+                        self.menuItems.push({
+                            id: newItem.id,
+                            name: newItem.name,
+                            price: newItem.price,
+                            category: newItem.category,
+                            status: newItem.status,
+                            icon: self.newItem.icon || '🍽️',
+                            image: newItem.image || null
+                        });
+                        if (newItem.id >= self.nextId) {
+                            self.nextId = newItem.id + 1;
+                        }
+                        var el = document.getElementById('addItemModal');
+                        if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            var modal = bootstrap.Modal.getInstance(el);
+                            if (modal) modal.hide();
+                        }
+                        self.showToast('✅ Menu "' + newItem.name + '" added successfully!');
+                    } else {
+                        self.showToast('❌ Failed to save menu: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr) {
+                    var msg = '❌ Failed to save menu. ';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += xhr.responseJSON.message;
+                    } else if (xhr.status === 422) {
+                        var errors = xhr.responseJSON.errors;
+                        var firstKey = Object.keys(errors)[0];
+                        if (firstKey && errors[firstKey].length > 0) {
+                            msg += errors[firstKey][0];
+                        } else {
+                            msg += 'Validation error.';
+                        }
+                    } else {
+                        msg += 'Please try again.';
+                    }
+                    self.showToast(msg);
+                }
+            });
         },
         handleImageUpload: function (event) {
             var file = event.target.files[0];
@@ -1166,8 +1433,14 @@ document.addEventListener('alpine:init', function () {
             reader.readAsDataURL(file);
         },
         openEditMenu: function (id) {
+            if (!this.isAdmin()) {
+                this.showToast('❌ You are not authorized to edit menu.');
+                return;
+            }
+
             var item = this.menuItems.find(function (i) { return i.id === id; });
             if (!item) { this.showToast('❌ Menu not found!'); return; }
+
             this.editItemId = id;
             this.editItem = {
                 id: item.id,
@@ -1181,6 +1454,16 @@ document.addEventListener('alpine:init', function () {
             };
             var fileInput = document.getElementById('editImage');
             if (fileInput) fileInput.value = '';
+
+            var titleEl = document.querySelector('#editItemModal .modal-title');
+            if (titleEl) {
+                if (item.category === 'additional') {
+                    titleEl.innerHTML = '<i class="bi bi-pencil-square me-2"></i> Edit Additional Menu';
+                } else {
+                    titleEl.innerHTML = '<i class="bi bi-pencil-square me-2"></i> Edit Menu';
+                }
+            }
+
             var el = document.getElementById('editItemModal');
             if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                 var modal = new bootstrap.Modal(el);
@@ -1205,50 +1488,174 @@ document.addEventListener('alpine:init', function () {
             }.bind(this), 100);
         },
         saveEditItem: function () {
+            if (!this.isAdmin()) {
+                this.showToast('❌ You are not authorized to edit menu.');
+                return;
+            }
+
             var id = this.editItemId;
-            if (id === null || id === undefined) { this.showToast('❌ No item selected to edit!'); return; }
-            var index = -1;
-            for (var i = 0; i < this.menuItems.length; i++) {
-                if (this.menuItems[i].id === id) { index = i; break; }
+            if (id === null || id === undefined) {
+                this.showToast('❌ No item selected to edit!');
+                return;
             }
-            if (index === -1) { this.showToast('❌ Menu not found!'); return; }
+
             var name = this.editItem.name.trim();
-            var rawPrice = this.editItem.price.replace(/\D/g, '');
+            var rawPrice = this.editItem.price.toString().replace(/\D/g, '');
             var price = parseInt(rawPrice, 10) || 0;
-            if (!name) { this.showToast('❌ Menu name is required!'); return; }
-            if (price <= 0) { this.showToast('❌ Price must be a positive number!'); return; }
-            this.menuItems[index] = {
-                id: this.menuItems[index].id,
-                name: name,
-                price: price,
-                category: this.editItem.category,
-                status: this.editItem.status,
-                icon: this.editItem.icon || '🍽️',
-                image: this.editItem.imageData || this.menuItems[index].image
-            };
-            this.sessions.forEach(function (session) {
-                session.items.forEach(function (item) {
-                    if (item.menu_item_id === id) {
-                        item.name = name;
-                        item.price = price;
-                    }
-                }.bind(this));
-            }.bind(this));
-            this.cart.forEach(function (item) {
-                if (item.id === id) {
-                    item.name = name;
-                    item.price = price;
-                    item.icon = this.editItem.icon || '🍽️';
-                }
-            }.bind(this));
-            var el = document.getElementById('editItemModal');
-            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                var modal = bootstrap.Modal.getInstance(el);
-                if (modal) modal.hide();
+
+            if (!name) {
+                this.showToast('❌ Menu name is required!');
+                return;
             }
-            this.editItemId = null;
-            this.editItem = { name: '', price: '', category: 'food', status: 'available', icon: '🍽️', imagePreview: null, imageData: null };
-            this.showToast('✅ Menu "' + name + '" updated successfully!');
+            if (price <= 0) {
+                this.showToast('❌ Price must be a positive number!');
+                return;
+            }
+
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            var formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('category', this.editItem.category);
+            formData.append('status', this.editItem.status);
+
+            if (this.editItem.imageData && this.editItem.imageData.startsWith('data:image')) {
+                try {
+                    var byteString = atob(this.editItem.imageData.split(',')[1]);
+                    var mimeString = this.editItem.imageData.split(',')[0].split(':')[1].split(';')[0];
+                    var ab = new ArrayBuffer(byteString.length);
+                    var ia = new Uint8Array(ab);
+                    for (var i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    var blob = new Blob([ab], { type: mimeString });
+                    formData.append('image', blob, 'menu_image.jpg');
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            $.ajax({
+                url: '/api/menu/' + id,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-HTTP-Method-Override': 'PUT'
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var index = -1;
+                        for (var i = 0; i < self.menuItems.length; i++) {
+                            if (self.menuItems[i].id === id) { index = i; break; }
+                        }
+                        if (index !== -1) {
+                            self.menuItems[index] = {
+                                id: id,
+                                name: name,
+                                price: price,
+                                category: self.editItem.category,
+                                status: self.editItem.status,
+                                icon: self.editItem.icon || '🍽️',
+                                image: response.data.image || null
+                            };
+                        }
+
+                        self.sessions.forEach(function (session) {
+                            session.items.forEach(function (item) {
+                                if (item.menu_item_id === id) {
+                                    item.name = name;
+                                    item.price = price;
+                                }
+                            });
+                        });
+                        self.cart.forEach(function (item) {
+                            if (item.id === id) {
+                                item.name = name;
+                                item.price = price;
+                                item.icon = self.editItem.icon || '🍽️';
+                            }
+                        });
+
+                        var el = document.getElementById('editItemModal');
+                        if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            var modal = bootstrap.Modal.getInstance(el);
+                            if (modal) modal.hide();
+                        }
+
+                        self.editItemId = null;
+                        self.editItem = { name: '', price: '', category: 'food', status: 'available', icon: '🍽️', imagePreview: null, imageData: null };
+                        self.showToast('✅ Menu "' + name + '" updated successfully!');
+                    } else {
+                        self.showToast('❌ Failed to update menu: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr) {
+                    var msg = '❌ Failed to update menu. ';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += xhr.responseJSON.message;
+                    } else if (xhr.status === 422) {
+                        var errors = xhr.responseJSON.errors;
+                        var firstKey = Object.keys(errors)[0];
+                        if (firstKey && errors[firstKey].length > 0) {
+                            msg += errors[firstKey][0];
+                        } else {
+                            msg += 'Validation error.';
+                        }
+                    } else if (xhr.status === 404) {
+                        msg += 'Menu item not found.';
+                    } else {
+                        msg += 'Please try again.';
+                    }
+                    self.showToast(msg);
+                }
+            });
+        },
+
+        deleteMenu: function (id) {
+            if (!this.isAdmin()) {
+                this.showToast('❌ You are not authorized to delete menu.');
+                return;
+            }
+            if (!confirm('Delete this menu item?')) return;
+
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            $.ajax({
+                url: '/api/menu/' + id,
+                type: 'DELETE',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    if (response.success) {
+                        self.menuItems = self.menuItems.filter(function (item) { return item.id !== id; });
+                        self.cart = self.cart.filter(function (item) { return item.id !== id; });
+                        self.sessions.forEach(function (session) {
+                            session.items = session.items.filter(function (item) { return item.menu_item_id !== id; });
+                        });
+                        self.showToast('🗑️ Menu deleted successfully');
+                    } else {
+                        self.showToast('❌ Failed to delete menu: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr) {
+                    var msg = '❌ Failed to delete menu. ';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += xhr.responseJSON.message;
+                    } else {
+                        msg += 'Please try again.';
+                    }
+                    self.showToast(msg);
+                }
+            });
         },
 
         // ============================================================
@@ -1320,7 +1727,7 @@ document.addEventListener('alpine:init', function () {
                     this.changeAmount = 0;
                 }
             } catch (error) {
-                // Silent error
+                // silent error
             }
         },
         handlePaymentMethodChange: function () {
@@ -1336,7 +1743,7 @@ document.addEventListener('alpine:init', function () {
                     this.changeAmount = 0;
                 }
             } catch (error) {
-                // Silent error
+                // silent error
             }
         },
         confirmCheckout: function () {
@@ -1344,38 +1751,71 @@ document.addEventListener('alpine:init', function () {
                 var total = this.discountedTotal;
                 var method = this.paymentMethod;
                 var paid = this.paymentAmountRaw;
-                if (method === 'cash') {
-                    if (paid < total) {
-                        this.showToast('❌ Payment insufficient!');
-                        return;
+
+                if (method === 'cash' && paid < total) {
+                    this.showToast('❌ Payment insufficient!');
+                    return;
+                }
+
+                if (!this.cartId) {
+                    this.showToast('❌ No active cart to checkout!');
+                    return;
+                }
+
+                var self = this;
+                var csrfToken = this.getCsrfToken();
+
+                $.ajax({
+                    url: '/api/cart/' + this.cartId + '/checkout',
+                    type: 'POST',
+                    dataType: 'json',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            var transactionData = response.data.transaction;
+                            var items = self.cart.map(function (item) {
+                                return { name: item.name, qty: item.qty, price: item.price, subtotal: item.price * item.qty };
+                            });
+                            var transaction = self.saveTransaction(
+                                method,
+                                total,
+                                paid,
+                                method === 'cash' ? paid - total : 0,
+                                items,
+                                self.discountAmount,
+                                self.discountType,
+                                self.discountValue,
+                                self.cartTotal
+                            );
+                            self.showToast('✅ Checkout successful!');
+                            self.printStrukMobile(transaction);
+
+                            self.cart = [];
+                            self.cartId = null;
+                            self.mobileCartOpen = false;
+
+                            var el = document.getElementById('checkoutModal');
+                            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                var modal = bootstrap.Modal.getInstance(el);
+                                if (modal) modal.hide();
+                            }
+                        } else {
+                            self.showToast('❌ Checkout failed: ' + (response.message || 'Unknown error'));
+                        }
+                    },
+                    error: function (xhr) {
+                        var msg = '❌ Checkout failed. ';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg += xhr.responseJSON.message;
+                        }
+                        self.showToast(msg);
                     }
-                    var change = paid - total;
-                    var items = this.cart.map(function (item) {
-                        return { name: item.name, qty: item.qty, price: item.price, subtotal: item.price * item.qty };
-                    });
-                    var transaction = this.saveTransaction('Cash', total, paid, change, items, this.discountAmount, this.discountType, this.discountValue, this.cartTotal);
-                    this.showToast('✅ Checkout successful!');
-                    this.printStrukMobile(transaction);
-                } else {
-                    paid = total;
-                    this.paymentAmount = this.formatRupiah(paid);
-                    this.paymentAmountRaw = paid;
-                    var items = this.cart.map(function (item) {
-                        return { name: item.name, qty: item.qty, price: item.price, subtotal: item.price * item.qty };
-                    });
-                    var transaction = this.saveTransaction('QRIS', total, paid, 0, items, this.discountAmount, this.discountType, this.discountValue, this.cartTotal);
-                    this.showToast('✅ Checkout successful! Method: QRIS.');
-                    this.printStrukMobile(transaction);
-                }
-                this.cart = [];
-                this.mobileCartOpen = false;
-                var el = document.getElementById('checkoutModal');
-                if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                    var modal = bootstrap.Modal.getInstance(el);
-                    if (modal) modal.hide();
-                }
+                });
             } catch (error) {
-                this.showToast('❌ Checkout failed!');
+                this.showToast('❌ Checkout error: ' + (error.message || ''));
             }
         },
         updateDiscount: function (event) {
@@ -1391,6 +1831,9 @@ document.addEventListener('alpine:init', function () {
                 this.discountValue = pct;
                 this.discountDisplay = pct.toString();
                 event.target.value = pct.toString();
+            }
+            if (this.cartId) {
+                this.applyDiscountToCart();
             }
             this.updateChange();
         },
@@ -1446,7 +1889,6 @@ document.addEventListener('alpine:init', function () {
             });
             unique.sort(function (a, b) { return a - b; });
 
-            // Pastikan 100000 selalu di akhir jika total <= 100000
             if (total <= 100000) {
                 var idx100 = unique.indexOf(100000);
                 if (idx100 !== -1 && idx100 !== unique.length - 1) {
@@ -1455,7 +1897,6 @@ document.addEventListener('alpine:init', function () {
                 }
             }
 
-            // Potong maksimal 5 opsi
             if (unique.length > 5) {
                 var firstFour = unique.slice(0, 4);
                 var last = unique[unique.length - 1];
@@ -1504,7 +1945,7 @@ document.addEventListener('alpine:init', function () {
             } catch (e) { }
             this.showToast('⚙️ Printer setting: ' + this.defaultPrinterSize);
         },
-        setOutle: function (name, address, id) {
+        setOutlet: function (name, address, id) {
             this.outletName = name || 'My Fried Chicken';
             this.outletAddress = address || 'Pusat';
             this.outletId = id || 1;
@@ -1732,6 +2173,9 @@ document.addEventListener('alpine:init', function () {
                     initials = name.substring(0, 2).toUpperCase();
                 }
                 return initials;
+            },
+            deleteMenu: function (id) {
+                Alpine.store('pos').deleteMenu(id);
             }
         };
     });
@@ -1780,7 +2224,7 @@ document.addEventListener('alpine:init', function () {
                 }
 
                 if (window.KitaPOS && window.KitaPOS.outlet) {
-                    store.setOutle(
+                    store.setOutlet(
                         window.KitaPOS.outlet.name,
                         window.KitaPOS.outlet.address,
                         window.KitaPOS.outlet.id

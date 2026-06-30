@@ -8,7 +8,6 @@ use App\Http\Requests\SystemSettingUpdateRequest;
 use App\Models\Company;
 use App\Models\SystemSetting;
 use App\Services\SystemSettingService;
-use Illuminate\Http\Request;
 
 class SystemSettingController extends Controller
 {

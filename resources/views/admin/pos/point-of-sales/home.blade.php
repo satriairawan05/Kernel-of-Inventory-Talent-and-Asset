@@ -25,7 +25,8 @@
         window.KitaPOS = {
             user: {
                 name: '{!! auth()->check() ? addslashes(auth()->user()->name) : 'Guest' !!}',
-                isOnline: {{ auth()->check() ? 'true' : 'false' }}
+                isOnline: {{ auth()->check() ? 'true' : 'false' }},
+                group_id: {{ auth()->check() ? auth()->user()->group_id : 0 }}
             },
             outlet: {
                 id: {{ auth()->user()->company_id ?? 1 }}, 
