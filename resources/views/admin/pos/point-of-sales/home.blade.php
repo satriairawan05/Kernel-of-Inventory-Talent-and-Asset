@@ -11,6 +11,20 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <link href="{{ asset('assets/css/kita-pos.css') }}" rel="stylesheet" />
+
+    <!-- ===============================================-->
+    <!--    Favicons-->
+    <!-- ===============================================-->
+    <link rel="apple-touch-icon" sizes="512x512" href="{{ asset('assets/img/favicons/android-chrome-512x512.png') }}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('assets/img/favicons/android-chrome-192x192.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/favicons/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/favicons/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/favicons/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('assets/img/favicons/manifest.json') }}">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description"
+        content="Kernel of Inventory Talent and Asset adalah project yang mengintegrasikan HRIS, Inventory dan POS dalam 1 wadah">
+
     <!-- ===== Inject PEXELS API KEY ===== -->
     <script type="text/javascript">
         window._env = {
@@ -29,7 +43,7 @@
                 group_id: {{ auth()->check() ? auth()->user()->group_id : 0 }}
             },
             outlet: {
-                id: {{ auth()->user()->company_id ?? 1 }}, 
+                id: {{ auth()->user()->company_id ?? 1 }},
                 name: "My Fried Chicken",
                 address: "Pusat",
                 openingBalance: "{{ $openingBalance ?? '150000' }}",

@@ -9,6 +9,19 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="{{ asset('assets/css/kita-absensi.min.css') }}" />
+
+    <!-- ===============================================-->
+    <!--    Favicons-->
+    <!-- ===============================================-->
+    <link rel="apple-touch-icon" sizes="512x512" href="{{ asset('assets/img/favicons/android-chrome-512x512.png') }}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('assets/img/favicons/android-chrome-192x192.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/favicons/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/favicons/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/favicons/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('assets/img/favicons/manifest.json') }}">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description"
+        content="Kernel of Inventory Talent and Asset adalah project yang mengintegrasikan HRIS, Inventory dan POS dalam 1 wadah">
 </head>
 
 <body id="home" x-data="rekapApp()" x-init="init()">
@@ -140,7 +153,8 @@
                     <p class="toast-message fs-5 mt-2 fw-semibold" style="color: #3d1a1a;"></p>
                 </div>
                 <div class="modal-footer border-0 pt-0 justify-content-center">
-                    <button type="button" class="btn btn-maroon rounded-pill px-4" data-bs-dismiss="modal">OK</button>
+                    <button type="button" class="btn btn-maroon rounded-pill px-4"
+                        data-bs-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
