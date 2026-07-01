@@ -23,26 +23,32 @@
                             @enderror
                         </div>
                         <div class="col-md-4">
+                            <label class="form-label">Outlet <span class="text-danger">*</span></label>
+                            <select name="location" class="form-select @error('location') is-invalid @enderror" required>
+                                <option value="">Pilih Outlet</option>
+                                @foreach ($companies as $company)
+                                    <option value="{{ $company->company_name }}"
+                                        {{ old('location') == $company->company_name ? 'selected' : '' }}>
+                                        {{ $company->company_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('location')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label">Shift Period <span class="text-danger">*</span></label>
                             <select name="period_id" class="form-select @error('period_id') is-invalid @enderror" required>
                                 <option value="">Pilih Shift</option>
                                 @foreach ($periods as $period)
                                     <option value="{{ $period->id }}"
                                         {{ old('period_id') == $period->id ? 'selected' : '' }}>
-                                        {{ $period->name }} ({{ $period->shift->name ?? '-' }})
+                                        {{ $period->name }} ({{ $period->shift->shift_name ?? '-' }})
                                     </option>
                                 @endforeach
                             </select>
                             @error('period_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Location <span class="text-danger">*</span></label>
-                            <input type="text" name="location"
-                                class="form-control @error('location') is-invalid @enderror" value="{{ old('location') }}"
-                                placeholder="Cabang / Toko" required>
-                            @error('location')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -53,7 +59,8 @@
                                 <option value="">Select User</option>
                                 @foreach ($users as $user)
                                     <option value="{{ $user->name }}"
-                                        {{ old('reported_by',auth()->user()->name) == $user->name ? 'selected' : '' }}>{{ $user->name }}
+                                        {{ old('reported_by', auth()->user()->name) == $user->name ? 'selected' : '' }}>
+                                        {{ $user->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -61,22 +68,6 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        {{-- <div class="col-md-4">
-                            <label class="form-label">Cashier Name <span class="text-danger">*</span></label>
-                            <select name="cashier_name" class="form-select select2 @error('cashier_name') is-invalid @enderror"
-                                required>
-                                <option value="">Select User</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->name }}"
-                                        {{ old('cashier_name') == $user->name ? 'selected' : '' }}>
-                                        {{ $user->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('cashier_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div> --}}
                         <div class="col-md-3">
                             <label class="form-label">Open at</label>
                             <input type="datetime-local" name="opened_at"

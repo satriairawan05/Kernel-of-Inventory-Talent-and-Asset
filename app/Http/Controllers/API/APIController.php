@@ -5,7 +5,13 @@ namespace App\Http\Controllers\API;
 use App\Enums\{DraftTypeEnum, DraftStatusEnum};
 use App\Enums\MenuStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Jobs\PrintReceiptJob;
 use App\Models\{Company, MenuItem, Shift, Draft, DraftItem, Cart, Stock, Transaction, TransactionItem};
+use App\Models\InventoryReport;
+use App\Models\InventoryReportItem;
+use App\Models\ReportPeriod;
+use App\Models\StockMovement;
+use App\Services\PrintService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Log, Storage};
 use Illuminate\Support\Facades\Cache;
@@ -985,14 +991,12 @@ class APIController extends Controller
                 return $this->response(null, 'Cart already processed', 403);
             }
 
-            // Mulai transaction
             DB::beginTransaction();
 
             try {
-                // Recalculate total
                 $cart->recalculate();
 
-                // ---- Cari draft dari notes ----
+                // ---- Draft handling ----
                 $draftId = null;
                 if ($cart->notes) {
                     preg_match('/draft_id:(\d+)/', $cart->notes, $matches);
@@ -1010,13 +1014,10 @@ class APIController extends Controller
                     }
                 }
 
-                // Complete cart
                 $cart->setCompleted();
 
-                // ---- Generate transaction number ----
+                // ---- Transaction ----
                 $transactionNumber = Transaction::generateTransactionNumber();
-
-                // ---- Buat transaksi ----
                 $transaction = Transaction::create([
                     'cart_id'            => $cart->id,
                     'draft_id'           => $draftId,
@@ -1035,7 +1036,6 @@ class APIController extends Controller
                     'status'             => 'completed',
                 ]);
 
-                // ---- Simpan item-item transaksi ----
                 foreach ($cart->items as $cartItem) {
                     TransactionItem::create([
                         'transaction_id'    => $transaction->id,
@@ -1049,31 +1049,45 @@ class APIController extends Controller
                 }
 
                 // ============================================================
-                // UPDATE STOCK, CATAT MOVEMENT, INVENTORY REPORT
+                // STOCK, MOVEMENT, INVENTORY REPORT (with ReportPeriod)
                 // ============================================================
 
-                // 1. Kelompokkan total qty per variant
+                // 1. Group quantities by variant
                 $variantUpdates = [];
                 foreach ($cart->items as $cartItem) {
                     $menuItem = MenuItem::find($cartItem->menu_item_id);
                     if ($menuItem && $menuItem->product_variant_id) {
                         $variantId = $menuItem->product_variant_id;
-                        if (!isset($variantUpdates[$variantId])) {
-                            $variantUpdates[$variantId] = 0;
-                        }
-                        $variantUpdates[$variantId] += $cartItem->qty;
+                        $variantUpdates[$variantId] = ($variantUpdates[$variantId] ?? 0) + $cartItem->qty;
                     }
                 }
 
-                // 2. Proses setiap variant
-                $inventoryReport = null;
+                // 2. Get or create the report period for today
                 $today = now()->toDateString();
+                $reportPeriod = ReportPeriod::where('company_id', $companyId)
+                    ->whereDate('start_date', '<=', $today)
+                    ->whereDate('end_date', '>=', $today)
+                    ->where('status', 'open') // adjust status if needed
+                    ->first();
+
+                if (!$reportPeriod) {
+                    // Create a new daily period (adjust fields as per your schema)
+                    $reportPeriod = ReportPeriod::create([
+                        'company_id'  => $companyId,
+                        'start_date'  => $today,
+                        'end_date'    => $today,
+                        'status'      => 'open',
+                        'period_type' => 'daily',
+                        // add any other required fields (e.g., shift_id)
+                    ]);
+                }
+
+                // 3. Process each variant
+                $inventoryReport = null;
 
                 foreach ($variantUpdates as $variantId => $totalQty) {
-                    // Ambil stock sekarang
                     $stock = Stock::where('product_variant_id', $variantId)->first();
                     if (!$stock) {
-                        // Jika stock tidak ada, lewati (seharusnya ada)
                         Log::warning("Stock not found for variant ID $variantId during checkout");
                         continue;
                     }
@@ -1081,16 +1095,13 @@ class APIController extends Controller
                     $stockBefore = (int) $stock->current_stock;
                     $stockAfter = $stockBefore - $totalQty;
 
-                    // Validasi stok cukup
                     if ($stockAfter < 0) {
                         throw new \Exception("Insufficient stock for variant ID $variantId. Available: $stockBefore, requested: $totalQty");
                     }
 
-                    // Update stock
                     $stock->current_stock = $stockAfter;
                     $stock->save();
 
-                    // ---- Catat StockMovement ----
                     StockMovement::create([
                         'product_variant_id' => $variantId,
                         'pic_id'             => $user->id,
@@ -1104,34 +1115,32 @@ class APIController extends Controller
 
                     // ---- Inventory Report ----
                     if (!$inventoryReport) {
-                        // Cari report hari ini untuk company ini
+                        // Use report_period_id in the search/creation
                         $inventoryReport = InventoryReport::firstOrCreate(
                             [
-                                'report_date' => $today,
-                                'location'    => $companyId,
-                                'reported_by' => $user->id,
+                                'report_period_id' => $reportPeriod->id,
+                                'location'         => $companyId,
                             ],
                             [
-                                'opened_at'            => now(),
-                                'cashier_name'         => $user->name,
-                                'total_products_sold'  => 0,
-                                'notes'                => 'Auto generated report',
+                                'report_date'           => $today,
+                                'reported_by'           => $user->id,
+                                'opened_at'             => now(),
+                                'cashier_name'          => $user->name,
+                                'total_products_sold'   => 0,
+                                'notes'                 => 'Auto generated report',
                             ]
                         );
                     }
 
-                    // Cari atau buat InventoryReportItem
                     $reportItem = InventoryReportItem::where('inventory_report_id', $inventoryReport->id)
                         ->where('product_variant_id', $variantId)
                         ->first();
 
                     if ($reportItem) {
-                        // Tambah selling
                         $reportItem->selling += $totalQty;
                         $reportItem->remain = $reportItem->first_stock + $reportItem->stock_in - $reportItem->selling;
                         $reportItem->save();
                     } else {
-                        // Buat baru, first_stock = stockBefore (stok sebelum transaksi ini)
                         InventoryReportItem::create([
                             'inventory_report_id' => $inventoryReport->id,
                             'product_variant_id'   => $variantId,
@@ -1142,23 +1151,20 @@ class APIController extends Controller
                         ]);
                     }
 
-                    // Update total_products_sold di inventory report
                     $inventoryReport->total_products_sold += $totalQty;
                     $inventoryReport->save();
                 }
 
-                // Commit transaction
                 DB::commit();
 
-                // ---- Dispatch print job (async) ----
+                // ---- Dispatch print job ----
                 try {
                     PrintReceiptJob::dispatch($transaction);
                 } catch (\Exception $e) {
                     Log::warning('Failed to dispatch print job: ' . $e->getMessage());
-                    // Print gagal, tapi transaksi tetap sukses
                 }
 
-                // ---- Siapkan response untuk frontend ----
+                // ---- Response ----
                 $responseData = [
                     'id'                 => $transaction->id,
                     'transaction_number' => $transaction->transaction_number,
@@ -1576,5 +1582,38 @@ class APIController extends Controller
             }
         }
         return ucfirst($status);
+    }
+
+
+    /**
+     * Print Transaction Receipt via PrintService.
+     * GET /api/transactions/{id}/print 
+     */
+    public function printTransaction($id, PrintService $printService)
+    {
+        try {
+            $user = $this->getUser(request());
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
+            $companyId = $user->company_id ?? 1;
+            $transaction = Transaction::with(['items', 'user', 'company'])
+                ->where('company_id', $companyId)
+                ->find($id);
+
+            if (!$transaction) {
+                return $this->response(null, 'Transaction not found', 404);
+            }
+
+            // Coba print via PrintService
+            $printService->printReceipt($transaction);
+
+            return $this->response(null, 'Struk berhasil dicetak via server');
+        } catch (\Exception $e) {
+            // Jika gagal, kita kirim response dengan status 500 agar JS bisa fallback
+            Log::error('Print transaction error: ' . $e->getMessage());
+            return $this->response(null, 'Gagal mencetak via server: ' . $e->getMessage(), 500);
+        }
     }
 }

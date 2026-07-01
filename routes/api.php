@@ -49,3 +49,4 @@ Route::post('/cart/{id}/checkout', [Controllers\API\APIController::class, 'check
 Route::post('/drafts/{id}/to-cart', [Controllers\API\APIController::class, 'moveDraftToCart'])->name('draft.move-to-cart');
 
 Route::get('/trx-number', [Controllers\API\APIController::class, 'generateTrxNumber'])->name('transaction.number');
+Route::post('/transactions/{id}/print', [Controllers\API\APIController::class, 'printTransaction'])->name('transaction.print');

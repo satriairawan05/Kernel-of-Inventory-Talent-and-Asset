@@ -13,22 +13,34 @@ return new class extends Migration
     {
         Schema::create('report_periods', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->foreignId('shift_id')
+
+            $table->foreignId('company_id')
+                ->constrained()
                 ->nullable()
-                ->constrained('shifts')
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
+            $table->foreignId('shift_id')
+                ->constrained()
+                ->nullablle()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->date('date')->nullable();
+            $table->string('name')->nullable();
             $table->boolean('is_active')->default(true);
+
             $table->timestamps();
+
+            $table->unique(['company_id', 'date', 'shift_id']);
         });
 
         Schema::create('inventory_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('report_period_id')
-                ->constrained('report_periods')
+                ->constrained()
+                ->nullable()
                 ->cascadeOnUpdate()
-                ->cascadeOnDelete(); // jika report_period dihapus, set null
+                ->cascadeOnDelete();
             $table->string('location')->nullable();
             $table->string('reported_by')->nullable();
             $table->date('report_date')->nullable();
@@ -44,23 +56,24 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->timestamps();
 
-            $table->index('report_period_id'); // perbaiki indeks
+            $table->index('report_period_id');
             $table->index('report_date');
         });
 
         Schema::create('inventory_report_items', function (Blueprint $table) {
             $table->id();
 
-            // Perbaiki foreign key: inventory_period_id -> inventory_periods
             $table->foreignId('inventory_report_id')
-                ->constrained('inventory_reports')
+                ->constrained()
+                ->nullable()
                 ->cascadeOnUpdate()
-                ->cascadeOnDelete(); // jika period dihapus, hapus item
+                ->cascadeOnDelete();
 
             $table->foreignId('product_variant_id')
                 ->constrained('product_variants')
+                ->nullable()
                 ->cascadeOnUpdate()
-                ->cascadeOnDelete(); // jika variant dihapus, hapus item
+                ->cascadeOnDelete();
 
             $table->decimal('first_stock', 15, 2)->nullable()->default(0);
             $table->decimal('stock_in', 15, 2)->nullable()->default(0);

@@ -190,7 +190,7 @@
             </div>
             <span class="stat-chip bg-primary-subtle text-primary">
                 <i class="fas fa-boxes me-1"></i>
-                {{ $type == 'daily' ? $reports->count() : count($data) }} record{{ $reports->count() > 1 ? 's' : '' }}
+                {{ $type == 'daily' ? $reports->count() : count($data) }} record{{ ($type == 'daily' ? $reports->count() : count($data)) > 1 ? 's' : '' }}
             </span>
         </div>
         <div class="card-body">
@@ -217,7 +217,7 @@
                                 <th>Date</th>
                                 <th>Shift</th>
                                 <th>Location</th>
-                                <th>Report</th>
+                                <th>Report By</th>
                                 <th>Total Sold</th>
                                 <th>Handle</th>
                             </tr>
@@ -227,9 +227,15 @@
                                 <tr>
                                     <th scope="row">{{ $loop->iteration }}</th>
                                     <td>{{ \Carbon\Carbon::parse($report->report_date)->translatedFormat('d/m/Y') }}</td>
-                                    <td>{{ $report->period->shift->name ?? '-' }}</td>
-                                    <td>{{ $report->location }}</td>
-                                    <td>{{ $report->reported_by }}</td>
+                                    <td>
+                                        @if($report->period && $report->period->shift)
+                                            {{ $report->period->shift->shift_name ?? '-' }}
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $report->location ?? '-' }}</td>
+                                    <td>{{ $report->reported_by ?? '-' }}</td>
                                     <td class="fw-bold">{{ number_format($report->total_products_sold, 0) }}</td>
                                     <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
                                         <a href="{{ route('inventory.report.preview', $report->id) }}" target="_blank" class="btn btn-sm btn-primary">
@@ -241,7 +247,7 @@
                                         <button type="button" class="btn btn-sm btn-danger"
                                             data-bs-toggle="modal" data-bs-target="#deleteModal"
                                             data-id="{{ $report->id }}"
-                                            data-name="Laporan {{ $report->report_date }} - {{ $report->period->shift->name ?? '' }}">
+                                            data-name="Laporan {{ $report->report_date }} - {{ $report->period->shift->shift_name ?? '' }}">
                                             <i class="fas fa-trash"></i> Hapus
                                         </button>
                                     </td>
@@ -251,9 +257,6 @@
                             @endforelse
                         </tbody>
                     </table>
-                    {{-- <div class="d-flex justify-content-between align-items-center mt-3">
-                        {{ $reports->links() ?? '' }}
-                    </div> --}}
                 @else
                     <!-- ========== WEEKLY / MONTHLY ========== -->
                     <table class="table table-hover align-middle mb-0">

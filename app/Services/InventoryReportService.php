@@ -27,7 +27,6 @@ class InventoryReportService
      * @param int $periodId ID dari report_periods (terhubung ke shift)
      * @param string $location Lokasi toko/cabang
      * @param string $reportedBy Nama pelapor
-     * @param string $cashierName Nama kasir
      * @param string|null $openedAt Waktu buka (datetime) - jika null, ambil dari shift
      * @param string|null $closedAt Waktu tutup (datetime) - jika null, ambil dari shift
      * @return InventoryReport
@@ -59,15 +58,14 @@ class InventoryReportService
         DB::beginTransaction();
 
         try {
-            // 1. Buat header laporan
+            // 1. Buat header laporan - gunakan report_period_id
             $report = InventoryReport::create([
-                'period_id'          => $periodId,
+                'report_period_id'   => $periodId,        // <-- perbaikan: period_id -> report_period_id
                 'location'           => $location,
                 'reported_by'        => $reportedBy,
                 'report_date'        => $date,
                 'opened_at'          => $start,
                 'closed_at'          => $end,
-                // 'cashier_name'       => $cashierName,
                 'total_products_sold'=> 0,
                 'created_by'         => auth()->id(),
                 'notes'              => null,
@@ -99,7 +97,7 @@ class InventoryReportService
                 $selling = abs($sellingQty);
                 $remain = $firstStock + $stockIn - $selling;
 
-                // Simpan item laporan (tanpa kolom pengeluaran)
+                // Simpan item laporan
                 InventoryReportItem::create([
                     'inventory_report_id' => $report->id,
                     'product_variant_id'  => $product->id,

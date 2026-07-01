@@ -52,11 +52,6 @@
                         @endif
                     @endauth
                 </div>
-                <!-- Optional: tampilkan stok numerik (jika ada) -->
-                <div class="menu-stock"
-                    x-show="item.stock !== undefined && item.category !== 'additional'"
-                    x-text="'Stok: ' + (item.stock ?? '∞')" style="font-size: 10px; color: #888; margin-top: 2px; text-align: center;">
-                </div>
             </div>
         </template>
     </div>

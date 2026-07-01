@@ -216,8 +216,8 @@ class HomeController extends Controller
     {
         $periods = ReportPeriod::with('shift')->where('is_active', true)->get();
         $users = \App\Models\User::get();
-        
-        return view('admin.inventory.report.generate', ['periods' => $periods,'users' => $users]);
+        $companies = \App\Models\Company::where('use_inventory', true)->get();
+        return view('admin.inventory.report.generate', ['periods' => $periods,'users' => $users, 'companies' => $companies]);
     }
 
     /**
@@ -282,67 +282,79 @@ class HomeController extends Controller
     }
 
     /**
-     * Cetak fisik laporan harian
+     * Cetak fisik laporan harian.
+     * Jika parameter 'preview' ada, tampilkan preview tanpa cetak.
      */
-    public function printReport(Request $request, int $id, InventoryPrintService $inventoryPrintService): RedirectResponse
+    public function printReport(Request $request, int $id, InventoryPrintService $inventoryPrintService): RedirectResponse|View
     {
         $access = $this->get_report_access();
 
         if (!isset($access['Read']) || $access['Read'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            $request->validate([
-                'connection_type' => 'required|in:windows,network,file',
-                'target'          => 'required|string',
-            ]);
-    
-            try {
-                $inventoryPrintService->connect($request->connection_type, $request->target);
-                $result = $inventoryPrintService->printDailyReport($id);
-    
-                if ($result['success']) {
-                    return back()->with('success', $result['message']);
-                }
-                return back()->with('failed', $result['message']);
-            } catch (\Exception $e) {
-                return back()->with('failed', 'Gagal cetak: ' . $e->getMessage());
+        }
+
+        // Jika preview, tampilkan view
+        if ($request->has('preview')) {
+            return $this->previewReport($id);
+        }
+
+        $request->validate([
+            'connection_type' => 'required|in:windows,network,file',
+            'target'          => 'required|string',
+        ]);
+
+        try {
+            $inventoryPrintService->connect($request->connection_type, $request->target);
+            $result = $inventoryPrintService->printDailyReport($id);
+
+            if ($result['success']) {
+                return back()->with('success', $result['message']);
             }
+            return back()->with('failed', $result['message']);
+        } catch (\Exception $e) {
+            return back()->with('failed', 'Gagal cetak: ' . $e->getMessage());
         }
     }
 
     /**
-     * Cetak fisik laporan agregat (weekly/monthly)
+     * Cetak fisik laporan agregat (weekly/monthly).
+     * Jika parameter 'preview' ada, tampilkan preview tanpa cetak.
      */
-    public function printAggregated(Request $request, InventoryReportService $inventoryReportService, InventoryPrintService $inventoryPrintService): RedirectResponse
+    public function printAggregated(Request $request, InventoryReportService $inventoryReportService, InventoryPrintService $inventoryPrintService): RedirectResponse|View
     {
         $access = $this->get_report_access();
 
         if (!isset($access['Read']) || $access['Read'] != 1) {
             return redirect()->back()->with('failed', "You don't have authority");
-        } else {
-            $request->validate([
-                'type'            => 'required|in:weekly,monthly',
-                'date'            => 'nullable|date',
-                'connection_type' => 'required|in:windows,network,file',
-                'target'          => 'required|string',
-            ]);
-    
-            try {
-                $data = $inventoryReportService->getAggregatedReport($request->type, $request->date);
-                if (empty($data)) {
-                    return back()->with('failed', 'Tidak ada data untuk dicetak.');
-                }
-    
-                $inventoryPrintService->connect($request->connection_type, $request->target);
-                $result = $inventoryPrintService->printAggregatedReport($data, $request->type, $request->date);
-    
-                if ($result['success']) {
-                    return back()->with('success', $result['message']);
-                }
-                return back()->with('failed', $result['message']);
-            } catch (\Exception $e) {
-                return back()->with('failed', 'Gagal cetak agregat: ' . $e->getMessage());
+        }
+
+        // Jika preview, tampilkan view
+        if ($request->has('preview')) {
+            return $this->previewAggregated($request);
+        }
+
+        $request->validate([
+            'type'            => 'required|in:weekly,monthly',
+            'date'            => 'nullable|date',
+            'connection_type' => 'required|in:windows,network,file',
+            'target'          => 'required|string',
+        ]);
+
+        try {
+            $data = $inventoryReportService->getAggregatedReport($request->type, $request->date);
+            if (empty($data)) {
+                return back()->with('failed', 'Tidak ada data untuk dicetak.');
             }
+
+            $inventoryPrintService->connect($request->connection_type, $request->target);
+            $result = $inventoryPrintService->printAggregatedReport($data, $request->type, $request->date);
+
+            if ($result['success']) {
+                return back()->with('success', $result['message']);
+            }
+            return back()->with('failed', $result['message']);
+        } catch (\Exception $e) {
+            return back()->with('failed', 'Gagal cetak agregat: ' . $e->getMessage());
         }
     }
 

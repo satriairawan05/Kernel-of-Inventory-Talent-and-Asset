@@ -10,31 +10,56 @@
             </div>
             <div class="modal-body">
 
-                <!-- Setting Printer -->
+                <!-- Setting Printer: Metode Print & Ukuran Kertas -->
                 <div class="card mb-4 border-0 bg-light-subtle shadow-sm">
                     <div class="card-body p-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-sliders text-danger me-2 fs-5"></i>
-                                <span class="fw-bold text-dark">System Setting (Receipt Printer)</span>
+                        <!-- Baris 1: Metode Print -->
+                        <div class="d-flex align-items-center gap-3 flex-wrap mb-2">
+                            <span class="fw-bold text-dark me-2"><i class="bi bi-printer me-1"></i> Metode Print:</span>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="printMethod" id="printAuto"
+                                    value="auto" x-model="$store.pos.printMethod"
+                                    @change="$store.pos.setPrintMethod('auto')">
+                                <label class="form-check-label fw-semibold text-secondary" for="printAuto">
+                                    🤖 Auto (Server → Bluetooth)
+                                </label>
                             </div>
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="form-check mb-0">
-                                    <input class="form-check-input" type="radio" name="printerSizeSetting"
-                                        id="size58" value="58mm" x-model="$store.pos.defaultPrinterSize"
-                                        @change="$store.pos.applyPrinterSize()">
-                                    <label class="form-check-label fw-semibold text-secondary" for="size58">
-                                        🖨️ Thermal 58mm
-                                    </label>
-                                </div>
-                                <div class="form-check mb-0">
-                                    <input class="form-check-input" type="radio" name="printerSizeSetting"
-                                        id="size80" value="80mm" x-model="$store.pos.defaultPrinterSize"
-                                        @change="$store.pos.applyPrinterSize()">
-                                    <label class="form-check-label fw-semibold text-secondary" for="size80">
-                                        🖨️ Thermal 80mm
-                                    </label>
-                                </div>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="printMethod" id="printBt"
+                                    value="bluetooth" x-model="$store.pos.printMethod"
+                                    @change="$store.pos.setPrintMethod('bluetooth')">
+                                <label class="form-check-label fw-semibold text-secondary" for="printBt">
+                                    📱 Bluetooth
+                                </label>
+                            </div>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="printMethod" id="printServer"
+                                    value="server" x-model="$store.pos.printMethod"
+                                    @change="$store.pos.setPrintMethod('server')">
+                                <label class="form-check-label fw-semibold text-secondary" for="printServer">
+                                    🖥️ Server (ESC/POS)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Baris 2: Ukuran Kertas -->
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <span class="fw-bold text-dark me-2"><i class="bi bi-rulers me-1"></i> Print Size:</span>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="printerSizeSetting"
+                                    id="size58" value="58mm" x-model="$store.pos.defaultPrinterSize"
+                                    @change="$store.pos.applyPrinterSize()">
+                                <label class="form-check-label fw-semibold text-secondary" for="size58">
+                                    🖨️ 58mm
+                                </label>
+                            </div>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="printerSizeSetting"
+                                    id="size80" value="80mm" x-model="$store.pos.defaultPrinterSize"
+                                    @change="$store.pos.applyPrinterSize()">
+                                <label class="form-check-label fw-semibold text-secondary" for="size80">
+                                    🖨️ 80mm
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -89,11 +114,11 @@
                             <div class="history-actions">
                                 <span class="text-accent"
                                     x-text="'Rp ' + $store.pos.formatRupiah(trx.total)"></span>
-                                <button class="print-history-btn" @click="$store.pos.printStrukMobile(trx)"
+                                <button class="print-history-btn" @click="$store.pos.printTransaction(trx.id)"
                                     title="Print receipt">
                                     <i class="bi bi-printer"></i>
                                 </button>
-                                <!-- opsional tombol hapus per transaksi -->
+                                <!-- tombol hapus opsional -->
                             </div>
                         </div>
 
