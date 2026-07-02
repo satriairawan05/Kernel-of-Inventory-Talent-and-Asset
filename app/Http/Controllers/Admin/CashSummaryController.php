@@ -47,41 +47,76 @@ class CashSummaryController extends Controller
         }
 
         try {
-            // Determine company ID based on user role
             $user = auth()->user();
-            if ($user->group_id == 1) {
-                // Admin / Super Admin: can see all companies
-                $companyId = 1;
-            } else {
-                $companyId = $user->company_id;
-            }
+            $companyId = ($user->group_id == 1) ? 1 : $user->company_id;
 
-            $filters = $request->only(['type', 'start_date', 'end_date', 'search']);
+            $filters = [
+                'start_date' => $request->get('start_date', now()->startOfMonth()->toDateString()),
+                'end_date'   => $request->get('end_date', now()->endOfMonth()->toDateString()),
+                'type'       => $request->get('type'),
+                'search'     => $request->get('search'),
+            ];
 
-            $cashSummaryService = new CashSummaryService(new CashSummary());
+            $cashSummaryService = new CashSummaryService();
 
-            // Get paginated records
-            $cashSummaries = $cashSummaryService->getPaginated($companyId, 15, $filters);
+            // Daily summary with pagination
+            $dailySummaries = $cashSummaryService->getDailySummaryPaginated(
+                $companyId,
+                15,
+                $filters['start_date'],
+                $filters['end_date']
+            );
 
-            // Get summary statistics with filters
+            // Summary statistics
             $summary = $cashSummaryService->getSummary(
                 $companyId,
-                $filters['start_date'] ?? null,
-                $filters['end_date'] ?? null
+                $filters['start_date'],
+                $filters['end_date']
             );
 
             $types = \App\Enums\CashSummaryTypeEnum::options();
 
             return view('admin.pos.cash_summary.index', compact(
-                'cashSummaries',
+                'dailySummaries',
                 'access',
                 'summary',
                 'types',
-                'filters' // Pass filters to view for form
+                'filters'
             ));
-        } catch (QueryException $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with('failed', $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('Cash summary index error: ' . $e->getMessage());
+            return redirect()->back()->with('failed', 'Failed to load cash summary: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show detailed records for a specific date.
+     */
+    public function detail(Request $request, string $date)
+    {
+        $access = $this->get_access();
+
+        if (! isset($access['Read']) || $access['Read'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        }
+
+        try {
+            $user = auth()->user();
+            $companyId = ($user->group_id == 1) ? 1 : $user->company_id;
+
+            $cashSummaryService = new CashSummaryService();
+            $records = $cashSummaryService->getByDate($companyId, $date);
+            $summary = $cashSummaryService->getSummary($companyId, $date, $date);
+
+            return view('admin.pos.cash_summary.detail', compact(
+                'records',
+                'summary',
+                'date',
+                'access'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Cash summary detail error: ' . $e->getMessage());
+            return redirect()->back()->with('failed', 'Failed to load detail: ' . $e->getMessage());
         }
     }
 
@@ -196,33 +231,33 @@ class CashSummaryController extends Controller
     }
 
     /**
- * Remove all cash summaries.
- * Only accessible by admin (group_id == 1).
- */
-public function destroyAll(CashSummaryService $service)
-{
-    $access = $this->get_access();
+     * Remove all cash summaries.
+     * Only accessible by admin (group_id == 1).
+     */
+    public function destroyAll(CashSummaryService $service)
+    {
+        $access = $this->get_access();
 
-    if (! isset($access['Delete']) || $access['Delete'] != 1) {
-        return redirect()->back()->with('failed', "You don't have authority");
+        if (! isset($access['Delete']) || $access['Delete'] != 1) {
+            return redirect()->back()->with('failed', "You don't have authority");
+        }
+
+        $user = auth()->user();
+
+        // Only admin can delete all
+        if ($user->group_id != 1) {
+            return redirect()->back()->with('failed', "You don't have authority to delete all records.");
+        }
+
+        try {
+            // Admin can delete all records (all companies)
+            $service->deleteAll();
+
+            return redirect()->route('pos.cash_summary.index')
+                ->with('success', 'All cash records deleted successfully.');
+        } catch (QueryException $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with('failed', $e->getMessage());
+        }
     }
-
-    $user = auth()->user();
-
-    // Only admin can delete all
-    if ($user->group_id != 1) {
-        return redirect()->back()->with('failed', "You don't have authority to delete all records.");
-    }
-
-    try {
-        // Admin can delete all records (all companies)
-        $service->deleteAll();
-
-        return redirect()->route('pos.cash_summary.index')
-            ->with('success', 'All cash records deleted successfully.');
-    } catch (QueryException $e) {
-        Log::error($e->getMessage());
-        return redirect()->back()->with('failed', $e->getMessage());
-    }
-}
 }

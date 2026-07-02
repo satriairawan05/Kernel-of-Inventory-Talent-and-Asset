@@ -31,4 +31,31 @@ class SystemSetting extends Model
     {
         return $this->belongsTo(Company::class);
     }
+
+
+     /**
+     * Ambil nilai setting berdasarkan key.
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getValue(string $key, mixed $default = null): mixed
+    {
+        $setting = static::where('key', $key)->first();
+        return $setting ? $setting->value : $default;
+    }
+
+    /**
+     * Ambil nilai setting dalam bentuk array (khusus untuk JSON).
+     *
+     * @param string $key
+     * @param array $default
+     * @return array
+     */
+    public static function getArrayValue(string $key, array $default = []): array
+    {
+        $value = static::getValue($key);
+        return $value ? json_decode($value, true) : $default;
+    }
 }

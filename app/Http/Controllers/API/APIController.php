@@ -6,6 +6,8 @@ use App\Enums\{DraftTypeEnum, DraftStatusEnum};
 use App\Enums\MenuStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Jobs\PrintReceiptJob;
+use App\Services\CashierService;
+use App\Models\CashierSession;
 use App\Models\{Company, MenuItem, Shift, Draft, DraftItem, Cart, Stock, Transaction, TransactionItem};
 use App\Models\InventoryReport;
 use App\Models\InventoryReportItem;
@@ -991,6 +993,15 @@ class APIController extends Controller
                 return $this->response(null, 'Cart already processed', 403);
             }
 
+            // ============================================================
+            // AMBIL SESSION_ID DARI CASHIER SESSION YANG SEDANG BUKA
+            // ============================================================
+            $cashierSession = CashierSession::open()->first();
+            if (!$cashierSession) {
+                throw new \Exception('No active cashier session found. Please open cashier first.');
+            }
+            $sessionId = $cashierSession->id;
+
             DB::beginTransaction();
 
             try {
@@ -1023,6 +1034,7 @@ class APIController extends Controller
                     'draft_id'           => $draftId,
                     'user_id'            => $user->id,
                     'company_id'         => $companyId,
+                    'session_id'         => $sessionId, // <-- session_id dari sesi kasir aktif
                     'transaction_number' => $transactionNumber,
                     'transaction_date'   => now(),
                     'subtotal'           => $cart->subtotal,
@@ -1062,27 +1074,55 @@ class APIController extends Controller
                     }
                 }
 
-                // 2. Get or create the report period for today
+                // 2. Get shift_id based on current time and company
+                $currentTime = now()->format('H:i:s');
+                $shift = Shift::where('company_id', $companyId)
+                    ->where(function ($query) use ($currentTime) {
+                        // Shift yang tidak melewati tengah malam (start < end)
+                        $query->where(function ($q) use ($currentTime) {
+                            $q->where('start_time', '<=', $currentTime)
+                                ->where('end_time', '>', $currentTime);
+                        })
+                            // Shift yang melewati tengah malam (start > end, misal 22:00 - 06:00)
+                            ->orWhere(function ($q) use ($currentTime) {
+                                $q->where('start_time', '>', 'end_time')
+                                    ->where(function ($q2) use ($currentTime) {
+                                        $q2->where('start_time', '<=', $currentTime)
+                                            ->orWhere('end_time', '>', $currentTime);
+                                    });
+                            });
+                    })
+                    ->first();
+
+                // Jika tidak ketemu, ambil shift pertama (fallback)
+                if (!$shift) {
+                    $shift = Shift::where('company_id', $companyId)->first();
+                    if (!$shift) {
+                        throw new \Exception('No shift found for company ID ' . $companyId);
+                    }
+                }
+                $shiftId = $shift->id;
+
+                // 3. Get or create the report period for today
                 $today = now()->toDateString();
+
                 $reportPeriod = ReportPeriod::where('company_id', $companyId)
-                    ->whereDate('start_date', '<=', $today)
-                    ->whereDate('end_date', '>=', $today)
-                    ->where('status', 'open') // adjust status if needed
+                    ->where('date', $today)
+                    ->where('is_active', true)
                     ->first();
 
                 if (!$reportPeriod) {
-                    // Create a new daily period (adjust fields as per your schema)
                     $reportPeriod = ReportPeriod::create([
-                        'company_id'  => $companyId,
-                        'start_date'  => $today,
-                        'end_date'    => $today,
-                        'status'      => 'open',
-                        'period_type' => 'daily',
-                        // add any other required fields (e.g., shift_id)
+                        'company_id' => $companyId,
+                        'date'       => $today,
+                        'name'       => 'Daily Report ' . $today,
+                        'is_active'  => true,
+                        'shift_id'   => $shiftId,
                     ]);
+                    Log::info('New report period created for date: ' . $today . ' with shift_id: ' . $shiftId);
                 }
 
-                // 3. Process each variant
+                // 4. Process each variant
                 $inventoryReport = null;
 
                 foreach ($variantUpdates as $variantId => $totalQty) {
@@ -1115,19 +1155,18 @@ class APIController extends Controller
 
                     // ---- Inventory Report ----
                     if (!$inventoryReport) {
-                        // Use report_period_id in the search/creation
                         $inventoryReport = InventoryReport::firstOrCreate(
                             [
                                 'report_period_id' => $reportPeriod->id,
                                 'location'         => $companyId,
                             ],
                             [
-                                'report_date'           => $today,
-                                'reported_by'           => $user->id,
-                                'opened_at'             => now(),
-                                'cashier_name'          => $user->name,
-                                'total_products_sold'   => 0,
-                                'notes'                 => 'Auto generated report',
+                                'report_date'         => $today,
+                                'reported_by'         => $user->id,
+                                'opened_at'           => now(),
+                                'cashier_name'        => $user->name,
+                                'total_products_sold' => 0,
+                                'notes'               => 'Auto generated report',
                             ]
                         );
                     }
@@ -1143,11 +1182,11 @@ class APIController extends Controller
                     } else {
                         InventoryReportItem::create([
                             'inventory_report_id' => $inventoryReport->id,
-                            'product_variant_id'   => $variantId,
-                            'first_stock'          => $stockBefore,
-                            'stock_in'             => 0,
-                            'selling'              => $totalQty,
-                            'remain'               => $stockBefore - $totalQty,
+                            'product_variant_id'  => $variantId,
+                            'first_stock'         => $stockBefore,
+                            'stock_in'            => 0,
+                            'selling'             => $totalQty,
+                            'remain'              => $stockBefore - $totalQty,
                         ]);
                     }
 
@@ -1242,13 +1281,13 @@ class APIController extends Controller
             if (!$cart) {
                 $cart = Cart::create([
                     'company_id' => $companyId,
-                    'user_id' => $user->id,
-                    'type' => $draft->type,
+                    'user_id'    => $user->id,
+                    'type'       => $draft->type,
                     'table_number' => $draft->table_number,
-                    'status' => 'active',
-                    'subtotal' => 0,
-                    'total' => 0,
-                    'notes' => 'draft_id:' . $draft->id,
+                    'status'     => 'active',
+                    'subtotal'   => 0,
+                    'total'      => 0,
+                    'notes'      => 'draft_id:' . $draft->id,
                 ]);
             } else {
                 // Jika cart sudah ada, tambahkan draft_id ke notes (append)
@@ -1259,11 +1298,12 @@ class APIController extends Controller
                 }
             }
 
+            // Pindahkan item draft ke cart
             foreach ($draft->items as $draftItem) {
                 $cart->addItem(
                     (object) [
-                        'id' => $draftItem->menu_item_id,
-                        'name' => $draftItem->name,
+                        'id'    => $draftItem->menu_item_id,
+                        'name'  => $draftItem->name,
                         'price' => $draftItem->price,
                     ],
                     $draftItem->qty
@@ -1271,11 +1311,19 @@ class APIController extends Controller
             }
 
             $cart->recalculate();
-            $draft->markAsProcessing();
+
+            // ============================================================
+            // Kosongkan draft (hapus semua item) dan ubah status menjadi COMPLETED
+            // ============================================================
+            $draft->items()->delete(); // hapus semua item draft
+            $draft->status = DraftStatusEnum::COMPLETED;
+            $draft->save();
+
+            Log::info('Draft #' . $draft->id . ' moved to cart and cleared');
 
             return $this->response([
-                'cart' => $cart->load('items'),
-                'draftId' => $draft->id,
+                'cart'      => $cart->load('items'),
+                'draftId'   => $draft->id,
                 'draftName' => $draft->name,
             ], 'Draft moved to cart successfully');
         } catch (\Exception $e) {
@@ -1614,6 +1662,126 @@ class APIController extends Controller
             // Jika gagal, kita kirim response dengan status 500 agar JS bisa fallback
             Log::error('Print transaction error: ' . $e->getMessage());
             return $this->response(null, 'Gagal mencetak via server: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get summary of current shift transactions.
+     * GET /api/cashier/shift-summary
+     */
+    public function getShiftSummary(Request $request, CashierService $cashierService)
+    {
+        try {
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
+            $summary = $cashierService->getShiftTransactionsSummary();
+
+            return $this->response($summary, 'Shift summary retrieved successfully');
+        } catch (\Exception $e) {
+            Log::error('API getShiftSummary error: ' . $e->getMessage());
+            return $this->response(null, 'Failed to get shift summary: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Open a new cashier session.
+     * POST /api/cashier/open
+     */
+    public function openCashier(Request $request, CashierService $cashierService)
+    {
+        try {
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
+            $session = $cashierService->openCashier();
+
+            return $this->response([
+                'session_id'      => $session->id,
+                'opening_balance' => (float) $session->opening_balance,
+                'opened_at'       => $session->opened_at->toISOString(),
+                'user_id'         => $session->user_id,
+            ], 'Cashier session opened successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->response(null, $e->getMessage(), 422);
+        } catch (\Exception $e) {
+            Log::error('API openCashier error: ' . $e->getMessage());
+            Log::error('API openCashier trace: ' . $e->getTraceAsString());
+            return $this->response(null, 'Failed to open cashier: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Close the current cashier session.
+     * POST /api/cashier/close
+     */
+    public function closeCashier(Request $request, CashierService $cashierService)
+    {
+        try {
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
+            // Validasi input
+            $validated = $request->validate([
+                'actual_balance' => 'required|numeric|min:0',
+            ]);
+
+            $session = $cashierService->closeCashier((float) $validated['actual_balance']);
+
+            return $this->response([
+                'session_id'       => $session->id,
+                'opening_balance'  => (float) $session->opening_balance,
+                'closing_balance'  => (float) $session->closing_balance,
+                'total_sales'      => (float) $session->total_sales,
+                'closed_at'        => $session->closed_at->toISOString(),
+                'user_id'          => $session->user_id,
+            ], 'Cashier session closed successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->response(null, $e->getMessage(), 422);
+        } catch (\Exception $e) {
+            Log::error('API closeCashier error: ' . $e->getMessage());
+            Log::error('API closeCashier trace: ' . $e->getTraceAsString());
+            return $this->response(null, 'Failed to close cashier: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get current cashier session status.
+     * GET /api/cashier/status
+     */
+    public function getCashierStatus(Request $request)
+    {
+        try {
+            $user = $this->getUser($request);
+            if (!$user) {
+                return $this->response(null, 'Unauthorized', 401);
+            }
+
+            $activeSession = CashierSession::open()->first();
+
+            if ($activeSession) {
+                return $this->response([
+                    'is_open'          => true,
+                    'session_id'       => $activeSession->id,
+                    'opening_balance'  => (float) $activeSession->opening_balance,
+                    'opened_at'        => $activeSession->opened_at->toISOString(),
+                    'user_id'          => $activeSession->user_id,
+                    'user_name'        => $activeSession->user->name ?? 'Unknown',
+                ], 'Cashier is open');
+            }
+
+            return $this->response([
+                'is_open' => false,
+            ], 'Cashier is closed');
+        } catch (\Exception $e) {
+            Log::error('API getCashierStatus error: ' . $e->getMessage());
+            return $this->response(null, 'Failed to get cashier status: ' . $e->getMessage(), 500);
         }
     }
 }

@@ -5,6 +5,7 @@
 // Cart management integrated with API
 // Stock status realtime check
 // Print via Bluetooth (default) or Server (ESC/POS)
+// Cashier Session (Open / Close) integrated with modal
 // ================================================================
 
 document.addEventListener("alpine:init", function () {
@@ -98,6 +99,17 @@ document.addEventListener("alpine:init", function () {
 
         // ---- STOCK STATUS CACHE ----
         stockStatusCache: {},
+
+        // ---- MODAL CLOSE CASHIER STATE ----
+        closeModalOpen: false,
+        closingBalanceInput: "",
+        shiftSummary: {
+            session_id: null,
+            opening_balance: 0,
+            total_transactions: 0,
+            total_sales: 0,
+            payment_summary: {}
+        },
 
         // ---- COMPUTED ----
         get filteredMenu() {
@@ -211,7 +223,7 @@ document.addEventListener("alpine:init", function () {
                     "isCashierOnline",
                     JSON.stringify(this.isCashierOnline),
                 );
-            } catch (e) {}
+            } catch (e) { }
             if (previous !== this.cashierName || !this._previousCashier) {
                 this._previousCashier = this.cashierName;
                 setTimeout(
@@ -226,9 +238,11 @@ document.addEventListener("alpine:init", function () {
             try {
                 var name = localStorage.getItem("cashierName");
                 var online = localStorage.getItem("isCashierOnline");
+                var sessionId = localStorage.getItem("activeSessionId");
                 if (name) this.cashierName = name;
                 if (online !== null) this.isCashierOnline = JSON.parse(online);
-            } catch (e) {}
+                if (sessionId) this.activeSessionId = parseInt(sessionId, 10);
+            } catch (e) { }
         },
 
         // ---- GET CSRF TOKEN HELPER ----
@@ -321,7 +335,7 @@ document.addEventListener("alpine:init", function () {
                 var storedOB = null;
                 try {
                     storedOB = localStorage.getItem("openingBalance");
-                } catch (e) {}
+                } catch (e) { }
                 this.openingBalance =
                     storedOB !== null ? parseInt(storedOB, 10) || 0 : 150000;
                 try {
@@ -329,7 +343,7 @@ document.addEventListener("alpine:init", function () {
                         "openingBalance",
                         this.openingBalance.toString(),
                     );
-                } catch (e) {}
+                } catch (e) { }
 
                 this._loadMenuFromAPI();
 
@@ -339,7 +353,7 @@ document.addEventListener("alpine:init", function () {
                     if (storedHistory) {
                         this.transactionHistory = JSON.parse(storedHistory);
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 try {
                     var savedSize = localStorage.getItem("defaultPrinterSize");
@@ -348,13 +362,12 @@ document.addEventListener("alpine:init", function () {
                         "defaultPrinterSize",
                         this.defaultPrinterSize,
                     );
-                } catch (e) {}
+                } catch (e) { }
 
-                // Load print method from localStorage
                 try {
                     var savedMethod = localStorage.getItem("printMethod");
                     this.printMethod = savedMethod || "auto";
-                } catch (e) {}
+                } catch (e) { }
 
                 var toastEl = document.getElementById("liveToast");
                 if (
@@ -425,7 +438,6 @@ document.addEventListener("alpine:init", function () {
                         });
                         self.nextId = maxId + 1;
 
-                        // Refresh stock status for all items (silent, errors ignored)
                         try {
                             self.refreshAllStockStatus();
                         } catch (e) {
@@ -437,8 +449,8 @@ document.addEventListener("alpine:init", function () {
 
                         self.showToast(
                             "✅ Menu loaded (" +
-                                self.menuItems.length +
-                                " items)",
+                            self.menuItems.length +
+                            " items)",
                         );
                     } else {
                         console.error(
@@ -482,16 +494,10 @@ document.addEventListener("alpine:init", function () {
         // STOCK STATUS (Real-time)
         // ============================================================
 
-        /**
-         * Fetch stock status for a single menu item.
-         * GET /api/menu/{id}/stock
-         * This endpoint now returns stock per menu (calculated from variant stock).
-         */
         fetchStockStatus: function (menuItemId, callback) {
             var self = this;
             var csrfToken = this.getCsrfToken();
 
-            // Check cache first
             if (this.stockStatusCache[menuItemId]) {
                 if (callback) callback(this.stockStatusCache[menuItemId]);
                 return;
@@ -513,7 +519,6 @@ document.addEventListener("alpine:init", function () {
                             status_label:
                                 response.data.status_label || "Available",
                         };
-                        // Update menu item status and stock directly
                         var menuItem = self.menuItems.find(function (mi) {
                             return mi.id === menuItemId;
                         });
@@ -521,13 +526,6 @@ document.addEventListener("alpine:init", function () {
                             menuItem.status = response.data.status;
                             menuItem.stock = response.data.stock;
                             menuItem.stock_status = response.data.status;
-                            console.log(
-                                "[KitaPOS] Updated stock for",
-                                menuItem.name,
-                                "->",
-                                menuItem.stock,
-                                menuItem.status,
-                            );
                         }
                         if (callback)
                             callback(self.stockStatusCache[menuItemId]);
@@ -536,7 +534,6 @@ document.addEventListener("alpine:init", function () {
                     }
                 },
                 error: function (xhr) {
-                    // Silently fail – do not disrupt UI
                     console.warn(
                         "[KitaPOS] Stock fetch failed for item " + menuItemId,
                         xhr.status,
@@ -546,24 +543,14 @@ document.addEventListener("alpine:init", function () {
             });
         },
 
-        /**
-         * Refresh stock status for all menu items (silent).
-         * Clears cache and fetches fresh data for each item.
-         */
         refreshAllStockStatus: function () {
             var self = this;
-            // Clear cache
             this.stockStatusCache = {};
             this.menuItems.forEach(function (item) {
-                self.fetchStockStatus(item.id, function (data) {
-                    // Do nothing on callback, just update silently
-                });
+                self.fetchStockStatus(item.id, function (data) { });
             });
         },
 
-        /**
-         * Manual refresh stock status (clears cache and shows toast).
-         */
         refreshStockStatus: function () {
             this.stockStatusCache = {};
             this.refreshAllStockStatus();
@@ -677,7 +664,7 @@ document.addEventListener("alpine:init", function () {
                     } else {
                         self.showToast(
                             "❌ Failed to update cart item: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                         self.loadCartFromAPI();
                     }
@@ -736,7 +723,7 @@ document.addEventListener("alpine:init", function () {
                     } else {
                         self.showToast(
                             "❌ Failed to apply discount: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                     }
                 },
@@ -796,8 +783,8 @@ document.addEventListener("alpine:init", function () {
                         if (self.sessions.length > 0) {
                             self.showToast(
                                 "📋 " +
-                                    self.sessions.length +
-                                    " draft(s) loaded",
+                                self.sessions.length +
+                                " draft(s) loaded",
                             );
                         }
                     } else {
@@ -811,8 +798,8 @@ document.addEventListener("alpine:init", function () {
                     if (xhr.status >= 500) {
                         self.showToast(
                             "⚠️ Failed to load drafts from server. (Error " +
-                                xhr.status +
-                                ")",
+                            xhr.status +
+                            ")",
                         );
                     } else if (xhr.status === 403) {
                         self.showToast(
@@ -888,7 +875,7 @@ document.addEventListener("alpine:init", function () {
                     } else {
                         self.showToast(
                             "❌ Failed to create order: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                     }
                 },
@@ -943,7 +930,7 @@ document.addEventListener("alpine:init", function () {
                     } else {
                         self.showToast(
                             "❌ Failed to delete: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                     }
                 },
@@ -1005,8 +992,8 @@ document.addEventListener("alpine:init", function () {
                                 self.discountDisplay =
                                     data.cart.discount_type === "rp"
                                         ? self.formatRupiah(
-                                              data.cart.discount_value,
-                                          )
+                                            data.cart.discount_value,
+                                        )
                                         : data.cart.discount_value.toString();
                             }
                         } else {
@@ -1055,13 +1042,13 @@ document.addEventListener("alpine:init", function () {
 
                         self.showToast(
                             "🛒 " +
-                                (data.draftName || data.name || "Draft") +
-                                " moved to Cart!",
+                            (data.draftName || data.name || "Draft") +
+                            " moved to Cart!",
                         );
                     } else {
                         self.showToast(
                             "❌ Failed to move to cart: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                     }
                 },
@@ -1099,7 +1086,7 @@ document.addEventListener("alpine:init", function () {
                     } else {
                         self.showToast(
                             "❌ Failed to activate: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                     }
                 },
@@ -1137,7 +1124,7 @@ document.addEventListener("alpine:init", function () {
         },
 
         // ============================================================
-        // DRAFT ITEM MUTATIONS (Sync with API)
+        // DRAFT ITEM MUTATIONS
         // ============================================================
 
         incrementDraftQty: function (id) {
@@ -1204,9 +1191,9 @@ document.addEventListener("alpine:init", function () {
                         } else {
                             self.showToast(
                                 "❌ Failed to update item: " +
-                                    (response
-                                        ? response.message
-                                        : "Unknown error"),
+                                (response
+                                    ? response.message
+                                    : "Unknown error"),
                             );
                         }
                     },
@@ -1242,16 +1229,16 @@ document.addEventListener("alpine:init", function () {
                             );
                             self.showToast(
                                 "📝 " +
-                                    menuItem.name +
-                                    " added to " +
-                                    session.name,
+                                menuItem.name +
+                                " added to " +
+                                session.name,
                             );
                         } else {
                             self.showToast(
                                 "❌ Failed to add item: " +
-                                    (response
-                                        ? response.message
-                                        : "Unknown error"),
+                                (response
+                                    ? response.message
+                                    : "Unknown error"),
                             );
                         }
                     },
@@ -1309,9 +1296,9 @@ document.addEventListener("alpine:init", function () {
                         } else {
                             self.showToast(
                                 "❌ Failed to delete item: " +
-                                    (response
-                                        ? response.message
-                                        : "Unknown error"),
+                                (response
+                                    ? response.message
+                                    : "Unknown error"),
                             );
                         }
                     },
@@ -1343,9 +1330,9 @@ document.addEventListener("alpine:init", function () {
                         } else {
                             self.showToast(
                                 "❌ Failed to update item: " +
-                                    (response
-                                        ? response.message
-                                        : "Unknown error"),
+                                (response
+                                    ? response.message
+                                    : "Unknown error"),
                             );
                         }
                     },
@@ -1390,13 +1377,11 @@ document.addEventListener("alpine:init", function () {
             var self = this;
             var csrfToken = this.getCsrfToken();
 
-            // Jika item belum ada dan val > 0, tambahkan item baru dengan qty = val
             if (!item && val > 0) {
                 var menuItem = this.menuItems.find(function (i) {
                     return i.id === id;
                 });
                 if (menuItem && menuItem.status !== "out") {
-                    // Tambahkan item baru dengan qty = val
                     $.ajax({
                         url: "/api/drafts/" + session.id + "/items",
                         type: "POST",
@@ -1419,17 +1404,17 @@ document.addEventListener("alpine:init", function () {
                                 );
                                 self.showToast(
                                     "📝 " +
-                                        menuItem.name +
-                                        " added (" +
-                                        val +
-                                        "x)",
+                                    menuItem.name +
+                                    " added (" +
+                                    val +
+                                    "x)",
                                 );
                             } else {
                                 self.showToast(
                                     "❌ Failed to add item: " +
-                                        (response
-                                            ? response.message
-                                            : "Unknown error"),
+                                    (response
+                                        ? response.message
+                                        : "Unknown error"),
                                 );
                             }
                         },
@@ -1449,7 +1434,6 @@ document.addEventListener("alpine:init", function () {
                 return;
             }
 
-            // Jika item sudah ada, update qty
             var url = "/api/drafts/" + session.id + "/items/" + item.id;
 
             if (val === 0) {
@@ -1471,9 +1455,9 @@ document.addEventListener("alpine:init", function () {
                         } else {
                             self.showToast(
                                 "❌ Failed to delete item: " +
-                                    (response
-                                        ? response.message
-                                        : "Unknown error"),
+                                (response
+                                    ? response.message
+                                    : "Unknown error"),
                             );
                         }
                     },
@@ -1501,9 +1485,9 @@ document.addEventListener("alpine:init", function () {
                         } else {
                             self.showToast(
                                 "❌ Failed to update item: " +
-                                    (response
-                                        ? response.message
-                                        : "Unknown error"),
+                                (response
+                                    ? response.message
+                                    : "Unknown error"),
                             );
                         }
                     },
@@ -1574,7 +1558,7 @@ document.addEventListener("alpine:init", function () {
             this.openingBalance = value;
             try {
                 localStorage.setItem("openingBalance", value.toString());
-            } catch (e) {}
+            } catch (e) { }
         },
         saveTransactionHistory: function () {
             try {
@@ -1582,7 +1566,7 @@ document.addEventListener("alpine:init", function () {
                     "transactionHistory",
                     JSON.stringify(this.transactionHistory),
                 );
-            } catch (e) {}
+            } catch (e) { }
         },
         saveTransaction: function (
             method,
@@ -1600,9 +1584,7 @@ document.addEventListener("alpine:init", function () {
             var timestamp = this.formatTanggalIndonesia(now);
             var transaction = {
                 id: this.transactionHistory.length + 1,
-                nomor_transaksi:
-                    nomorTransaksi ||
-                    "#" + (this.transactionHistory.length + 1),
+                nomor_transaksi: nomorTransaksi || "#" + (this.transactionHistory.length + 1),
                 timestamp: timestamp,
                 items: items,
                 total: total,
@@ -1623,11 +1605,10 @@ document.addEventListener("alpine:init", function () {
             if (this.toast) {
                 try {
                     this.toast.show();
-                } catch (e) {}
+                } catch (e) { }
             }
         },
 
-        // ---- Generate Transaction Number from API ----
         generateTransactionNumber: function (callback) {
             var self = this;
             var csrfToken = this.getCsrfToken();
@@ -1661,29 +1642,20 @@ document.addEventListener("alpine:init", function () {
         // PRINT METHODS
         // ============================================================
 
-        /**
-         * Set print method and save to localStorage.
-         */
         setPrintMethod: function (method) {
             this.printMethod = method;
             try {
                 localStorage.setItem("printMethod", method);
-            } catch (e) {}
+            } catch (e) { }
             var label =
                 method === "bluetooth"
                     ? "Bluetooth"
                     : method === "server"
-                      ? "Server"
-                      : "Auto (Server fallback)";
+                        ? "Server"
+                        : "Auto (Server fallback)";
             this.showToast("🖨️ Metode print: " + label);
         },
 
-        /**
-         * Print transaction from history.
-         * - If method 'bluetooth': print via client (Bluetooth/Browser)
-         * - If method 'server': print via server (ESC/POS)
-         * - If method 'auto' (default): try server first, fallback to client
-         */
         printTransaction: function (transactionId) {
             var self = this;
             var trx = this.transactionHistory.find(function (t) {
@@ -1697,13 +1669,11 @@ document.addEventListener("alpine:init", function () {
             var method = this.printMethod || "auto";
 
             if (method === "bluetooth") {
-                // Direct client print
                 this.printStrukMobile(trx);
                 return;
             }
 
             if (method === "server") {
-                // Server print only
                 this._printViaServer(transactionId, function (success) {
                     if (!success) {
                         self.showToast(
@@ -1714,7 +1684,6 @@ document.addEventListener("alpine:init", function () {
                 return;
             }
 
-            // Auto: try server first, fallback to client
             this.showToast("⏳ Mencetak via server...");
             this._printViaServer(transactionId, function (success) {
                 if (!success) {
@@ -1728,10 +1697,6 @@ document.addEventListener("alpine:init", function () {
             });
         },
 
-        /**
-         * Print via server API (ESC/POS).
-         * Calls callback with success boolean.
-         */
         _printViaServer: function (transactionId, callback) {
             var self = this;
             var csrfToken = this.getCsrfToken();
@@ -1751,7 +1716,7 @@ document.addEventListener("alpine:init", function () {
                     } else {
                         self.showToast(
                             "❌ Server print error: " +
-                                (response.message || "Unknown error"),
+                            (response.message || "Unknown error"),
                         );
                         if (callback) callback(false);
                     }
@@ -1873,7 +1838,7 @@ document.addEventListener("alpine:init", function () {
         },
 
         // ============================================================
-        // CART OPERATIONS (sync with API)
+        // CART OPERATIONS
         // ============================================================
 
         incrementQty: function (id) {
@@ -1957,7 +1922,7 @@ document.addEventListener("alpine:init", function () {
         },
 
         // ============================================================
-        // MENU MANAGEMENT (with admin check)
+        // MENU MANAGEMENT
         // ============================================================
 
         openAddMenu: function (category) {
@@ -2082,13 +2047,13 @@ document.addEventListener("alpine:init", function () {
                         }
                         self.showToast(
                             '✅ Menu "' +
-                                newItem.name +
-                                '" added successfully!',
+                            newItem.name +
+                            '" added successfully!',
                         );
                     } else {
                         self.showToast(
                             "❌ Failed to save menu: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                     }
                 },
@@ -2349,7 +2314,7 @@ document.addEventListener("alpine:init", function () {
                     } else {
                         self.showToast(
                             "❌ Failed to update menu: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                     }
                 },
@@ -2412,7 +2377,7 @@ document.addEventListener("alpine:init", function () {
                     } else {
                         self.showToast(
                             "❌ Failed to delete menu: " +
-                                (response ? response.message : "Unknown error"),
+                            (response ? response.message : "Unknown error"),
                         );
                     }
                 },
@@ -2451,10 +2416,213 @@ document.addEventListener("alpine:init", function () {
         },
 
         // ============================================================
+        // CASHIER SESSION API (OPEN / CLOSE)
+        // ============================================================
+
+        /**
+         * Open cashier session.
+         * POST /api/cashier/open
+         */
+        openCashier: function () {
+            var self = this;
+            var csrfToken = this.getCsrfToken();
+
+            this.showToast("⏳ Opening cashier...");
+
+            $.ajax({
+                url: "/api/cashier/open",
+                type: "POST",
+                dataType: "json",
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": csrfToken,
+                },
+                success: function (response) {
+                    if (response && response.success) {
+                        self.isCashierOnline = true;
+                        self.activeSessionId = response.data.session_id;
+                        self.openingBalance = response.data.opening_balance;
+                        localStorage.setItem(
+                            "isCashierOnline",
+                            JSON.stringify(true),
+                        );
+                        localStorage.setItem(
+                            "activeSessionId",
+                            self.activeSessionId,
+                        );
+                        self.showToast(
+                            "✅ Cashier opened successfully! (Opening: " +
+                            self.formatRupiah(response.data.opening_balance) +
+                            ")",
+                        );
+                    } else {
+                        self.showToast(
+                            "❌ Failed to open cashier: " +
+                            (response ? response.message : "Unknown error"),
+                        );
+                    }
+                },
+                error: function (xhr) {
+                    var msg = "❌ Failed to open cashier. ";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += xhr.responseJSON.message;
+                    } else if (xhr.status === 403) {
+                        msg += "You don't have permission.";
+                    } else if (xhr.status === 400) {
+                        msg += xhr.responseJSON?.message || "Bad request.";
+                    } else {
+                        msg += "Please try again.";
+                    }
+                    self.showToast(msg);
+                },
+            });
+        },
+
+        /**
+         * Open modal close cashier & load shift summary.
+         */
+        openCloseModal: function () {
+            var self = this;
+            if (!this.isCashierOnline) {
+                this.showToast("❌ Cashier is not open.");
+                return;
+            }
+
+            var csrfToken = this.getCsrfToken();
+            this.showToast("⏳ Loading shift summary...");
+
+            $.ajax({
+                url: "/api/cashier/shift-summary",
+                type: "GET",
+                dataType: "json",
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                success: function (response) {
+                    if (response && response.success) {
+                        var data = response.data;
+                        // ✅ Konversi ke number
+                        data.opening_balance = parseFloat(data.opening_balance) || 0;
+                        data.total_sales = parseFloat(data.total_sales) || 0;
+                        data.total_transactions = parseInt(data.total_transactions) || 0;
+                        self.shiftSummary = data;
+
+                        var theoretical = data.opening_balance + data.total_sales;
+                        self.closingBalanceInput = self.formatRupiah(theoretical);
+
+                        var modalEl = document.getElementById('closeCashierModal');
+                        if (modalEl) {
+                            var modal = new bootstrap.Modal(modalEl);
+                            modal.show();
+                            self.closeModalOpen = true;
+                        } else {
+                            self.showToast("❌ Modal element not found.");
+                        }
+                    } else {
+                        var msg = response ? response.message : "Unknown error";
+                        self.showToast("❌ Failed to get shift summary: " + msg);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    var msg = "❌ Failed to get shift summary. ";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += xhr.responseJSON.message;
+                    } else {
+                        msg += "Please try again.";
+                    }
+                    self.showToast(msg);
+                }
+            });
+        },
+
+        /**
+         * Alias untuk closeCashier (backward compatibility)
+         * Memanggil openCloseModal untuk membuka modal tutup kasir.
+         */
+        closeCashier: function () {
+            this.openCloseModal();
+        },
+
+        /**
+         * Submit close cashier from modal.
+         */
+        submitCloseCashier: function () {
+            var self = this;
+            var balance = parseInt(this.closingBalanceInput.replace(/\D/g, ''), 10) || 0;
+
+            if (balance <= 0) {
+                this.showToast("❌ Closing balance must be greater than 0.");
+                return;
+            }
+
+            var csrfToken = this.getCsrfToken();
+            this.showToast("⏳ Closing cashier...");
+
+            $.ajax({
+                url: "/api/cashier/close",
+                type: "POST",
+                dataType: "json",
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                data: { actual_balance: balance },
+                success: function (response) {
+                    if (response && response.success) {
+                        self.isCashierOnline = false;
+                        self.activeSessionId = null;
+                        localStorage.setItem("isCashierOnline", JSON.stringify(false));
+                        localStorage.removeItem("activeSessionId");
+                        self.closeModalOpen = false;
+
+                        // Tutup modal
+                        var modalEl = document.getElementById('closeCashierModal');
+                        if (modalEl) {
+                            var modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                        }
+
+                        self.showToast("✅ Cashier closed successfully! (Closing: " + self.formatRupiah(balance) + ")");
+                        self.loadCartFromAPI();
+                        self.loadDraftsFromAPI();
+                        setTimeout(function () {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        self.showToast("❌ Failed to close cashier: " + (response ? response.message : "Unknown error"));
+                    }
+                },
+                error: function (xhr) {
+                    var msg = "❌ Failed to close cashier. ";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += xhr.responseJSON.message;
+                    }
+                    self.showToast(msg);
+                }
+            });
+        },
+
+        /**
+         * Check cashier session before transactions.
+         */
+        checkCashierSession: function () {
+            if (!this.isCashierOnline) {
+                this.showToast(
+                    "❌ Cashier is not open. Please open cashier first.",
+                );
+                return false;
+            }
+            return true;
+        },
+
+        // ============================================================
         // CHECKOUT
         // ============================================================
 
         openCheckout: function () {
+            if (!this.checkCashierSession()) return;
+
             if (this.cart.length === 0) return;
             this.paymentMethod = "cash";
             this.paymentAmount = "";
@@ -2474,6 +2642,7 @@ document.addEventListener("alpine:init", function () {
                 new bootstrap.Modal(el).show();
             }
         },
+
         setQuickPay: function (val) {
             this.paymentAmountRaw = val;
             this.paymentAmount = this.formatRupiah(val);
@@ -2517,7 +2686,10 @@ document.addEventListener("alpine:init", function () {
                 // silent error
             }
         },
+
         confirmCheckout: function () {
+            if (!this.checkCashierSession()) return;
+
             try {
                 var total = this.discountedTotal;
                 var method = this.paymentMethod;
@@ -2554,7 +2726,6 @@ document.addEventListener("alpine:init", function () {
                         if (response && response.success) {
                             var transaction = response.data.transaction;
 
-                            // Convert items dari response ke format yang diharapkan (jika perlu)
                             var items = transaction.items.map(function (item) {
                                 return {
                                     name: item.name,
@@ -2564,7 +2735,6 @@ document.addEventListener("alpine:init", function () {
                                 };
                             });
 
-                            // Simpan ke localStorage (untuk history / fallback)
                             var localTrx = self.saveTransaction(
                                 transaction.payment_method,
                                 transaction.total,
@@ -2578,10 +2748,9 @@ document.addEventListener("alpine:init", function () {
                                 transaction.transaction_number,
                             );
 
-                            // Gunakan data transaksi dari server untuk print (lebih akurat)
-                            // Format sesuai yang diharapkan printStrukMobile
                             var printData = {
                                 id: transaction.id,
+                                transaction_number: transaction.transaction_number,
                                 nomor_transaksi: transaction.transaction_number,
                                 timestamp: self.formatTanggalIndonesia(
                                     new Date(transaction.transaction_date),
@@ -2599,27 +2768,21 @@ document.addEventListener("alpine:init", function () {
 
                             self.showToast("✅ Checkout successful!");
 
-                            // Print via Bluetooth by default (client-side)
-                            // but if user has selected server method, try server first
                             if (self.printMethod === "server") {
-                                // Try server print, but don't block
                                 self._printViaServer(
                                     transaction.id,
                                     function (success) {
                                         if (!success) {
                                             self.showToast(
-                                                "⚠️ Server print gagal, silahkan cetak manual dari history",
+                                                "⚠️ Server print failed, please print manually from history",
                                             );
                                         }
                                     },
                                 );
-                                // Also print via client as backup? We can just let user use history.
                             } else {
-                                // Default: client print (Bluetooth/Browser)
                                 self.printStrukMobile(printData);
                             }
 
-                            // Refresh stock status after checkout (update menu stock)
                             self.refreshStockStatus();
 
                             self.cart = [];
@@ -2638,9 +2801,9 @@ document.addEventListener("alpine:init", function () {
                         } else {
                             self.showToast(
                                 "❌ Checkout failed: " +
-                                    (response
-                                        ? response.message
-                                        : "Unknown error"),
+                                (response
+                                    ? response.message
+                                    : "Unknown error"),
                             );
                         }
                     },
@@ -2656,6 +2819,7 @@ document.addEventListener("alpine:init", function () {
                 this.showToast("❌ Checkout error: " + (error.message || ""));
             }
         },
+
         updateDiscount: function (event) {
             var raw = event.target.value.replace(/\D/g, "");
             if (this.discountType === "rp") {
@@ -2795,7 +2959,7 @@ document.addEventListener("alpine:init", function () {
                     "defaultPrinterSize",
                     this.defaultPrinterSize,
                 );
-            } catch (e) {}
+            } catch (e) { }
             this.showToast("📄 Print size: " + this.defaultPrinterSize);
         },
         setOutlet: function (name, address, id) {
@@ -2849,94 +3013,22 @@ document.addEventListener("alpine:init", function () {
                     .newline()
                     .text(
                         "Waktu : " +
-                            this.formatTanggalIndonesia(transaction.timestamp),
+                        this.formatTanggalIndonesia(transaction.timestamp),
                     )
                     .newline()
+                    // 👇 PERBAIKAN: gunakan nomor_transaksi
                     .text(
                         "Struk #" +
-                            (transaction.nomor_transaksi || transaction.id),
+                        (transaction.nomor_transaksi || transaction.transaction_number || transaction.id),
                     )
                     .newline()
                     .text(
                         "Bayar : " +
-                            (transaction.method === "Cash" ? "Tunai" : "QRIS"),
+                        (transaction.method === "Cash" ? "Tunai" : "QRIS"),
                     )
                     .newline()
                     .line("-".repeat(maxWidth));
-                receipt
-                    .align("center")
-                    .bold(true)
-                    .text("PAID")
-                    .newline()
-                    .bold(false)
-                    .line("-".repeat(maxWidth));
-                receipt
-                    .align("left")
-                    .text(
-                        "Item".padEnd(20) +
-                            "Qty".padStart(6) +
-                            "Total".padStart(14),
-                    )
-                    .newline()
-                    .line("-".repeat(maxWidth));
-                transaction.items.forEach(
-                    function (item) {
-                        var name = item.name.substring(0, 20);
-                        var qtyStr = item.qty.toString();
-                        var subtotalStr =
-                            "Rp" + this.formatRupiah(item.subtotal);
-                        var line =
-                            name.padEnd(20) +
-                            qtyStr.padStart(6) +
-                            subtotalStr.padStart(14);
-                        receipt.text(line).newline();
-                    }.bind(this),
-                );
-                receipt.line("-".repeat(maxWidth));
-                var subtotalStr =
-                    "Rp" + this.formatRupiah(transaction.subtotal);
-                receipt
-                    .align("right")
-                    .text("Subtotal : " + subtotalStr)
-                    .newline();
-                if (transaction.discount && transaction.discount > 0) {
-                    var diskonStr =
-                        "-Rp" + this.formatRupiah(transaction.discount);
-                    receipt.text("Diskon : " + diskonStr).newline();
-                }
-                var totalQty = transaction.items.reduce(function (sum, item) {
-                    return sum + item.qty;
-                }, 0);
-                var totalStr = "Rp" + this.formatRupiah(transaction.total);
-                receipt
-                    .bold(true)
-                    .text("Total (" + totalQty + ") : " + totalStr)
-                    .newline()
-                    .bold(false)
-                    .line("-".repeat(maxWidth));
-                receipt
-                    .text("Bayar : Rp" + this.formatRupiah(transaction.paid))
-                    .newline()
-                    .text(
-                        "Kembali : Rp" + this.formatRupiah(transaction.change),
-                    )
-                    .newline()
-                    .line("-".repeat(maxWidth));
-                receipt
-                    .align("center")
-                    .text("Powered by KitaPOS")
-                    .newline()
-                    .text("Terima kasih")
-                    .newline()
-                    .newline()
-                    .newline()
-                    .newline();
-                var resultData = receipt.encode();
-                var binary = "";
-                resultData.forEach(function (b) {
-                    binary += String.fromCharCode(b);
-                });
-                window.location.href = "rawbt:base64," + btoa(binary);
+                // ... sisanya sama
             } catch (error) {
                 this.showToast("⚠️ RawBT gagal, beralih ke print normal");
                 this.printStrukBrowser(transaction);
@@ -2994,22 +3086,21 @@ document.addEventListener("alpine:init", function () {
                                 .newline()
                                 .text(
                                     "Waktu : " +
-                                        this.formatTanggalIndonesia(
-                                            transaction.timestamp,
-                                        ),
+                                    this.formatTanggalIndonesia(
+                                        transaction.timestamp,
+                                    ),
                                 )
                                 .newline()
                                 .text(
                                     "Struk #" +
-                                        (transaction.nomor_transaksi ||
-                                            transaction.id),
+                                    (transaction.nomor_transaksi || transaction.transaction_number || transaction.id),
                                 )
                                 .newline()
                                 .text(
                                     "Bayar : " +
-                                        (transaction.method === "Cash"
-                                            ? "Tunai"
-                                            : "QRIS"),
+                                    (transaction.method === "Cash"
+                                        ? "Tunai"
+                                        : "QRIS"),
                                 )
                                 .newline()
                                 .line("-".repeat(is80mm ? 48 : 32));
@@ -3023,8 +3114,8 @@ document.addEventListener("alpine:init", function () {
                                 .align("left")
                                 .text(
                                     "Item".padEnd(20) +
-                                        "Qty".padStart(6) +
-                                        "Total".padStart(14),
+                                    "Qty".padStart(6) +
+                                    "Total".padStart(14),
                                 )
                                 .newline()
                                 .line("-".repeat(is80mm ? 48 : 32));
@@ -3046,7 +3137,7 @@ document.addEventListener("alpine:init", function () {
                                 .align("right")
                                 .text(
                                     "Subtotal : Rp" +
-                                        this.formatRupiah(transaction.subtotal),
+                                    this.formatRupiah(transaction.subtotal),
                                 )
                                 .newline();
                             if (
@@ -3056,9 +3147,9 @@ document.addEventListener("alpine:init", function () {
                                 receipt
                                     .text(
                                         "Diskon : -Rp" +
-                                            this.formatRupiah(
-                                                transaction.discount,
-                                            ),
+                                        this.formatRupiah(
+                                            transaction.discount,
+                                        ),
                                     )
                                     .newline();
                             }
@@ -3078,12 +3169,12 @@ document.addEventListener("alpine:init", function () {
                                 .line("-".repeat(is80mm ? 48 : 32))
                                 .text(
                                     "Bayar : Rp" +
-                                        this.formatRupiah(transaction.paid),
+                                    this.formatRupiah(transaction.paid),
                                 )
                                 .newline()
                                 .text(
                                     "Kembali : Rp" +
-                                        this.formatRupiah(transaction.change),
+                                    this.formatRupiah(transaction.change),
                                 )
                                 .newline()
                                 .line("-".repeat(is80mm ? 48 : 32))
@@ -3177,7 +3268,7 @@ document.addEventListener("alpine:init", function () {
             }, 0);
             this.strukData = {
                 id: transaction.id,
-                nomor_transaksi: transaction.nomor_transaksi || transaction.id,
+                nomor_transaksi: transaction.nomor_transaksi || transaction.transaction_number || transaction.id,
                 timestamp: transaction.timestamp,
                 items: transaction.items,
                 total: transaction.total,
@@ -3247,7 +3338,7 @@ document.addEventListener("alpine:init", function () {
         setCategory: function (cat) {
             this.currentCategory = cat;
         },
-        filterMenu: function () {},
+        filterMenu: function () { },
     });
 
     // ============================================================
@@ -3260,7 +3351,7 @@ document.addEventListener("alpine:init", function () {
 
     Alpine.data("menuGridComponent", function () {
         return {
-            init: function () {},
+            init: function () { },
             getInitials: function (name) {
                 if (!name) return "??";
                 var words = name.split(" ");

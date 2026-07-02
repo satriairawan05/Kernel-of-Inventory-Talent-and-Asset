@@ -50,3 +50,9 @@ Route::post('/drafts/{id}/to-cart', [Controllers\API\APIController::class, 'move
 
 Route::get('/trx-number', [Controllers\API\APIController::class, 'generateTrxNumber'])->name('transaction.number');
 Route::post('/transactions/{id}/print', [Controllers\API\APIController::class, 'printTransaction'])->name('transaction.print');
+
+Route::get('/cashier/shift-summary', [Controllers\API\APIController::class, 'getShiftSummary'])->name('cashier.shift-summary');
+
+// Cashier session
+Route::post('/cashier/open', [Controllers\API\APIController::class, 'openCashier'])->name('cashier.open');
+Route::post('/cashier/close', [Controllers\API\APIController::class, 'closeCashier'])->name('cashier.close');

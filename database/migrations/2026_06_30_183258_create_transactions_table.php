@@ -18,15 +18,16 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('company_id')->nullable()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
 
-            // Nomor transaksi dari generateTrxNumber (format KITA/YYYY/MM/DD/XXXX)
+            $table->foreignId('session_id')
+                ->nullable()
+                ->constrained('cashier_sessions')
+                ->onDelete('set null');
             $table->string('transaction_number')->unique();
 
-            // Waktu transaksi (bisa pakai created_at, tapi kita simpan explicit)
             $table->timestamp('transaction_date')->nullable()->useCurrent();
 
-            // Nilai-nilai
             $table->bigInteger('subtotal')->nullable()->default(0);
-            $table->string('discount_type')->nullable(); // 'rp' or 'percent'
+            $table->string('discount_type')->nullable();
             $table->bigInteger('discount_value')->nullable()->default(0);
             $table->bigInteger('discount_amount')->nullable()->default(0);
             $table->bigInteger('total')->nullable()->default(0);
@@ -44,6 +45,7 @@ return new class extends Migration
             $table->index('transaction_number');
             $table->index('transaction_date');
             $table->index('user_id');
+            $table->index('session_id');
             $table->index('company_id');
         });
 

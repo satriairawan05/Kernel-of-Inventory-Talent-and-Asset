@@ -78,13 +78,13 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('stock-in', StockInController::class);
         Route::resource('stock-out', StockOutController::class);
         Route::resource('return-stock', ReturnStockController::class);
-        Route::resource('stock-opname', StockOpnameController::class)->except(['create','edit','destroy']);
-        Route::prefix('stock-opname')->name('stock-opname.')->group(function(){
+        Route::resource('stock-opname', StockOpnameController::class)->except(['create', 'edit', 'destroy']);
+        Route::prefix('stock-opname')->name('stock-opname.')->group(function () {
             Route::put('/detail/{detail}', [StockOpnameController::class, 'updateDetail'])->name('update-detail');
             Route::put('/{period}/close', [StockOpnameController::class, 'close'])->name('close');
         });
 
-        Route::prefix('report')->as('report.')->group(function(){
+        Route::prefix('report')->as('report.')->group(function () {
             Route::get('/', [\App\Http\Controllers\HomeController::class, 'indexReport'])->name('index');
             Route::get('/generate', [\App\Http\Controllers\HomeController::class, 'generateForm'])->name('generate-form');
             Route::post('/generate', [\App\Http\Controllers\HomeController::class, 'generate'])->name('generate');
@@ -93,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/print-aggregated', [\App\Http\Controllers\HomeController::class, 'printAggregated'])->name('print-aggregated');
             Route::delete('/{id}', [\App\Http\Controllers\HomeController::class, 'destroyReport'])->name('destroy');
         });
-        
+
         Route::get('stock-log', [StockController::class, 'stockLogs'])->name('stock.logs');
     });
 
@@ -104,11 +104,14 @@ Route::middleware(['auth'])->group(function () {
             ]);
         })->name('home');
 
-        Route::get('point-of-sales',[PointOfSalesController::class, 'posView'])->name('point-of-sales');
+        Route::get('open', [PointOfSalesController::class, 'openCashierView'])->name('open');
+        Route::post('open', [PointOfSalesController::class, 'storeCashierOpen'])->name('open.store');
+        Route::get('point-of-sales', [PointOfSalesController::class, 'posView'])->name('point-of-sales');
 
-        Route::resource('menu', MenuController::class)->except(['create','edit']);
-        Route::resource('cash_summary',CashSummaryController::class)->except(['create','edit']);
-        Route::delete('cash-summary/destroy-all', [CashSummaryController::class, 'destroyAll'])->name('cash_summary.destroyAll');
+        Route::resource('menu', MenuController::class)->except(['create', 'edit']);
+        Route::resource('cash_summary', CashSummaryController::class)->except(['create', 'edit']);
+        Route::get('cash_summary/{date}/detail', [CashSummaryController::class, 'detail'])->name('cash_summary.detail');
+        Route::delete('cash_summary/destroy-all', [CashSummaryController::class, 'destroyAll'])->name('cash_summary.destroyAll');
         Route::get('report/daily', [SalesReportController::class, 'dailyIndex'])->name('report.daily');
         Route::get('report/weekly', [SalesReportController::class, 'weeklyIndex'])->name('report.weekly');
         Route::get('report/weekly/detail/{start_date}/{end_date}/{company_id}', [SalesReportController::class, 'showWeekly'])->name('report.weekly.detail');

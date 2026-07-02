@@ -80,6 +80,46 @@
             border: 1px solid #d1fae5;
         }
 
+        /* ===== FILTER FORM ===== */
+        .filter-form {
+            background: #f8fafc;
+            border-radius: 1.2rem;
+            padding: 1rem 1.2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .filter-form .form-control,
+        .filter-form .form-select {
+            border-radius: 30px !important;
+            border-color: #d1fae5;
+        }
+
+        .filter-form .btn-filter {
+            border-radius: 30px !important;
+            background: #065f46 !important;
+            border: none !important;
+            color: #fff !important;
+            padding: 0.45rem 1.5rem !important;
+            font-weight: 600 !important;
+        }
+
+        .filter-form .btn-filter:hover {
+            background: #047857 !important;
+        }
+
+        .filter-form .btn-reset {
+            border-radius: 30px !important;
+            background: #e2e8f0 !important;
+            border: none !important;
+            color: #1e293b !important;
+            padding: 0.45rem 1.5rem !important;
+            font-weight: 600 !important;
+        }
+
+        .filter-form .btn-reset:hover {
+            background: #cbd5e1 !important;
+        }
+
         /* ===== TABLE ===== */
         .table thead th {
             background: #ecfdf5;
@@ -102,11 +142,33 @@
             border-bottom: 1px solid #f1f5f9;
         }
 
+        .text-success {
+            color: #059669 !important;
+        }
+
+        .text-danger {
+            color: #dc2626 !important;
+        }
+
+        .text-primary {
+            color: #065f46 !important;
+        }
+
         /* ===== ACTION BUTTONS ===== */
         .action-buttons .btn-sm {
             font-size: 0.75rem;
             padding: 0.25rem 0.7rem;
             border-radius: 30px;
+        }
+
+        .action-buttons .btn-info {
+            background: #0ea5e9 !important;
+            border: none !important;
+            color: #fff !important;
+        }
+
+        .action-buttons .btn-info:hover {
+            background: #0284c7 !important;
         }
 
         .action-buttons .btn-warning {
@@ -160,27 +222,6 @@
             margin-bottom: 0;
         }
 
-        .summary-stats .text-success {
-            color: #059669 !important;
-        }
-
-        .summary-stats .text-danger {
-            color: #dc2626 !important;
-        }
-
-        .summary-stats .text-primary {
-            color: #065f46 !important;
-        }
-
-        /* ===== PAGINATION ===== */
-        .pagination-wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-        }
-
         /* ===== MODAL ===== */
         .modal-header.bg-primary {
             background: #065f46 !important;
@@ -194,8 +235,7 @@
             background: #ef4444 !important;
         }
 
-        .modal-header.bg-primary .btn-close-white,
-        .modal-header.bg-danger .btn-close-white {
+        .modal-header .btn-close-white {
             filter: brightness(0) invert(1);
         }
 
@@ -292,10 +332,6 @@
                 align-items: stretch;
             }
 
-            .pagination-wrapper>div {
-                width: 100%;
-            }
-
             .summary-stats h3 {
                 font-size: 1.2rem;
             }
@@ -312,8 +348,6 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-
-            // ==================== FORMAT RUPIAH ====================
             function formatRupiah(angka) {
                 if (!angka) return '';
                 var clean = angka.replace(/\D/g, '');
@@ -323,19 +357,12 @@
                 return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             }
 
-            function parseRupiah(value) {
-                if (!value) return 0;
-                var clean = value.replace(/\D/g, '');
-                return parseInt(clean, 10) || 0;
-            }
-
             $(document).on('input', '.rupiah-input', function() {
                 var val = $(this).val();
                 var formatted = formatRupiah(val);
                 $(this).val(formatted);
             });
 
-            // ==================== SELECT2 ====================
             function initSelect2(modalId) {
                 $(modalId + ' .select2').select2({
                     theme: 'default',
@@ -355,7 +382,6 @@
                 initSelect2('#editModal');
             });
 
-            // ==================== EDIT MODAL ====================
             $('#editModal').on('show.bs.modal', function(event) {
                 const button = $(event.relatedTarget);
                 const id = button.data('id');
@@ -374,7 +400,6 @@
                 $('#edit_transaction_date').val(transactionDate || '');
             });
 
-            // ==================== DELETE MODAL ====================
             $('#deleteModal').on('show.bs.modal', function(event) {
                 const button = $(event.relatedTarget);
                 const id = button.data('id');
@@ -384,7 +409,6 @@
                 $('#deleteForm').attr('action', url);
                 $('#delete_description').text(description || 'this record');
             });
-
         });
     </script>
 @endpush
@@ -410,38 +434,92 @@
                 <div class="summary-stats">
                     <p><i class="fas fa-arrow-down text-success"></i> Total Cash In</p>
                     <h3 class="text-success">{{ $summary['formatted_in'] ?? 'Rp 0' }}</h3>
+                    <small class="text-muted">
+                        @if (!empty($filters['start_date']) && !empty($filters['end_date']))
+                            {{ \Carbon\Carbon::parse($filters['start_date'])->format('d M Y') }} -
+                            {{ \Carbon\Carbon::parse($filters['end_date'])->format('d M Y') }}
+                        @else
+                            Today
+                        @endif
+                    </small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="summary-stats">
                     <p><i class="fas fa-arrow-up text-danger"></i> Total Cash Out</p>
                     <h3 class="text-danger">{{ $summary['formatted_out'] ?? 'Rp 0' }}</h3>
+                    <small class="text-muted">{{ $summary['count'] ?? 0 }} transaksi</small>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="summary-stats">
-                    <p><i class="fas fa-calculator text-primary"></i> Net Balance{{ $summary['formatted_balance'] > 0 ? 's' : '' }}</p>
-                    <h3 class="text-primary">{{ $summary['formatted_balance'] ?? 'Rp 0' }}</h3>
+                    <p><i class="fas fa-calculator text-primary"></i> Net Balance</p>
+                    <h3 class="text-primary {{ ($summary['balance'] ?? 0) < 0 ? 'text-danger' : 'text-primary' }}">
+                        {{ $summary['formatted_balance'] ?? 'Rp 0' }}
+                    </h3>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="summary-stats">
-                    <p><i class="fas fa-receipt"></i> Total Record{{ $summary['count'] > 0 ? 's' : '' }}</p>
-                    <h3>{{ $summary['count'] ?? 0 }}</h3>
+                    <p><i class="fas fa-receipt"></i> Total Hari</p>
+                    <h3>{{ $dailySummaries->count() }}</h3>
+                    <small class="text-muted">
+                        @if (!empty($filters['type']))
+                            Filter: {{ ucfirst($filters['type']) }}
+                        @endif
+                    </small>
                 </div>
             </div>
+        </div>
+
+        <!-- Filter Form -->
+        <div class="filter-form mb-4">
+            <form method="GET" action="{{ route('pos.cash_summary.index') }}" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label" for="start_date">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control"
+                        value="{{ $filters['start_date'] ?? date('Y-m-01') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="end_date">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control"
+                        value="{{ $filters['end_date'] ?? date('Y-m-t') }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="type">Type</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">All Types</option>
+                        @foreach ($types as $value => $label)
+                            <option value="{{ $value }}"
+                                {{ ($filters['type'] ?? '') == $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="search">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" placeholder="Description..."
+                        value="{{ $filters['search'] ?? '' }}">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-filter w-100"><i class="fas fa-filter me-1"></i> Filter</button>
+                    <a href="{{ route('pos.cash_summary.index') }}" class="btn btn-reset w-100"><i
+                            class="fas fa-times me-1"></i> Reset</a>
+                </div>
+            </form>
         </div>
 
         @if ($access['Read'] == 1)
             <div class="card soft-card mt-0">
                 <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                     <div>
-                        <h4 class="mb-1"><i class="fas fa-list me-2"></i> Cash Records</h4>
-                        <p class="text-muted mb-0">All cash in and cash out transactions.</p>
+                        <h4 class="mb-1"><i class="fas fa-list me-2"></i> Daily Summary</h4>
+                        <p class="text-muted mb-0">Grouped by transaction date.</p>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="stat-chip"><i class="fas fa-cash-register me-1"></i>
-                            {{ $cashSummaries->total() }} total record{{ $cashSummaries->total() > 1 ? 's' : '' }}
+                        <span class="stat-chip"><i class="fas fa-calendar-day me-1"></i>
+                            {{ $dailySummaries->count() }} day{{ $dailySummaries->count() > 1 ? 's' : '' }}
                         </span>
                         @if (auth()->user()->group_id == 1)
                             <form action="{{ route('pos.cash_summary.destroyAll') }}" method="POST" class="d-inline"
@@ -474,69 +552,44 @@
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
-                                    <th scope="col">Type</th>
-                                    <th scope="col">Amount</th>
-                                    <th scope="col">Description</th>
-                                    <th scope="col">Transaction Date</th>
-                                    <th scope="col">Action</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col" class="text-end">Cash In</th>
+                                    <th scope="col" class="text-end">Cash Out</th>
+                                    <th scope="col" class="text-end">Net Balance</th>
+                                    <th scope="col" class="text-center">Transactions</th>
+                                    <th scope="col" class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($cashSummaries as $item)
+                                @forelse($dailySummaries as $index => $row)
                                     <tr>
-                                        <th scope="row">{{ $cashSummaries->firstItem() + $loop->index }}</th>
-                                        <td>
-                                            @php
-                                                $isCashIn =
-                                                    $item->type === \App\Enums\CashSummaryTypeEnum::CASH_IN->value;
-                                                $badgeClass = $isCashIn ? 'bg-success' : 'bg-danger';
-                                                $iconClass = $isCashIn ? 'fa-arrow-down' : 'fa-arrow-up';
-                                                $textClass = $isCashIn ? 'text-success' : 'text-danger';
-                                            @endphp
-                                            <span class="badge {{ $badgeClass }}">
-                                                <i class="fas {{ $iconClass }}"></i>
-                                                {{ $item->type_label }}
-                                            </span>
+                                        <td>{{ $loop->iteration + ($dailySummaries->currentPage() - 1) * $dailySummaries->perPage() }}
                                         </td>
-                                        <td>
-                                            <span class="{{ $textClass }} fw-bold">
-                                                {{ $item->formatted_amount }}
-                                            </span>
+                                        <td>{{ \Carbon\Carbon::parse($row['date'])->format('d M Y') }}</td>
+                                        <td class="text-end text-success fw-bold">{{ $row['formatted_in'] }}</td>
+                                        <td class="text-end text-danger fw-bold">{{ $row['formatted_out'] }}</td>
+                                        <td
+                                            class="text-end fw-bold {{ $row['balance'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                            {{ $row['formatted_balance'] }}
                                         </td>
-                                        <td>{{ $item->description ?? '-' }}</td>
-                                        <td>{{ $item->transaction_date->format('d M Y') }}</td>
-                                        <td class="action-buttons d-md-flex flex-md-row align-items-md-center gap-2">
-                                            @if ($access['Update'] == 1)
-                                                <button type="button" class="btn btn-sm btn-warning btn-edit"
-                                                    data-bs-toggle="modal" data-bs-target="#editModal"
-                                                    data-id="{{ $item->id }}" data-type="{{ $item->type }}"
-                                                    data-amount="{{ $item->amount }}"
-                                                    data-description="{{ $item->description }}"
-                                                    data-transaction_date="{{ $item->transaction_date->format('Y-m-d') }}">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </button>
-                                            @endif
-                                            @if ($access['Delete'] == 1)
-                                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                                                    data-bs-target="#deleteModal" data-id="{{ $item->id }}"
-                                                    data-description="{{ $item->description ?? 'record #' . $item->id }}">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </button>
-                                            @endif
+                                        <td class="text-center">{{ $row['count'] }}</td>
+                                        <td class="text-center">
+                                            <a href="{{ route('pos.cash_summary.detail', ['date' => $row['date']]) }}"
+                                                class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye me-1"></i> Detail
+                                            </a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">No cash records found.</td>
+                                        <td colspan="7" class="text-center py-4 text-muted">No cash records found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-3 pagination-wrapper">
-                        {{ $cashSummaries->links() }}
-                    </div>
+                    {{ $dailySummaries->links() }}
                 </div>
             </div>
         @endif

@@ -113,6 +113,16 @@ class Transaction extends Model
         return $this->hasMany(TransactionItem::class);
     }
 
+    /**
+     * Relasi balik ke sesi kasir.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function cashierSession(): BelongsTo
+    {
+        return $this->belongsTo(CashierSession::class, 'session_id');
+    }
+
     // ============================================================
     // HELPERS
     // ============================================================

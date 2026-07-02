@@ -11,43 +11,19 @@ use Illuminate\Support\Facades\Log;
 class CashSummaryService
 {
     /**
-     * The CashSummary model instance.
-     *
-     * @var CashSummary
-     */
-    protected CashSummary $model;
-
-    /**
-     * Constructor.
-     *
-     * @param CashSummary $model
-     */
-    public function __construct(CashSummary $model)
-    {
-        $this->model = $model;
-    }
-
-    /**
      * Get all cash summaries with optional filters.
-     * Default: today's data if no date filters provided.
-     *
-     * @param int|null $companyId
-     * @param array $filters
-     * @return Collection
      */
     public function getAll(?int $companyId = null, array $filters = []): Collection
     {
-        $query = $this->model->query();
+        $query = CashSummary::query();
 
         if ($companyId) {
             $query->byCompany($companyId);
         }
 
-        // Apply date filter: default to today if not specified
+        // Perbaikan: Hapus batasan default hari ini agar semua data tampil
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $query->betweenDates($filters['start_date'], $filters['end_date']);
-        } else {
-            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         if (!empty($filters['type'])) {
@@ -58,31 +34,25 @@ class CashSummaryService
             $query->where('description', 'LIKE', '%' . $filters['search'] . '%');
         }
 
-        return $query->orderBy('transaction_date', 'desc')->get();
+        return $query->orderBy('transaction_date', 'desc')
+                     ->orderBy('id', 'desc')
+                     ->get();
     }
 
     /**
      * Get paginated cash summaries.
-     * Default: today's data if no date filters provided.
-     *
-     * @param int|null $companyId
-     * @param int $perPage
-     * @param array $filters
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getPaginated(?int $companyId = null, int $perPage = 15, array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        $query = $this->model->query();
+        $query = CashSummary::query();
 
         if ($companyId) {
             $query->byCompany($companyId);
         }
 
-        // Apply date filter: default to today if not specified
+        // Perbaikan: Hapus batasan default hari ini
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $query->betweenDates($filters['start_date'], $filters['end_date']);
-        } else {
-            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         if (!empty($filters['type'])) {
@@ -93,54 +63,34 @@ class CashSummaryService
             $query->where('description', 'LIKE', '%' . $filters['search'] . '%');
         }
 
-        return $query->orderBy('transaction_date', 'desc')->paginate($perPage);
+        return $query->orderBy('transaction_date', 'desc')
+                     ->orderBy('id', 'desc')
+                     ->paginate($perPage);
     }
 
-    /**
-     * Get a single cash summary by ID.
-     *
-     * @param int $id
-     * @return CashSummary|null
-     */
     public function getById(int $id): ?CashSummary
     {
-        return $this->model->find($id);
+        return CashSummary::find($id);
     }
 
-    /**
-     * Get a single cash summary by ID or throw exception.
-     *
-     * @param int $id
-     * @return CashSummary
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     */
     public function getByIdOrFail(int $id): CashSummary
     {
-        return $this->model->findOrFail($id);
+        return CashSummary::findOrFail($id);
     }
 
-    /**
-     * Create a new cash summary record.
-     *
-     * @param array $data
-     * @return CashSummary
-     * @throws \Exception
-     */
     public function store(array $data): CashSummary
     {
         try {
             return DB::transaction(function () use ($data) {
-                // Ensure type is valid
                 if (!in_array($data['type'], CashSummaryTypeEnum::values())) {
                     throw new \InvalidArgumentException('Invalid cash summary type.');
                 }
 
-                // Set default transaction_date if not provided
                 if (empty($data['transaction_date'])) {
                     $data['transaction_date'] = now()->toDateString();
                 }
 
-                return $this->model->create($data);
+                return CashSummary::create($data);
             });
         } catch (\Exception $e) {
             Log::error('Failed to create cash summary: ' . $e->getMessage());
@@ -148,13 +98,6 @@ class CashSummaryService
         }
     }
 
-    /**
-     * Update an existing cash summary record.
-     *
-     * @param CashSummary $cashSummary
-     * @param array $data
-     * @return CashSummary
-     */
     public function update(CashSummary $cashSummary, array $data): CashSummary
     {
         try {
@@ -172,12 +115,6 @@ class CashSummaryService
         }
     }
 
-    /**
-     * Delete a cash summary record.
-     *
-     * @param CashSummary $cashSummary
-     * @return bool|null
-     */
     public function destroy(CashSummary $cashSummary)
     {
         try {
@@ -190,17 +127,11 @@ class CashSummaryService
         }
     }
 
-    /**
-     * Delete all cash summary records.
-     * Use with caution – only for admin.
-     *
-     * @return void
-     */
     public function deleteAll(): void
     {
         try {
             DB::transaction(function () {
-                $this->model->query()->delete();
+                CashSummary::query()->delete();
             });
         } catch (\Exception $e) {
             Log::error('Failed to delete all cash summaries: ' . $e->getMessage());
@@ -208,189 +139,208 @@ class CashSummaryService
         }
     }
 
-    /**
-     * Get total cash in for a company within optional date range.
-     * Default: today if no date range provided.
-     *
-     * @param int $companyId
-     * @param string|null $start
-     * @param string|null $end
-     * @return int
-     */
     public function getTotalCashIn(int $companyId, ?string $start = null, ?string $end = null): int
     {
-        $query = $this->model->byCompany($companyId)->cashIn();
+        // Gunakan where langsung agar tidak bergantung pada scope Model
+        $types = CashSummaryTypeEnum::values();
+        $inType = $types[0] ?? 'in';
 
-        if ($start && $end) {
+        $query = CashSummary::byCompany($companyId)->where('type', $inType);
+
+        if (!empty($start) && !empty($end)) {
             $query->betweenDates($start, $end);
-        } else {
-            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return (int) $query->sum('amount');
     }
 
-    /**
-     * Get total cash out for a company within optional date range.
-     * Default: today if no date range provided.
-     *
-     * @param int $companyId
-     * @param string|null $start
-     * @param string|null $end
-     * @return int
-     */
     public function getTotalCashOut(int $companyId, ?string $start = null, ?string $end = null): int
     {
-        $query = $this->model->byCompany($companyId)->cashOut();
+        $types = CashSummaryTypeEnum::values();
+        $outType = $types[1] ?? 'out';
 
-        if ($start && $end) {
+        $query = CashSummary::byCompany($companyId)->where('type', $outType);
+
+        if (!empty($start) && !empty($end)) {
             $query->betweenDates($start, $end);
-        } else {
-            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return (int) $query->sum('amount');
     }
 
-    /**
-     * Get net balance for a company within optional date range.
-     * Default: today if no date range provided.
-     *
-     * @param int $companyId
-     * @param string|null $start
-     * @param string|null $end
-     * @return int
-     */
     public function getBalance(int $companyId, ?string $start = null, ?string $end = null): int
     {
-        $totalIn = $this->getTotalCashIn($companyId, $start, $end);
-        $totalOut = $this->getTotalCashOut($companyId, $start, $end);
-
-        return $totalIn - $totalOut;
+        return $this->getTotalCashIn($companyId, $start, $end) - $this->getTotalCashOut($companyId, $start, $end);
     }
 
-    /**
-     * Get cash summary statistics for a company.
-     * Default: today if no date range provided.
-     *
-     * @param int $companyId
-     * @param string|null $start
-     * @param string|null $end
-     * @return array
-     */
-    public function getSummary(int $companyId, ?string $start = null, ?string $end = null): array
+    public function getDailySummaryPaginated(int $companyId, int $perPage = 15, ?string $start = null, ?string $end = null): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        $query = $this->model->byCompany($companyId);
-
-        if ($start && $end) {
-            $query->betweenDates($start, $end);
-        } else {
-            $query->whereDate('transaction_date', now()->toDateString());
+        if (!$start || !$end) {
+            $start = now()->startOfMonth()->toDateString();
+            $end = now()->endOfMonth()->toDateString();
         }
 
-        $totalIn = (clone $query)->cashIn()->sum('amount');
-        $totalOut = (clone $query)->cashOut()->sum('amount');
-        $count = $query->count();
+        try {
+            $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+        } catch (\Exception $e) {
+            $startDate = now()->startOfMonth();
+            $endDate = now()->endOfMonth();
+        }
+
+        $query = CashSummary::byCompany($companyId)
+            ->whereBetween('transaction_date', [$startDate, $endDate]);
+
+        $paginated = $query
+            ->select(
+                DB::raw('DATE(transaction_date) as date'),
+                DB::raw('SUM(CASE WHEN type = "in" THEN amount ELSE 0 END) as total_in'),
+                DB::raw('SUM(CASE WHEN type = "out" THEN amount ELSE 0 END) as total_out'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->paginate($perPage);
+
+        $paginated->getCollection()->transform(function ($item) {
+            return [
+                'date'              => $item->date,
+                'total_in'          => (int) $item->total_in,
+                'total_out'         => (int) $item->total_out,
+                'balance'           => (int) ($item->total_in - $item->total_out),
+                'count'             => (int) $item->count,
+                'formatted_in'      => 'Rp ' . number_format($item->total_in, 0, ',', '.'),
+                'formatted_out'     => 'Rp ' . number_format($item->total_out, 0, ',', '.'),
+                'formatted_balance' => 'Rp ' . number_format($item->total_in - $item->total_out, 0, ',', '.'),
+            ];
+        });
+
+        return $paginated;
+    }
+
+    public function getSummary(int $companyId, ?string $start = null, ?string $end = null): array
+    {
+        $query = CashSummary::byCompany($companyId);
+
+        // Hanya filter tanggal JIKA user benar-benar mengisi start_date & end_date
+        if (!empty($start) && !empty($end)) {
+            try {
+                $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+                $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+                $query->whereBetween('transaction_date', [$startDate, $endDate]);
+            } catch (\Exception $e) {
+                // Abaikan jika format tanggal salah, biarkan tanpa filter
+            }
+        }
+
+        // Ambil nilai dari Enum (Lebih aman dari typo)
+        // Sesuaikan CashSummaryTypeEnum::values() jika strukturnya berbeda
+        $types = CashSummaryTypeEnum::values();
+        $inType = $types[0] ?? 'in';   // Default fallback 'in'
+        $outType = $types[1] ?? 'out'; // Default fallback 'out'
+
+        $totalIn = (clone $query)->where('type', $inType)->sum('amount');
+        $totalOut = (clone $query)->where('type', $outType)->sum('amount');
+        $count = (clone $query)->count();
 
         return [
-            'total_in'       => (int) $totalIn,
-            'total_out'      => (int) $totalOut,
-            'balance'        => (int) ($totalIn - $totalOut),
-            'count'          => (int) $count,
-            'formatted_in'   => 'Rp ' . number_format($totalIn, 0, ',', '.'),
-            'formatted_out'  => 'Rp ' . number_format($totalOut, 0, ',', '.'),
+            'total_in'          => (int) $totalIn,
+            'total_out'         => (int) $totalOut,
+            'balance'           => (int) ($totalIn - $totalOut),
+            'count'             => (int) $count,
+            'formatted_in'      => 'Rp ' . number_format($totalIn, 0, ',', '.'),
+            'formatted_out'     => 'Rp ' . number_format($totalOut, 0, ',', '.'),
             'formatted_balance' => 'Rp ' . number_format($totalIn - $totalOut, 0, ',', '.'),
         ];
     }
 
-    /**
-     * Get all cash in records for a company.
-     * Default: today if no date range provided.
-     *
-     * @param int $companyId
-     * @param string|null $start
-     * @param string|null $end
-     * @return Collection
-     */
+    public function getDailySummary(int $companyId, ?string $start = null, ?string $end = null): \Illuminate\Support\Collection
+    {
+        $query = CashSummary::byCompany($companyId);
+
+        if ($start && $end) {
+            $query->betweenDates($start, $end);
+        } else {
+            // Default 30 hari terakhir agar tidak kosong
+            $query->whereDate('transaction_date', '>=', now()->subDays(30)->toDateString());
+        }
+
+        return $query
+            ->select(
+                DB::raw('DATE(transaction_date) as date'),
+                DB::raw('SUM(CASE WHEN type = "in" THEN amount ELSE 0 END) as total_in'),
+                DB::raw('SUM(CASE WHEN type = "out" THEN amount ELSE 0 END) as total_out'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'date'              => $item->date,
+                    'total_in'          => (int) $item->total_in,
+                    'total_out'         => (int) $item->total_out,
+                    'balance'           => (int) ($item->total_in - $item->total_out),
+                    'count'             => (int) $item->count,
+                    'formatted_in'      => 'Rp ' . number_format($item->total_in, 0, ',', '.'),
+                    'formatted_out'     => 'Rp ' . number_format($item->total_out, 0, ',', '.'),
+                    'formatted_balance' => 'Rp ' . number_format($item->total_in - $item->total_out, 0, ',', '.'),
+                ];
+            });
+    }
+
+    public function getByDate(int $companyId, string $date): Collection
+    {
+        return CashSummary::byCompany($companyId)
+            ->whereDate('transaction_date', $date)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
     public function getCashInRecords(int $companyId, ?string $start = null, ?string $end = null): Collection
     {
-        $query = $this->model->byCompany($companyId)->cashIn();
+        $query = CashSummary::byCompany($companyId)->cashIn();
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
-        } else {
-            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return $query->orderBy('transaction_date', 'desc')->get();
     }
 
-    /**
-     * Get all cash out records for a company.
-     * Default: today if no date range provided.
-     *
-     * @param int $companyId
-     * @param string|null $start
-     * @param string|null $end
-     * @return Collection
-     */
     public function getCashOutRecords(int $companyId, ?string $start = null, ?string $end = null): Collection
     {
-        $query = $this->model->byCompany($companyId)->cashOut();
+        $query = CashSummary::byCompany($companyId)->cashOut();
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
-        } else {
-            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return $query->orderBy('transaction_date', 'desc')->get();
     }
 
-    /**
-     * Get total count of records for a company.
-     * Default: today if no date range provided.
-     *
-     * @param int $companyId
-     * @param string|null $start
-     * @param string|null $end
-     * @return int
-     */
     public function getCount(int $companyId, ?string $start = null, ?string $end = null): int
     {
-        $query = $this->model->byCompany($companyId);
+        $query = CashSummary::byCompany($companyId);
 
         if ($start && $end) {
             $query->betweenDates($start, $end);
-        } else {
-            $query->whereDate('transaction_date', now()->toDateString());
         }
 
         return $query->count();
     }
 
-    /**
-     * Get the latest record for a company.
-     *
-     * @param int $companyId
-     * @return CashSummary|null
-     */
     public function getLatest(int $companyId): ?CashSummary
     {
-        return $this->model->byCompany($companyId)
-            ->whereDate('transaction_date', now()->toDateString())
+        return CashSummary::byCompany($companyId)
+            // Perbaikan: Hapus filter hari ini agar benar-benar mengambil data terakhir di database
             ->orderBy('transaction_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->first();
     }
 
-    /**
-     * Check if a cash summary exists.
-     *
-     * @param int $id
-     * @return bool
-     */
     public function exists(int $id): bool
     {
-        return $this->model->where('id', $id)->exists();
+        return CashSummary::where('id', $id)->exists();
     }
 }

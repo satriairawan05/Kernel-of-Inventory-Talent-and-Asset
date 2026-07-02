@@ -124,6 +124,79 @@
         </div>
     </div>
 
+    <!-- ===== MODAL CLOSE CASHIER ===== -->
+    <div class="modal fade" id="closeCashierModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-cash-register me-2"></i> Close Cashier
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Shift Summary -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <small class="text-muted d-block">Opening Balance</small>
+                                <h5 class="fw-bold mb-0"
+                                    x-text="'Rp ' + $store.pos.formatRupiah($store.pos.shiftSummary.opening_balance)">
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <small class="text-muted d-block">Total Transactions</small>
+                                <h5 class="fw-bold mb-0" x-text="$store.pos.shiftSummary.total_transactions">
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <small class="text-muted d-block">Total Sales</small>
+                                <h5 class="fw-bold mb-0"
+                                    x-text="'Rp ' + $store.pos.formatRupiah($store.pos.shiftSummary.total_sales)">
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-success bg-opacity-10 rounded-3 border border-success">
+                                <small class="text-muted d-block">Theoretical</small>
+                                <h5 class="fw-bold mb-0 text-success"
+                                    x-text="'Rp ' + $store.pos.formatRupiah($store.pos.shiftSummary.opening_balance + $store.pos.shiftSummary.total_sales)">
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form input closing balance -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            Actual Balance (Physical Cash) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light fw-bold">Rp</span>
+                            <input type="text" class="form-control form-control-lg text-center fw-bold"
+                                x-model="$store.pos.closingBalanceInput"
+                                @input="$store.pos.closingBalanceInput = $store.pos.formatRupiah($event.target.value)"
+                                placeholder="Enter actual balance">
+                        </div>
+                        <small class="text-muted">Enter the amount of cash in the cash drawer.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" @click="$store.pos.submitCloseCashier()">
+                        <i class="fas fa-check me-1"></i> Close Cashier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== FOOTER ===== -->
     @include('admin.pos.point-of-sales.components.footer')
 
